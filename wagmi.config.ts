@@ -12,7 +12,7 @@ export default defineConfig(
                     artifacts: 'out/',
                     include: [
                         'ContentRegistry.json',
-                        'PaywallFrak.json',
+                        'PaywallToken.json',
                         'Paywall.json'
                     ]
                 }),

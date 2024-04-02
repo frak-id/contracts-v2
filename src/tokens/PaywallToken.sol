@@ -6,11 +6,9 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {MINTER_ROLES} from "../utils/Roles.sol";
 
 /// @author @KONFeature
-/// @title PaywallFrk
+/// @title PaywallToken
 /// @notice pFrak token, used to unlock access to content for a paywall
-contract PaywallFrk is ERC20, OwnableRoles {
-
-
+contract PaywallToken is ERC20, OwnableRoles {
     constructor(address _owner) {
         _initializeOwner(_owner);
         _setRoles(_owner, MINTER_ROLES);
@@ -26,7 +24,7 @@ contract PaywallFrk is ERC20, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     function name() public pure override returns (string memory) {
-        return "Paywall FRAK";
+        return "Paywall Token - FRAK";
     }
 
     function symbol() public pure override returns (string memory) {

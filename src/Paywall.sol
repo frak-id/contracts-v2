@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import { ContentRegistry } from "./tokens/ContentRegistry.sol";
-import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
+import {ContentRegistry} from "./tokens/ContentRegistry.sol";
+import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /// @author @KONFeature
 /// @title Paywall
@@ -87,10 +87,7 @@ contract Paywall {
     /// @dev Address of the frak labs wallet
     address private paymentToken;
 
-    constructor(
-        address _tokenAddr,
-        address _contentRegistry
-    ) {
+    constructor(address _tokenAddr, address _contentRegistry) {
         paymentToken = _tokenAddr;
         contentRegistry = ContentRegistry(_contentRegistry);
     }
@@ -145,11 +142,7 @@ contract Paywall {
     /// @dev Check if the access to an `item` on a `contentId` by the given `user` is allowed
     /// @return isAllowed True if the access is allowed, false otherwise
     /// @return allowedUntil The timestamp until the access is allowed, uint48.max if the access is allowed forever
-    function isReadAllowed(
-        uint256 contentId,
-        bytes32 articleId,
-        address user
-    )
+    function isReadAllowed(uint256 contentId, bytes32 articleId, address user)
         external
         view
         returns (bool isAllowed, uint256 allowedUntil)
@@ -175,13 +168,7 @@ contract Paywall {
     }
 
     /// @dev Add a new price for the given `_contentId`
-    function addPrice(
-        uint256 _contentId,
-        UnlockPrice calldata price
-    )
-        external
-        onlyContentOwner(_contentId)
-    {
+    function addPrice(uint256 _contentId, UnlockPrice calldata price) external onlyContentOwner(_contentId) {
         // Check the price
         if (price.price == 0) {
             revert PriceCannotBeZero();
@@ -193,11 +180,7 @@ contract Paywall {
     }
 
     /// @dev Update the price at the given `_priceIndex` for the given `_contentId`
-    function updatePrice(
-        uint256 _contentId,
-        uint256 _priceIndex,
-        UnlockPrice calldata _price
-    )
+    function updatePrice(uint256 _contentId, uint256 _priceIndex, UnlockPrice calldata _price)
         external
         onlyContentOwner(_contentId)
     {

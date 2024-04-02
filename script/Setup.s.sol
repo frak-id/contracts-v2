@@ -4,35 +4,23 @@ pragma solidity 0.8.23;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
-import { ContentRegistry, Metadata } from "src/tokens/ContentRegistry.sol";
-import { PaywallFrk } from "src/tokens/PaywallFrk.sol";
-import { Paywall } from "src/Paywall.sol";
-import { MINTER_ROLES } from "src/utils/Roles.sol";
+import {ContentRegistry, Metadata} from "src/tokens/ContentRegistry.sol";
+import {PaywallToken} from "src/tokens/PaywallToken.sol";
+import {Paywall} from "src/Paywall.sol";
 
 contract Setup is Script {
+    address CONTENT_REGISTRY_ADDRESS = 0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753;
+    address PAYWALL_ADDRESS = 0x9218521020EF26924B77188f4ddE0d0f7C405f21;
 
     function run() public {
-        console.log("Current address: %s", address(this));
-        address airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
-        address owner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
-        deploy(airdropper, owner);
+        setupContents();
     }
 
-    function deploy(address airdropper, address owner) internal {
+    function setupContents() internal {
         vm.startBroadcast();
 
-        PaywallFrk pFrk = new PaywallFrk{ salt: 0 }(owner);
-        ContentRegistry contentRegistry = new ContentRegistry{ salt: 0 }(owner);
-
-        Paywall paywall = new Paywall{ salt: 0 }(address(pFrk), address(contentRegistry));
-
-        // Log every deployed address
-        console.log("PaywallFrk: %s", address(pFrk));
-        console.log("ContentRegistry: %s", address(contentRegistry));
-        console.log("Paywall: %s", address(paywall));
-
-        // Grant the minter roles to the airdropper
-        pFrk.grantRoles(airdropper, MINTER_ROLES);
+        ContentRegistry contentRegistry = ContentRegistry(CONTENT_REGISTRY_ADDRESS);
+        Paywall paywall = Paywall(PAYWALL_ADDRESS);
 
         // Then mint the contents
         uint256 cLeMonde = _mintContent(contentRegistry, "Le Monde", "news-example.frak.id");
@@ -48,7 +36,10 @@ contract Setup is Script {
     }
 
     /// @dev Mint a content with the given name and domain
-    function _mintContent(ContentRegistry _contentRegistry, string memory _name, string memory _domain) internal returns (uint256) {
+    function _mintContent(ContentRegistry _contentRegistry, string memory _name, string memory _domain)
+        internal
+        returns (uint256)
+    {
         Metadata memory metadata = Metadata(_name, keccak256(bytes(_domain)));
         bytes memory metadataBytes = abi.encode(metadata);
         return _contentRegistry.mint(metadataBytes);

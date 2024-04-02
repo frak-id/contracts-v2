@@ -11,9 +11,14 @@ optimizer = true
 optimizer_runs = 100_000
 via-ir = false
 
+[profile.default.optimizer_details]
+constantOptimizer = true
+yul = true
 
 [etherscan]
   mainnet = { key = "${API_KEY_ETHERSCAN}" }
   goerli = { key = "${API_KEY_ETHERSCAN}", url = "https://api-goerli.etherscan.io/api" }
   polygon = { key = "${API_KEY_POLYGONSCAN}", url = "https://api.polygonscan.com/api" }
   mumbai = { key = "${API_KEY_POLYGONSCAN}", url = "https://api-testnet.polygonscan.com/api" }
+  arbitrum = { key = "${API_KEY_ARBISCAN}", url = "https://api.arbiscan.io/api" }
+  arbitrumSepolia = { key = "${API_KEY_ARBISCAN}", url = "https://api-sepolia.arbiscan.io/api" }
