@@ -3,9 +3,9 @@ import { foundry } from '@wagmi/cli/plugins'
 
 export default defineConfig(
     [
-        // Main config
+        // Poc contract abis
         {
-            out: "abi/generated.ts",
+            out: "abi/poc-abis.ts",
             plugins: [
                 foundry({
                     project: './',
@@ -17,6 +17,19 @@ export default defineConfig(
                     ]
                 }),
             ],
-        }
+        },
+        // Validator abis
+        {
+            out: "abi/7579-abis.ts",
+            plugins: [
+                foundry({
+                    project: './',
+                    artifacts: 'out/',
+                    include: [
+                        'WebAuthNValidator.json'
+                    ]
+                }),
+            ],
+        },
     ]
 )

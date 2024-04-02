@@ -10,7 +10,7 @@ import {Paywall} from "src/Paywall.sol";
 import {MINTER_ROLES} from "src/utils/Roles.sol";
 
 contract Deploy is Script {
-    address TOKEN_ADDRESS = 0x8c7d750798AEA699b473EAE7242781c3b517F00A;
+    address TOKEN_ADDRESS = 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2;
     address CONTENT_REGISTRY_ADDRESS = 0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753;
     address PAYWALL_ADDRESS = 0x9218521020EF26924B77188f4ddE0d0f7C405f21;
 
