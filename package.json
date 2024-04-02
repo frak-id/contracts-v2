@@ -1,0 +1,19 @@
+{
+  "name": "@frak-id/poc-paywall",
+  "version": "1.0.0",
+  "description": "All the smart contracts used for the paywall POC",
+  "license": "GNU GPL 3.0",
+  "private": true,
+  "scripts": {
+    "preinstall": "npx only-allow bun",
+    "clean": "forge clean",
+    "build": "forge build",
+    "generate": "wagmi generate"
+  },
+  "devDependencies": {
+    "@wagmi/cli": "^2.0.2"
+  },
+  "engines": {
+    "node": "^18.16.0"
+  }
+}
