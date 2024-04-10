@@ -13,6 +13,8 @@ export default defineConfig(
                     include: [
                         'ContentRegistry.json',
                         'PaywallToken.json',
+                        'ContentCommunityToken.json',
+                        'CommunityTokenFactory.json',
                         'Paywall.json'
                     ]
                 }),

@@ -7,12 +7,14 @@ import "forge-std/console.sol";
 import {ContentRegistry, Metadata} from "src/tokens/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 import {Paywall} from "src/Paywall.sol";
+import {CommunityTokenFactory} from "src/CommunityTokenFactory.sol";
 import {MINTER_ROLES} from "src/utils/Roles.sol";
 
 contract Deploy is Script {
     address TOKEN_ADDRESS = 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2;
     address CONTENT_REGISTRY_ADDRESS = 0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753;
     address PAYWALL_ADDRESS = 0x9218521020EF26924B77188f4ddE0d0f7C405f21;
+    address COMMUNITY_TOKEN_FACTORY_ADDRESS = 0x618A5dae7A3BF1f4d92A6cb1bD11f11E34BB850B;
 
     function run() public {
         address airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
@@ -51,11 +53,21 @@ contract Deploy is Script {
             paywall = Paywall(PAYWALL_ADDRESS);
         }
 
+        // Deploy the community token factory
+        CommunityTokenFactory communityTokenFactory;
+        if (COMMUNITY_TOKEN_FACTORY_ADDRESS.code.length == 0) {
+            console.log("Deploying Community token factory");
+            communityTokenFactory = new CommunityTokenFactory{salt: 0}(address(contentRegistry));
+        } else {
+            communityTokenFactory = CommunityTokenFactory(COMMUNITY_TOKEN_FACTORY_ADDRESS);
+        }
+
         // Log every deployed address
         console.log("Chain: %s", block.chainid);
         console.log(" - PaywallToken: %s", address(pFrk));
         console.log(" - ContentRegistry: %s", address(contentRegistry));
         console.log(" - Paywall: %s", address(paywall));
+        console.log(" - Community token factory: %s", address(communityTokenFactory));
 
         vm.stopBroadcast();
     }
