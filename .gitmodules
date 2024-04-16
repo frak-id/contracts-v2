@@ -10,3 +10,6 @@
 [submodule "lib/FreshCryptoLib"]
 	path = lib/FreshCryptoLib
 	url = https://github.com/rdubois-crypto/FreshCryptoLib
+[submodule "lib/kernel"]
+	path = lib/kernel
+	url = https://github.com/zerodevapp/kernel

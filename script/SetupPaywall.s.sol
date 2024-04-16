@@ -8,7 +8,7 @@ import {ContentRegistry, Metadata} from "src/tokens/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 import {Paywall} from "src/Paywall.sol";
 
-contract Setup is Script {
+contract SetupPaywall is Script {
     address CONTENT_REGISTRY_ADDRESS = 0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753;
     address PAYWALL_ADDRESS = 0x9218521020EF26924B77188f4ddE0d0f7C405f21;
 

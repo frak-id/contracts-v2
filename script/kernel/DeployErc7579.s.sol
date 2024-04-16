@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
-import {P256VerifierWrapper} from "src/7579-plugins/P256VerifierWrapper.sol";
-import {WebAuthNValidator} from "src/7579-plugins/WebAuthNValidator.sol";
+import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
+import {WebAuthNValidator} from "src/kernel/v3/WebAuthNValidator.sol";
 
 contract DeployErc7579 is Script {
     address P256_WRAPPER_ADDRESS = 0x169cb43cB17a37E5B022738a2BA6697f0f7b0Bc9;

@@ -8,10 +8,10 @@ import {
     VALIDATION_FAILED,
     MODULE_TYPE_VALIDATOR,
     MODULE_TYPE_HOOK
-} from "kernel/interfaces/IERC7579Modules.sol";
-import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
-import {SIG_VALIDATION_FAILED, ERC1271_MAGICVALUE, ERC1271_INVALID} from "kernel/types/Constants.sol";
-import {WebAuthnVerifier} from "./WebAuthnVerifier.sol";
+} from "kernel-v3/interfaces/IERC7579Modules.sol";
+import {PackedUserOperation} from "kernel-v3/interfaces/PackedUserOperation.sol";
+import {SIG_VALIDATION_FAILED, ERC1271_MAGICVALUE, ERC1271_INVALID} from "kernel-v3/types/Constants.sol";
+import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
 
 /// @dev Storage layout for a smart account in the WebAuthnValidator contract.
 struct WebAuthnValidatorStorage {
