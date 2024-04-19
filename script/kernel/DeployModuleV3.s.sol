@@ -7,19 +7,13 @@ import "forge-std/console.sol";
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 import {WebAuthNValidator} from "src/kernel/v3/WebAuthNValidator.sol";
 import {MultiWebAuthNValidator} from "src/kernel/v3/MultiWebAuthNValidator.sol";
-import {Kernel} from "kernel-v3/Kernel.sol";
-import {IEntryPoint} from "kernel-v3/interfaces/IEntryPoint.sol";
-import {ValidationId} from "kernel-v3/core/ValidationManager.sol";
-import {ValidatorLib} from "kernel-v3/utils/ValidationTypeLib.sol";
+import {Kernel} from "kernel/Kernel.sol";
+import {IEntryPoint} from "kernel/interfaces/IEntryPoint.sol";
+import {ValidationId} from "kernel/core/ValidationManager.sol";
+import {ValidatorLib} from "kernel/utils/ValidationTypeLib.sol";
 import {
-    IModule,
-    IValidator,
-    IHook,
-    IExecutor,
-    IFallback,
-    IPolicy,
-    ISigner
-} from "kernel-v3/interfaces/IERC7579Modules.sol";
+    IModule, IValidator, IHook, IExecutor, IFallback, IPolicy, ISigner
+} from "kernel/interfaces/IERC7579Modules.sol";
 
 import {LibClone} from "solady/utils/LibClone.sol";
 

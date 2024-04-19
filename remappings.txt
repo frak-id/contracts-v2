@@ -1,5 +1,4 @@
 forge-std/=lib/forge-std/src/
 solady/=lib/solady/src/
-kernel-v3/=lib/kernel_v3/src/
-kernel-v2/=lib/kernel/src/
+kernel-v3/=lib/kernel/src/
 FreshCryptoLib/=lib/FreshCryptoLib/solidity/src/
