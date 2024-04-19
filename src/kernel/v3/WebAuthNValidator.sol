@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {
-    IValidator,
-    IHook,
-    VALIDATION_SUCCESS,
-    VALIDATION_FAILED,
-    MODULE_TYPE_VALIDATOR,
-    MODULE_TYPE_HOOK
-} from "kernel/interfaces/IERC7579Modules.sol";
+import {IValidator, IHook} from "kernel/interfaces/IERC7579Modules.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
-import {SIG_VALIDATION_FAILED, ERC1271_MAGICVALUE, ERC1271_INVALID} from "kernel/types/Constants.sol";
+import {
+    MODULE_TYPE_VALIDATOR,
+    MODULE_TYPE_HOOK,
+    SIG_VALIDATION_SUCCESS_UINT,
+    SIG_VALIDATION_FAILED_UINT,
+    ERC1271_MAGICVALUE,
+    ERC1271_INVALID
+} from "kernel/types/Constants.sol";
 import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
 
 /// @dev Storage layout for a smart account in the WebAuthNValidator contract.
@@ -132,7 +132,9 @@ contract WebAuthNValidator is IValidator {
         override
         returns (uint256)
     {
-        return _checkSignature(_userOp.sender, _userOpHash, _userOp.signature) ? VALIDATION_SUCCESS : VALIDATION_FAILED;
+        return _checkSignature(_userOp.sender, _userOpHash, _userOp.signature)
+            ? SIG_VALIDATION_SUCCESS_UINT
+            : SIG_VALIDATION_FAILED_UINT;
     }
 
     /// @notice Verify the signature of the given `_hash` by the `_sender`.
