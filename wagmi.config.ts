@@ -28,7 +28,8 @@ export default defineConfig(
                     artifacts: 'out/',
                     include: [
                         'WebAuthNValidator.json',
-                        'MultiWebAuthNValidator.json'
+                        'MultiWebAuthNValidatorV2.json',
+                        'MultiWebAuthNValidatorV3.json'
                     ]
                 }),
             ],

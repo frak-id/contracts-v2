@@ -1,66 +1,13 @@
-## Foundry
+# Nexus - Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repo host the smart contracts related to the Nexus dApp, inside the [Frak](https://frak.id/) ecosystem.
 
-Foundry consists of:
+## Addresses
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+Plugin for Kernel smart accounts:
 
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+| Name                          | Address                                       |
+|--                             |--                                             |
+| MultiWebAuthN - Kernel-v3     | `0xE4F8193A714E2fD08D9Ae2dDe83721C752e5fC76`  |
+| MultiWebAuthN - Kernel v2     | `0xAd2E8dA9f4Cd8A0114B54AECAE03D222AEF0C475`  |
+| P256 Signature checker        | `0x97A24c95E317c44c0694200dd0415dD6F556663D`  |

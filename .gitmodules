@@ -10,3 +10,6 @@
 [submodule "lib/kernel"]
 	path = lib/kernel
 	url = https://github.com/zerodevapp/kernel
+[submodule "lib/kernel-v2"]
+	path = lib/kernel-v2
+	url = https://github.com/zerodevapp/kernel

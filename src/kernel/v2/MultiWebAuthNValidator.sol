@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {IValidator, IHook} from "kernel/interfaces/IERC7579Modules.sol";
-import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
-import {
-    SIG_VALIDATION_SUCCESS_UINT,
-    SIG_VALIDATION_FAILED_UINT,
-    ERC1271_MAGICVALUE,
-    ERC1271_INVALID,
-    MODULE_TYPE_VALIDATOR,
-    MODULE_TYPE_HOOK
-} from "kernel/types/Constants.sol";
+import {IKernelValidator} from "kernel-v2/interfaces/IKernelValidator.sol";
+import {ValidationData} from "kernel-v2/common/Types.sol";
+import {UserOperation} from "I4337/interfaces/UserOperation.sol";
 import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
+
+ValidationData constant SIG_VALIDATION_FAILED = ValidationData.wrap(1);
+ValidationData constant SIG_VALIDATION_SUCCESS = ValidationData.wrap(0);
 
 struct WebAuthNPubKey {
     /// @dev The `x` coord of the secp256r1 public key used to sign the user operation.
@@ -38,9 +34,9 @@ struct WebAuthNInitializationData {
 
 /// @author @KONFeature
 /// @title MultiWebAuthNValidator
-/// @notice A Multi-WebAuthN validator for erc-7579 compliant smart wallet, based on the FCL approach arround WebAuthN signature handling
+/// @notice A Multi-WebAuthN validator for kernel v2 smart wallet, based on the FCL approach arround WebAuthN signature handling
 /// @notice This validator can have multiple webauthn validator per wallet, can revoke them etc.
-contract MultiWebAuthNValidatorV3 is IValidator {
+contract MultiWebAuthNValidatorV2 is IKernelValidator {
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
@@ -61,6 +57,9 @@ contract MultiWebAuthNValidatorV3 is IValidator {
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
+
+    /// @dev When the smart account sin't init
+    error NotInitialized(address smartAccount);
 
     /// @dev When the initialisation data of this validator are invalid
     error InvalidInitData(uint256 x, uint256 y);
@@ -87,20 +86,6 @@ contract MultiWebAuthNValidatorV3 is IValidator {
     /// @dev Simple constructor, setting the P256 verifier address
     constructor(address _p256Verifier) {
         P256_VERIFIER = _p256Verifier;
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                               Metadata hooks                               */
-    /* -------------------------------------------------------------------------- */
-
-    /// @notice Returns the module type of the validator.
-    function isModuleType(uint256 typeID) external pure override returns (bool) {
-        return typeID == MODULE_TYPE_VALIDATOR;
-    }
-
-    /// @notice Returns if the validator is initialized for a given smart account.
-    function isInitialized(address smartAccount) public view override returns (bool) {
-        return signerStorage[smartAccount].mainAuthenticatorIdHash != 0;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -179,11 +164,7 @@ contract MultiWebAuthNValidatorV3 is IValidator {
     /// @dev The smart account need to be the `msg.sender`.
     /// @dev The public key is encoded as `abi.encode(MultiWebAuthNValidatorStorage)` inside the data, so (uint256,uint256).
     /// @dev The authenticatorIdHash is the hash of the authenticatorId. It enables to find public keys on-chain via event logs.
-    function onInstall(bytes calldata _data) external payable override {
-        // check if the webauthn validator is already initialized for the given account
-        // TODO: This imply that if a smart wallet want to change he need to disable and renable in the same tx, rly wanted? In the meantime it prevent erasing of the biometry validator if the account is compromised
-        if (isInitialized(msg.sender)) revert AlreadyInitialized(msg.sender);
-
+    function enable(bytes calldata _data) external payable override {
         // Extract the init data
         WebAuthNInitializationData calldata initData;
         assembly {
@@ -211,8 +192,7 @@ contract MultiWebAuthNValidatorV3 is IValidator {
 
     /// @notice Uninstall WebAuthn validator for a smart account.
     /// @dev The smart account need to be the `msg.sender`.
-    function onUninstall(bytes calldata) external payable override {
-        if (!isInitialized(msg.sender)) revert NotInitialized(msg.sender);
+    function disable(bytes calldata) external payable override {
         bytes32 mainAuthenticator = signerStorage[msg.sender].mainAuthenticatorIdHash;
         delete signerStorage[msg.sender].pubKeys[mainAuthenticator];
         delete signerStorage[msg.sender];
@@ -223,24 +203,25 @@ contract MultiWebAuthNValidatorV3 is IValidator {
     /* -------------------------------------------------------------------------- */
 
     /// @notice Validate the given `_userOp`.
-    function validateUserOp(PackedUserOperation calldata _userOp, bytes32 _userOpHash)
+    function validateUserOp(UserOperation calldata _userOp, bytes32 _userOpHash, uint256)
         external
         payable
         override
-        returns (uint256)
+        returns (ValidationData)
     {
         return _checkSignature(_userOp.sender, _userOpHash, _userOp.signature)
-            ? SIG_VALIDATION_SUCCESS_UINT
-            : SIG_VALIDATION_FAILED_UINT;
+            ? SIG_VALIDATION_SUCCESS
+            : SIG_VALIDATION_FAILED;
     }
 
-    /// @notice Verify the signature of the given `_hash` by the `_sender`.
-    function isValidSignatureWithSender(address _sender, bytes32 _hash, bytes calldata _data)
-        external
-        view
-        returns (bytes4)
-    {
-        return _checkSignature(_sender, _hash, _data) ? ERC1271_MAGICVALUE : ERC1271_INVALID;
+    /// @notice Verify the signature of the given `_hash` by the `msg.sender`.
+    function validateSignature(bytes32 _hash, bytes calldata _data) external view returns (ValidationData) {
+        return _checkSignature(msg.sender, _hash, _data) ? SIG_VALIDATION_SUCCESS : SIG_VALIDATION_FAILED;
+    }
+
+    /// @dev Check if the caller is a valid signer, this don't apply to the WebAuthN validator, since it's using a public key
+    function validCaller(address, bytes calldata) external pure override returns (bool) {
+        revert NotImplemented();
     }
 
     /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
