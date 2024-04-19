@@ -9,7 +9,7 @@ import {MultiWebAuthNValidatorV2} from "src/kernel/v2/MultiWebAuthNValidator.sol
 
 contract DeployModuleV3 is Script {
     address P256_WRAPPER_ADDRESS = 0x97A24c95E317c44c0694200dd0415dD6F556663D;
-    address MULTI_WEBAUTHN_VALIDATOR_ADDRESS = 0xE4F8193A714E2fD08D9Ae2dDe83721C752e5fC76;
+    address MULTI_WEBAUTHN_VALIDATOR_ADDRESS = 0x4De27de97DA4B7d885EED9154bb21510F1329AE1;
 
     function run() public {
         deploy();

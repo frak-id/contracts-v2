@@ -225,13 +225,19 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
     }
 
     /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
+    /// TODO: This could be packed AF: bool + bytes32 + challengeOffset + rs packed, then 2 bytes unpacked
+    /// TODO: We then would have smth like (byte1 + bytes32 + uint256 + [uint256 + uint256] + bytes + bytes)
+    // TODO: then length of the two bytes arrays could be only byte2 (so uint16) (since we can't have more than 255 bytes in a bytes array)
     struct SignatureLayout {
         bool useOnChainP256Verifier;
         bytes32 authenticatorIdHash;
-        WebAuthnVerifier.FclSignatureLayout fclSignature;
+        WebAuthnVerifier.FclSignatureLayout signature;
     }
 
     /// @notice Validates the given `_signature` against the `_hash` for the given `_sender`
+    /// @dev The first 2 bytes of the sig -> use pre compile or not?
+    /// @dev The next 32 bytes of the sig -> the authenticator id hash
+    /// @dev The rest of the sig -> the webauthn signature data
     /// @param _sender The sender for which we want to verify the signature
     /// @param _hash The hash signed
     /// @param _signature The signature
@@ -241,25 +247,25 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
         returns (bool isValid)
     {
         // Extract the signature
-        SignatureLayout calldata signature;
+        SignatureLayout calldata metadata;
         assembly {
-            signature := _signature.offset
+            // Extract metadata
+            metadata := _signature.offset
         }
 
         // Ensure pub key exist here (and copy it into memory)
-        WebAuthNPubKey memory pubKey = signerStorage[_sender].pubKeys[signature.authenticatorIdHash];
+        WebAuthNPubKey memory pubKey = signerStorage[_sender].pubKeys[metadata.authenticatorIdHash];
         if (pubKey.x == 0 || pubKey.y == 0) {
-            revert NotInitialized(_sender);
+            return false;
         }
 
         // If the signature is using the on-chain p256 verifier, we will use it
         address p256Verifier = P256_VERIFIER;
-        if (signature.useOnChainP256Verifier) {
+        if (metadata.useOnChainP256Verifier) {
             p256Verifier = WebAuthnVerifier.PRECOMPILED_P256_VERIFIER;
         }
 
         // Extract the first byte of the signature to check
-        return
-            WebAuthnVerifier._verifyWebAuthNSignature(p256Verifier, _hash, signature.fclSignature, pubKey.x, pubKey.y);
+        return WebAuthnVerifier._verifyWebAuthNSignature(p256Verifier, _hash, metadata.signature, pubKey.x, pubKey.y);
     }
 }

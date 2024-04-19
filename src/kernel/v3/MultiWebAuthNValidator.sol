@@ -268,7 +268,7 @@ contract MultiWebAuthNValidatorV3 is IValidator {
         // Ensure pub key exist here (and copy it into memory)
         WebAuthNPubKey memory pubKey = signerStorage[_sender].pubKeys[signature.authenticatorIdHash];
         if (pubKey.x == 0 || pubKey.y == 0) {
-            revert NotInitialized(_sender);
+            return false;
         }
 
         // If the signature is using the on-chain p256 verifier, we will use it
