@@ -21,13 +21,14 @@ export default defineConfig(
         },
         // Validator abis
         {
-            out: "abi/7579-abis.ts",
+            out: "abi/kernel-abis.ts",
             plugins: [
                 foundry({
                     project: './',
                     artifacts: 'out/',
                     include: [
-                        'WebAuthNValidator.json'
+                        'WebAuthNValidator.json',
+                        'MultiWebAuthNValidator.json'
                     ]
                 }),
             ],

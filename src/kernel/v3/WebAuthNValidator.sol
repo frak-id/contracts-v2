@@ -15,36 +15,22 @@ import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
 
 /// @dev Storage layout for a smart account in the WebAuthNValidator contract.
 struct WebAuthNValidatorStorage {
-    /// @dev The keccak hash of the authenticator id used for the webauthn validation.
-    bytes32 authenticatorIdHash;
     /// @dev The `x` coord of the secp256r1 public key used to sign the user operation.
     uint256 x;
     /// @dev The `y` coord of the secp256r1 public key used to sign the user operation.
     uint256 y;
 }
 
-/// @dev The initialisation data for the WebAuthN validator.
-struct WebAuthNInitializationData {
-    /// @dev The authenticator id used to create the public key, base64 encoded, used to find the public key on-chain post creation.
-    bytes32 authenticatorIdHash;
-    uint256 x;
-    uint256 y;
-}
-
 /// @author @KONFeature
 /// @title WebAuthNValidator
 /// @notice A WebAuthN validator for erc-7579 compliant smart wallet, based on the FCL approach arround WebAuthN signature handling
-/// @dev Reflection points:
-///     - Multi validator per kernel with authenticator id as key??
-///     - Init required account to not be init yet, is it wanted?
-///     - With isInit is external ffs
 contract WebAuthNValidator is IValidator {
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event emitted when the public key signing the WebAuthN user operation is changed for a given `smartAccount`.
-    /// @dev The `b64AuthenticatorId` param represent the webauthn authenticator id used to create this public key
+    /// @dev The `authenticatorIdHash` param represent the webauthn authenticator id used to create this public key
     event WebAuthnPublicKeyChanged(
         address indexed smartAccount, bytes32 indexed authenticatorIdHash, uint256 x, uint256 y
     );
@@ -88,6 +74,14 @@ contract WebAuthNValidator is IValidator {
     /*                             Installation hooks                             */
     /* -------------------------------------------------------------------------- */
 
+    /// @dev The initialisation data for the WebAuthN validator.
+    struct WebAuthNInstallData {
+        /// @dev The authenticator id used to create the public key, base64 encoded, used to find the public key on-chain post creation.
+        bytes32 authenticatorIdHash;
+        uint256 x;
+        uint256 y;
+    }
+
     /// @notice Install WebAuthn validator for a smart account.
     /// @dev The smart account need to be the `msg.sender`.
     /// @dev The public key is encoded as `abi.encode(WebAuthNValidatorStorage)` inside the data, so (uint256,uint256).
@@ -98,7 +92,7 @@ contract WebAuthNValidator is IValidator {
         if (isInitialized(msg.sender)) revert AlreadyInitialized(msg.sender);
 
         // Extract the init data
-        WebAuthNInitializationData calldata initData;
+        WebAuthNInstallData calldata initData;
         assembly {
             initData := _data.offset
         }
@@ -113,7 +107,6 @@ contract WebAuthNValidator is IValidator {
 
         // Set the authentication data
         WebAuthNValidatorStorage storage validatorStorage = signerStorage[msg.sender];
-        validatorStorage.authenticatorIdHash = initData.authenticatorIdHash;
         validatorStorage.x = pubKeyX;
         validatorStorage.y = pubKeyY;
 
@@ -151,6 +144,12 @@ contract WebAuthNValidator is IValidator {
         return _checkSignature(_sender, _hash, _data) ? ERC1271_MAGICVALUE : ERC1271_INVALID;
     }
 
+    /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
+    struct SignatureLayout {
+        bool useOnChainP256Verifier;
+        WebAuthnVerifier.FclSignatureLayout fclSignature;
+    }
+
     /// @notice Validates the given `_signature` against the `_hash` for the given `_sender`
     /// @param _sender The sender for which we want to verify the signature
     /// @param _hash The hash signed
@@ -163,9 +162,21 @@ contract WebAuthNValidator is IValidator {
         // Access the storage
         WebAuthNValidatorStorage storage validatorStorage = signerStorage[_sender];
 
+        // Extract the signature
+        SignatureLayout calldata signature;
+        assembly {
+            signature := _signature.offset
+        }
+
+        // If the signature is using the on-chain p256 verifier, we will use it
+        address p256Verifier = P256_VERIFIER;
+        if (signature.useOnChainP256Verifier) {
+            p256Verifier = WebAuthnVerifier.PRECOMPILED_P256_VERIFIER;
+        }
+
         // Extract the first byte of the signature to check
         return WebAuthnVerifier._verifyWebAuthNSignature(
-            P256_VERIFIER, _hash, _signature, validatorStorage.x, validatorStorage.y
+            p256Verifier, _hash, signature.fclSignature, validatorStorage.x, validatorStorage.y
         );
     }
 }

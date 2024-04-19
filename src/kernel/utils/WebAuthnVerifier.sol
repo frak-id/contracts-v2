@@ -24,7 +24,6 @@ library WebAuthnVerifier {
 
     /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
     struct FclSignatureLayout {
-        bool useOnChainP256Verifier;
         bytes authenticatorData;
         bytes clientData;
         uint256 challengeOffset;
@@ -114,28 +113,15 @@ library WebAuthnVerifier {
     function _verifyWebAuthNSignature(
         address _p256Verifier,
         bytes32 _hash,
-        bytes calldata _signature,
+        FclSignatureLayout calldata _signature,
         uint256 _x,
         uint256 _y
     ) internal view returns (bool isValid) {
-        // Extract the signature
-        FclSignatureLayout calldata signature;
-        // This code should precalculate the offsets of variables as defined in the layout
-        // From: https://twitter.com/k06a/status/1706934230779883656
-        assembly {
-            signature := _signature.offset
-        }
-
-        // If the signature is using the on-chain p256 verifier, we will use it
-        if (!signature.useOnChainP256Verifier) {
-            _p256Verifier = PRECOMPILED_P256_VERIFIER;
-        }
-
         // Format the webauthn challenge into a p256 message
-        bytes32 challenge = _formatWebAuthNChallenge(_hash, signature);
+        bytes32 challenge = _formatWebAuthNChallenge(_hash, _signature);
 
         // Prepare the argument we will use to verify the signature
-        bytes memory args = abi.encode(challenge, signature.rs[0], signature.rs[1], _x, _y);
+        bytes memory args = abi.encode(challenge, _signature.rs[0], _signature.rs[1], _x, _y);
 
         // Send the call the the p256 verifier
         (bool success, bytes memory ret) = _p256Verifier.staticcall(args);
