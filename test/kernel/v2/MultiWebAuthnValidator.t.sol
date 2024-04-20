@@ -130,7 +130,7 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         vm.skip(true);
     }
 
-    function test_validate_signature() external override {
+    function test_validate_signature() external view override {
         bytes32 _hash = keccak256(abi.encodePacked("hello world"));
 
         bytes32 digest = keccak256(
@@ -144,7 +144,7 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         assertEq(kernel.isValidSignature(_hash, signature), Kernel.isValidSignature.selector);
     }
 
-    function test_fail_validate_wrongsignature() external override {
+    function test_fail_validate_wrongsignature() external view override {
         // Prepare the hash to sign
         bytes32 _hash = keccak256(abi.encodePacked("hello world"));
         bytes32 digest = keccak256(
@@ -197,37 +197,28 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         return _generateWebAuthnSignature(ownerKey + 1, _hash);
     }
 
-    function _assertPublicKey(uint256 actualX, uint256 actualY, uint256 expectedX, uint256 expectedY) internal {
+    function _assertPublicKey(uint256 actualX, uint256 actualY, uint256 expectedX, uint256 expectedY) internal pure {
         assertEq(actualX, expectedX, "Public key X component mismatch");
         assertEq(actualY, expectedY, "Public key Y component mismatch");
     }
 
     /// @dev Ensure that the validation won't revert when using the dummy signature bypass (challenge offset to uint256.max)
-    function test_dontRevertForDummySig() public {
+    function test_dontRevertForDummySig() public view {
         // Build rly dummy data for authenticator data and client data
         bytes memory authenticatorData = hex"1312";
         bytes memory clientData = hex"1312";
-        // Set the client challenge data offset to the max value
-        uint256 clientChallengeDataOffset = type(uint256).max;
 
         // Build an incoherent signature
-        uint256[2] memory rs = [type(uint256).max, type(uint256).max];
-
-        // Encode all of that into a signature
-        bytes memory noMetadataSig = abi.encode(authenticatorData, clientData, clientChallengeDataOffset, rs);
+        bytes memory rawSignature = _packWebAuthNSignature(
+            type(uint256).max, type(uint256).max, type(uint256).max, authenticatorData, clientData
+        );
 
         // Check the sig (and ensure we didn't revert here)
-        bool isValid = webAuthNTester.verifySignature(address(p256VerifierWrapper), bytes32(0), noMetadataSig, x, y);
+        bool isValid = webAuthNTester.verifySignature(address(p256VerifierWrapper), bytes32(0), rawSignature, x, y);
         assertEq(isValid, false);
 
         // Ensure we can go through the validator with that signature
-        WebAuthnVerifier.FclSignatureLayout memory directSig = WebAuthnVerifier.FclSignatureLayout({
-            authenticatorData: authenticatorData,
-            clientData: clientData,
-            challengeOffset: clientChallengeDataOffset,
-            rs: rs
-        });
-        bytes memory signature = abi.encode(false, authenticatorId, directSig);
+        bytes memory signature = abi.encodePacked(false, authenticatorId, rawSignature);
 
         // Ensure we can go through the validator with that signature
         ValidationData validationData = webAuthNValidator.validateSignature(bytes32(0), signature);
@@ -235,7 +226,7 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
     }
 
     /// @dev Ensure that our flow to generate a webauthn signature is working
-    function test_webAuthnSignatureGeneration(bytes32 _hash, uint256 _privateKey) public {
+    function test_webAuthnSignatureGeneration(bytes32 _hash, uint256 _privateKey) public view {
         vm.assume(_privateKey > 0);
         vm.assume(_privateKey < n);
         (uint256 pubX, uint256 pubY) = _getPublicKey(_privateKey);
@@ -246,10 +237,9 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
 
         // Then sign them
         (uint256 r, uint256 s) = _getP256Signature(_privateKey, msgToSign);
-        uint256[2] memory rs = [r, s];
 
         // Encode all of that into a signature
-        bytes memory signature = abi.encode(authenticatorData, clientData, clientChallengeDataOffset, rs);
+        bytes memory signature = _packWebAuthNSignature(clientChallengeDataOffset, r, s, authenticatorData, clientData);
 
         // Ensure the signature is valid
         bool isValid = webAuthNTester.verifySignature(address(p256VerifierWrapper), _hash, signature, pubX, pubY);
@@ -257,7 +247,7 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
     }
 
     /// @dev Ensure that our flow to generate a webauthn signature is working
-    function test_webAuthnSignatureGeneration_solo() public {
+    function test_webAuthnSignatureGeneration_solo() public view {
         uint256 _privateKey = 0x1;
         bytes32 _hash = keccak256(abi.encodePacked("hello world"));
         (uint256 pubX, uint256 pubY) = _getPublicKey(_privateKey);
@@ -268,10 +258,9 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
 
         // Then sign them
         (uint256 r, uint256 s) = _getP256Signature(_privateKey, msgToSign);
-        uint256[2] memory rs = [r, s];
 
         // Encode all of that into a signature
-        bytes memory signature = abi.encode(authenticatorData, clientData, clientChallengeDataOffset, rs);
+        bytes memory signature = _packWebAuthNSignature(clientChallengeDataOffset, r, s, authenticatorData, clientData);
 
         // Ensure the signature is valid
         bool isValid = webAuthNTester.verifySignature(address(p256VerifierWrapper), _hash, signature, pubX, pubY);
@@ -290,21 +279,20 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
     {
         (bytes32 msgToSign, bytes memory authenticatorData, bytes memory clientData, uint256 clientChallengeDataOffset)
         = _prepapreWebAuthnMsg(_hash);
-        console.log("Challenge to sign: %d", uint256(msgToSign));
+        console.log("Challenge offset: %x", clientChallengeDataOffset);
+        console.log("Challenge to sign: %x", uint256(msgToSign));
+        console.log("Authenticator data (legth: %x)", authenticatorData.length);
+        console.logBytes(authenticatorData);
 
         // Get the signature
         (uint256 r, uint256 s) = _getP256Signature(_privateKey, msgToSign);
 
         // The fcl signature directly
-        WebAuthnVerifier.FclSignatureLayout memory directSig = WebAuthnVerifier.FclSignatureLayout({
-            authenticatorData: authenticatorData,
-            clientData: clientData,
-            challengeOffset: clientChallengeDataOffset,
-            rs: [r, s]
-        });
+        bytes memory webAuthNSignature =
+            _packWebAuthNSignature(clientChallengeDataOffset, r, s, authenticatorData, clientData);
 
         // Return the signature + metadata
-        return abi.encode(false, authenticatorId, directSig);
+        return abi.encodePacked(false, authenticatorId, webAuthNSignature);
     }
 
     /// @dev Prepare all the base data needed to perform a webauthn signature o n the given `_hash`
@@ -332,16 +320,11 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         clientChallengeDataOffset = 36;
 
         // Build the signature layout
-        WebAuthnVerifier.FclSignatureLayout memory sigLayout = WebAuthnVerifier.FclSignatureLayout({
-            authenticatorData: authenticatorData,
-            clientData: clientData,
-            challengeOffset: clientChallengeDataOffset,
-            // R/S not needed since the formatter will only use the other data
-            rs: [uint256(0), uint256(0)]
-        });
+        bytes memory sigForFormat =
+            _packWebAuthNSignature(clientChallengeDataOffset, 0, 0, authenticatorData, clientData);
 
         // Format it
-        msgToSign = webAuthNTester.formatSigLayout(_hash, sigLayout);
+        msgToSign = webAuthNTester.formatSigLayout(_hash, sigForFormat);
     }
 
     /// @dev Get a public key for a p256 user, from the given `_privateKey`
@@ -358,16 +341,33 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         (bytes32 r, bytes32 s) = vm.signP256(_privateKey, _hash);
         return (uint256(r), uint256(s));
     }
+
+    function _packWebAuthNSignature(
+        uint256 challengeOffset,
+        uint256 r,
+        uint256 s,
+        bytes memory authenticatorData,
+        bytes memory clientData
+    ) internal pure returns (bytes memory) {
+        return abi.encodePacked(
+            // Challenge offset
+            challengeOffset,
+            // R + S
+            r,
+            s,
+            // Length of both
+            uint24(authenticatorData.length),
+            uint24(clientData.length),
+            // Data themself
+            authenticatorData,
+            clientData
+        );
+    }
 }
 
 /// @dev simple contract to format a webauthn challenge (using to convert stuff in memory during test to calldata)
 contract WebAuthNTester {
-    function formatSigLayout(bytes32 _hash, WebAuthnVerifier.FclSignatureLayout calldata signatureLayout)
-        public
-        view
-        returns (bytes32)
-    {
-        console.log("hash: %d", uint256(_hash));
+    function formatSigLayout(bytes32 _hash, bytes calldata signatureLayout) public view returns (bytes32) {
         return WebAuthnVerifier._formatWebAuthNChallenge(_hash, signatureLayout);
     }
 
@@ -376,11 +376,6 @@ contract WebAuthNTester {
         view
         returns (bool)
     {
-        WebAuthnVerifier.FclSignatureLayout calldata signature;
-        assembly {
-            signature := _signature.offset
-        }
-
-        return WebAuthnVerifier._verifyWebAuthNSignature(_p256Verifier, _hash, signature, _x, _y);
+        return WebAuthnVerifier._verifyWebAuthNSignature(_p256Verifier, _hash, _signature, _x, _y);
     }
 }

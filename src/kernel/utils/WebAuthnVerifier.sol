@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Base64} from "solady/utils/Base64.sol";
+import {WebAuthNSignatureLib} from "../types/WebAuthNSignatureLib.sol";
 
 /// @title WebAuthnVerifier
 /// @author KONFeature
@@ -9,6 +10,8 @@ import {Base64} from "solady/utils/Base64.sol";
 /// From https://github.com/cometh-hq/p256-signer/blob/09319213276da69aad6d96fa75cd339726f78bb9/contracts/P256Signer.sol
 /// And https://github.com/rdubois-crypto/FreshCryptoLib/blob/master/solidity/src/FCL_Webauthn.sol
 library WebAuthnVerifier {
+    using WebAuthNSignatureLib for bytes;
+
     /// @dev Error thrown when the webauthn data is invalid
     error InvalidWebAuthNData();
 
@@ -22,29 +25,20 @@ library WebAuthnVerifier {
     /// @dev The address of the pre-compiled p256 verifier contract (following RIP-7212)
     address internal constant PRECOMPILED_P256_VERIFIER = address(0x100);
 
-    /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
-    struct FclSignatureLayout {
-        bytes authenticatorData;
-        bytes clientData;
-        uint256 challengeOffset;
-        uint256[2] rs;
-    }
-
     /// @dev Format the webauthn challenge into a p256 message
     /// @dev return the raw message that has been signed by the user on the p256 curve
     /// @dev Logic from https://github.com/rdubois-crypto/FreshCryptoLib/blob/master/solidity/src/FCL_Webauthn.sol
     /// @param _hash The hash that has been signed via WebAuthN
     /// @param _signature The signature that has been provided with the userOp
     /// @return p256Message The message that has been signed on the p256 curve
-    function _formatWebAuthNChallenge(bytes32 _hash, FclSignatureLayout calldata _signature)
+    function _formatWebAuthNChallenge(bytes32 _hash, bytes calldata _signature)
         internal
         pure
         returns (bytes32 p256Message)
     {
         // Extract a few calldata pointer we will use to format / verify our msg
-        bytes calldata authenticatorData = _signature.authenticatorData;
-        bytes calldata clientData = _signature.clientData;
-        uint256 challengeOffset = _signature.challengeOffset;
+        (uint256 challengeOffset, bytes calldata authenticatorData, bytes calldata clientData) =
+            _signature.formattingPayload();
 
         // If the challenge offset is uint256 max, it's mean that we are in the case of a dummy sig, so we can skip the check and just return the hash
         if (challengeOffset == type(uint256).max) {
@@ -113,7 +107,7 @@ library WebAuthnVerifier {
     function _verifyWebAuthNSignature(
         address _p256Verifier,
         bytes32 _hash,
-        FclSignatureLayout calldata _signature,
+        bytes calldata _signature,
         uint256 _x,
         uint256 _y
     ) internal view returns (bool isValid) {
@@ -121,7 +115,7 @@ library WebAuthnVerifier {
         bytes32 challenge = _formatWebAuthNChallenge(_hash, _signature);
 
         // Prepare the argument we will use to verify the signature
-        bytes memory args = abi.encode(challenge, _signature.rs[0], _signature.rs[1], _x, _y);
+        bytes memory args = abi.encode(challenge, _signature.getR(), _signature.getS(), _x, _y);
 
         // Send the call the the p256 verifier
         (bool success, bytes memory ret) = _p256Verifier.staticcall(args);

@@ -5,6 +5,8 @@ import {IKernelValidator} from "kernel-v2/interfaces/IKernelValidator.sol";
 import {ValidationData} from "kernel-v2/common/Types.sol";
 import {UserOperation} from "I4337/interfaces/UserOperation.sol";
 import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
+import {MultiWebAuthNSignatureLib} from "../types/MultiWebAuthNSignatureLib.sol";
+import {WebAuthNSignatureLib} from "../types/WebAuthNSignatureLib.sol";
 
 ValidationData constant SIG_VALIDATION_FAILED = ValidationData.wrap(1);
 ValidationData constant SIG_VALIDATION_SUCCESS = ValidationData.wrap(0);
@@ -37,6 +39,8 @@ struct WebAuthNInitializationData {
 /// @notice A Multi-WebAuthN validator for kernel v2 smart wallet, based on the FCL approach arround WebAuthN signature handling
 /// @notice This validator can have multiple webauthn validator per wallet, can revoke them etc.
 contract MultiWebAuthNValidatorV2 is IKernelValidator {
+    using MultiWebAuthNSignatureLib for bytes;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
@@ -224,16 +228,6 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
         revert NotImplemented();
     }
 
-    /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
-    /// TODO: This could be packed AF: bool + bytes32 + challengeOffset + rs packed, then 2 bytes unpacked
-    /// TODO: We then would have smth like (byte1 + bytes32 + uint256 + [uint256 + uint256] + bytes + bytes)
-    // TODO: then length of the two bytes arrays could be only byte2 (so uint16) (since we can't have more than 255 bytes in a bytes array)
-    struct SignatureLayout {
-        bool useOnChainP256Verifier;
-        bytes32 authenticatorIdHash;
-        WebAuthnVerifier.FclSignatureLayout signature;
-    }
-
     /// @notice Validates the given `_signature` against the `_hash` for the given `_sender`
     /// @dev The first 2 bytes of the sig -> use pre compile or not?
     /// @dev The next 32 bytes of the sig -> the authenticator id hash
@@ -246,26 +240,23 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
         view
         returns (bool isValid)
     {
-        // Extract the signature
-        SignatureLayout calldata metadata;
-        assembly {
-            // Extract metadata
-            metadata := _signature.offset
-        }
-
         // Ensure pub key exist here (and copy it into memory)
-        WebAuthNPubKey memory pubKey = signerStorage[_sender].pubKeys[metadata.authenticatorIdHash];
+        WebAuthNPubKey memory pubKey = signerStorage[_sender].pubKeys[_signature.authenticatorId()];
         if (pubKey.x == 0 || pubKey.y == 0) {
             return false;
         }
 
         // If the signature is using the on-chain p256 verifier, we will use it
-        address p256Verifier = P256_VERIFIER;
-        if (metadata.useOnChainP256Verifier) {
+        address p256Verifier;
+        if (_signature.useOnChainP256()) {
             p256Verifier = WebAuthnVerifier.PRECOMPILED_P256_VERIFIER;
+        } else {
+            p256Verifier = P256_VERIFIER;
         }
 
         // Extract the first byte of the signature to check
-        return WebAuthnVerifier._verifyWebAuthNSignature(p256Verifier, _hash, metadata.signature, pubKey.x, pubKey.y);
+        return WebAuthnVerifier._verifyWebAuthNSignature(
+            p256Verifier, _hash, _signature.getSignatureBytes(), pubKey.x, pubKey.y
+        );
     }
 }

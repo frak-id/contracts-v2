@@ -12,6 +12,8 @@ import {
     MODULE_TYPE_HOOK
 } from "kernel/types/Constants.sol";
 import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
+import {WebAuthNSignatureLib} from "../types/WebAuthNSignatureLib.sol";
+import {MultiWebAuthNSignatureLib} from "../types/MultiWebAuthNSignatureLib.sol";
 
 struct WebAuthNPubKey {
     /// @dev The `x` coord of the secp256r1 public key used to sign the user operation.
@@ -41,6 +43,8 @@ struct WebAuthNInitializationData {
 /// @notice A Multi-WebAuthN validator for erc-7579 compliant smart wallet, based on the FCL approach arround WebAuthN signature handling
 /// @notice This validator can have multiple webauthn validator per wallet, can revoke them etc.
 contract MultiWebAuthNValidatorV3 is IValidator {
+    using MultiWebAuthNSignatureLib for bytes;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
@@ -243,13 +247,6 @@ contract MultiWebAuthNValidatorV3 is IValidator {
         return _checkSignature(_sender, _hash, _data) ? ERC1271_MAGICVALUE : ERC1271_INVALID;
     }
 
-    /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
-    struct SignatureLayout {
-        bool useOnChainP256Verifier;
-        bytes32 authenticatorIdHash;
-        WebAuthnVerifier.FclSignatureLayout fclSignature;
-    }
-
     /// @notice Validates the given `_signature` against the `_hash` for the given `_sender`
     /// @param _sender The sender for which we want to verify the signature
     /// @param _hash The hash signed
@@ -259,26 +256,23 @@ contract MultiWebAuthNValidatorV3 is IValidator {
         view
         returns (bool isValid)
     {
-        // Extract the signature
-        SignatureLayout calldata signature;
-        assembly {
-            signature := _signature.offset
-        }
-
         // Ensure pub key exist here (and copy it into memory)
-        WebAuthNPubKey memory pubKey = signerStorage[_sender].pubKeys[signature.authenticatorIdHash];
+        WebAuthNPubKey memory pubKey = signerStorage[_sender].pubKeys[_signature.authenticatorId()];
         if (pubKey.x == 0 || pubKey.y == 0) {
             return false;
         }
 
         // If the signature is using the on-chain p256 verifier, we will use it
-        address p256Verifier = P256_VERIFIER;
-        if (signature.useOnChainP256Verifier) {
+        address p256Verifier;
+        if (_signature.useOnChainP256()) {
             p256Verifier = WebAuthnVerifier.PRECOMPILED_P256_VERIFIER;
+        } else {
+            p256Verifier = P256_VERIFIER;
         }
 
         // Extract the first byte of the signature to check
-        return
-            WebAuthnVerifier._verifyWebAuthNSignature(p256Verifier, _hash, signature.fclSignature, pubKey.x, pubKey.y);
+        return WebAuthnVerifier._verifyWebAuthNSignature(
+            p256Verifier, _hash, _signature.getSignatureBytes(), pubKey.x, pubKey.y
+        );
     }
 }

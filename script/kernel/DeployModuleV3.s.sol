@@ -5,12 +5,11 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
-import {WebAuthNValidator} from "src/kernel/v3/WebAuthNValidator.sol";
 import {MultiWebAuthNValidatorV3} from "src/kernel/v3/MultiWebAuthNValidator.sol";
 
 contract DeployModuleV3 is Script {
     address P256_WRAPPER_ADDRESS = 0x97A24c95E317c44c0694200dd0415dD6F556663D;
-    address WEBAUTHN_VALIDATOR_ADDRESS = 0xC11258F3193Bc561ef614E205195cc2129d4B5F6;
+    //address WEBAUTHN_VALIDATOR_ADDRESS = 0xC11258F3193Bc561ef614E205195cc2129d4B5F6;
     address MULTI_WEBAUTHN_VALIDATOR_ADDRESS = 0xAd2E8dA9f4Cd8A0114B54AECAE03D222AEF0C475;
 
     function run() public {
@@ -30,13 +29,13 @@ contract DeployModuleV3 is Script {
         }
 
         // Deploy the webauthn validator if not already deployed
-        WebAuthNValidator webAuthNSigner;
+        /*WebAuthNValidator webAuthNSigner;
         if (WEBAUTHN_VALIDATOR_ADDRESS.code.length == 0) {
             console.log("Deploying WebAuthNValidator");
             webAuthNSigner = new WebAuthNValidator{salt: 0}(address(p256verifierWrapper));
         } else {
             webAuthNSigner = WebAuthNValidator(WEBAUTHN_VALIDATOR_ADDRESS);
-        }
+        }*/
 
         // Deploy the multi webauthn validator if not already deployed
         MultiWebAuthNValidatorV3 multiWebAuthNSigner;
@@ -50,7 +49,7 @@ contract DeployModuleV3 is Script {
         // Log every deployed address
         console.log("Chain: %s", block.chainid);
         console.log(" - P256VerifierWrapper: %s", address(p256verifierWrapper));
-        console.log(" - WebAuthNValidator: %s", address(webAuthNSigner));
+        //console.log(" - WebAuthNValidator: %s", address(webAuthNSigner));
         console.log(" - MultiWebAuthNValidator: %s", address(multiWebAuthNSigner));
 
         vm.stopBroadcast();

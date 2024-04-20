@@ -146,12 +146,6 @@ contract WebAuthNValidator is IValidator {
         return _checkSignature(_sender, _hash, _data) ? ERC1271_MAGICVALUE : ERC1271_INVALID;
     }
 
-    /// @dev layout of a signature (used to extract the reauired payload from the initial calldata)
-    struct SignatureLayout {
-        bool useOnChainP256Verifier;
-        WebAuthnVerifier.FclSignatureLayout fclSignature;
-    }
-
     /// @notice Validates the given `_signature` against the `_hash` for the given `_sender`
     /// @param _sender The sender for which we want to verify the signature
     /// @param _hash The hash signed
