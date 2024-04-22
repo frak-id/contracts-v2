@@ -12,6 +12,7 @@ import {
     ERC1271_INVALID
 } from "kernel/types/Constants.sol";
 import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
+import {SingleWebAuthNSignatureLib} from "../types/SingleWebAuthNSignatureLib.sol";
 
 /// @dev Storage layout for a smart account in the WebAuthNValidator contract.
 struct WebAuthNValidatorStorage {
@@ -24,7 +25,8 @@ struct WebAuthNValidatorStorage {
 /// @author @KONFeature
 /// @title WebAuthNValidator
 /// @notice A WebAuthN validator for erc-7579 compliant smart wallet, based on the FCL approach arround WebAuthN signature handling
-contract WebAuthNValidator is IValidator {
+contract WebAuthNValidatorV3 is IValidator {
+    using SingleWebAuthNSignatureLib for bytes;
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
@@ -158,21 +160,17 @@ contract WebAuthNValidator is IValidator {
         // Access the storage
         WebAuthNValidatorStorage storage validatorStorage = signerStorage[_sender];
 
-        // Extract the signature
-        SignatureLayout calldata signature;
-        assembly {
-            signature := _signature.offset
-        }
-
         // If the signature is using the on-chain p256 verifier, we will use it
-        address p256Verifier = P256_VERIFIER;
-        if (signature.useOnChainP256Verifier) {
+        address p256Verifier;
+        if (_signature.useOnChainP256()) {
             p256Verifier = WebAuthnVerifier.PRECOMPILED_P256_VERIFIER;
+        } else {
+            p256Verifier = P256_VERIFIER;
         }
 
         // Extract the first byte of the signature to check
         return WebAuthnVerifier._verifyWebAuthNSignature(
-            p256Verifier, _hash, signature.fclSignature, validatorStorage.x, validatorStorage.y
+            p256Verifier, _hash, _signature.getSignatureBytes(), validatorStorage.x, validatorStorage.y
         );
     }
 }
