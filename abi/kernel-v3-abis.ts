@@ -1,14 +1,66 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// WebAuthNValidator
+// MultiWebAuthNValidatorV3
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const webAuthNValidatorAbi = [
+export const multiWebAuthNValidatorV3Abi = [
   {
     type: 'constructor',
     inputs: [
       { name: '_p256Verifier', internalType: 'address', type: 'address' },
     ],
     stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'authenticatorId', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'x', internalType: 'uint256', type: 'uint256' },
+      { name: 'y', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'addPassKey',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_smartWallet', internalType: 'address', type: 'address' },
+    ],
+    name: 'getPasskey',
+    outputs: [
+      { name: '', internalType: 'bytes32', type: 'bytes32' },
+      {
+        name: '',
+        internalType: 'struct WebAuthNPubKey',
+        type: 'tuple',
+        components: [
+          { name: 'x', internalType: 'uint256', type: 'uint256' },
+          { name: 'y', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_smartWallet', internalType: 'address', type: 'address' },
+      { name: '_authenticatorId', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'getPasskey',
+    outputs: [
+      { name: '', internalType: 'bytes32', type: 'bytes32' },
+      {
+        name: '',
+        internalType: 'struct WebAuthNPubKey',
+        type: 'tuple',
+        components: [
+          { name: 'x', internalType: 'uint256', type: 'uint256' },
+          { name: 'y', internalType: 'uint256', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -54,6 +106,24 @@ export const webAuthNValidatorAbi = [
   {
     type: 'function',
     inputs: [
+      { name: 'authenticatorId', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'removePassKey',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'authenticatorId', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'setPrimaryPassKey',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
       {
         name: '_userOp',
         internalType: 'struct PackedUserOperation',
@@ -95,15 +165,53 @@ export const webAuthNValidatorAbi = [
         indexed: true,
       },
       {
-        name: 'b64AuthenticatorId',
-        internalType: 'string',
-        type: 'string',
+        name: 'authenticatorIdHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+    ],
+    name: 'PrimaryPassKeyChanged',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'smartAccount',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'authenticatorIdHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
         indexed: true,
       },
       { name: 'x', internalType: 'uint256', type: 'uint256', indexed: false },
       { name: 'y', internalType: 'uint256', type: 'uint256', indexed: false },
     ],
-    name: 'WebAuthnPublicKeyChanged',
+    name: 'WebAuthnPublicKeyAdded',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'smartAccount',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'authenticatorIdHash',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+    ],
+    name: 'WebAuthnPublicKeyRemoved',
   },
   {
     type: 'error',
@@ -111,6 +219,14 @@ export const webAuthNValidatorAbi = [
       { name: 'smartAccount', internalType: 'address', type: 'address' },
     ],
     name: 'AlreadyInitialized',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'smartAccount', internalType: 'address', type: 'address' },
+      { name: 'authenticatorIdHash', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'CantRemoveMainPasskey',
   },
   {
     type: 'error',
@@ -132,5 +248,21 @@ export const webAuthNValidatorAbi = [
       { name: 'smartAccount', internalType: 'address', type: 'address' },
     ],
     name: 'NotInitialized',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'smartAccount', internalType: 'address', type: 'address' },
+      { name: 'authenticatorIdHash', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'PassKeyAlreadyExist',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'smartAccount', internalType: 'address', type: 'address' },
+      { name: 'authenticatorIdHash', internalType: 'bytes32', type: 'bytes32' },
+    ],
+    name: 'PassKeyDontExist',
   },
 ] as const

@@ -1,50 +1,40 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {IValidator, IHook} from "kernel/interfaces/IERC7579Modules.sol";
+import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
 import {
-    IValidator,
-    IHook,
-    VALIDATION_SUCCESS,
-    VALIDATION_FAILED,
     MODULE_TYPE_VALIDATOR,
-    MODULE_TYPE_HOOK
-} from "kernel-v3/interfaces/IERC7579Modules.sol";
-import {PackedUserOperation} from "kernel-v3/interfaces/PackedUserOperation.sol";
-import {SIG_VALIDATION_FAILED, ERC1271_MAGICVALUE, ERC1271_INVALID} from "kernel-v3/types/Constants.sol";
+    MODULE_TYPE_HOOK,
+    SIG_VALIDATION_SUCCESS_UINT,
+    SIG_VALIDATION_FAILED_UINT,
+    ERC1271_MAGICVALUE,
+    ERC1271_INVALID
+} from "kernel/types/Constants.sol";
 import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
+import {SingleWebAuthNSignatureLib} from "../types/SingleWebAuthNSignatureLib.sol";
 
-/// @dev Storage layout for a smart account in the WebAuthnValidator contract.
-struct WebAuthnValidatorStorage {
+/// @dev Storage layout for a smart account in the WebAuthNValidator contract.
+struct WebAuthNValidatorStorage {
     /// @dev The `x` coord of the secp256r1 public key used to sign the user operation.
     uint256 x;
     /// @dev The `y` coord of the secp256r1 public key used to sign the user operation.
     uint256 y;
 }
 
-/// @dev The initialisation data for the WebAuthN validator.
-struct WebAuthNInitializationData {
-    /// @dev The authenticator id used to create the public key, base64 encoded, used to find the public key on-chain post creation.
-    string b64AuthenticatorId;
-    uint256 x;
-    uint256 y;
-}
-
 /// @author @KONFeature
 /// @title WebAuthNValidator
 /// @notice A WebAuthN validator for erc-7579 compliant smart wallet, based on the FCL approach arround WebAuthN signature handling
-/// @dev Reflection points:
-///     - Multi validator per kernel with authenticator id as key??
-///     - Init required account to not be init yet, is it wanted?
-///     - With isInit is external ffs
-contract WebAuthNValidator is IValidator {
+contract WebAuthNValidatorV3 is IValidator {
+    using SingleWebAuthNSignatureLib for bytes;
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event emitted when the public key signing the WebAuthN user operation is changed for a given `smartAccount`.
-    /// @dev The `b64AuthenticatorId` param represent the webauthn authenticator id used to create this public key
+    /// @dev The `authenticatorIdHash` param represent the webauthn authenticator id used to create this public key
     event WebAuthnPublicKeyChanged(
-        address indexed smartAccount, string indexed b64AuthenticatorId, uint256 x, uint256 y
+        address indexed smartAccount, bytes32 indexed authenticatorIdHash, uint256 x, uint256 y
     );
 
     /* -------------------------------------------------------------------------- */
@@ -58,7 +48,7 @@ contract WebAuthNValidator is IValidator {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Mapping of smart account address to each webAuthn specific storage
-    mapping(address smartAccount => WebAuthnValidatorStorage webAuthnStorage) private webAuthnValidatorStorage;
+    mapping(address smartAccount => WebAuthNValidatorStorage webAuthnStorage) private signerStorage;
 
     /// @dev The address of the on-chain p256 verifier contract (will be used if the user want that instead of the pre-compiled one, that way this validator can work on every chain out of the box while rip7212 is slowly being implemented everywhere)
     address private immutable P256_VERIFIER;
@@ -79,16 +69,24 @@ contract WebAuthNValidator is IValidator {
 
     /// @notice Returns if the validator is initialized for a given smart account.
     function isInitialized(address smartAccount) public view override returns (bool) {
-        return webAuthnValidatorStorage[smartAccount].x != 0;
+        return signerStorage[smartAccount].x != 0;
     }
 
     /* -------------------------------------------------------------------------- */
     /*                             Installation hooks                             */
     /* -------------------------------------------------------------------------- */
 
+    /// @dev The initialisation data for the WebAuthN validator.
+    struct WebAuthNInstallData {
+        /// @dev The authenticator id used to create the public key, base64 encoded, used to find the public key on-chain post creation.
+        bytes32 authenticatorIdHash;
+        uint256 x;
+        uint256 y;
+    }
+
     /// @notice Install WebAuthn validator for a smart account.
     /// @dev The smart account need to be the `msg.sender`.
-    /// @dev The public key is encoded as `abi.encode(WebAuthnValidatorStorage)` inside the data, so (uint256,uint256).
+    /// @dev The public key is encoded as `abi.encode(WebAuthNValidatorStorage)` inside the data, so (uint256,uint256).
     /// @dev The authenticatorIdHash is the hash of the authenticatorId. It enables to find public keys on-chain via event logs.
     function onInstall(bytes calldata _data) external payable override {
         // check if the webauthn validator is already initialized for the given account
@@ -96,7 +94,7 @@ contract WebAuthNValidator is IValidator {
         if (isInitialized(msg.sender)) revert AlreadyInitialized(msg.sender);
 
         // Extract the init data
-        WebAuthNInitializationData calldata initData;
+        WebAuthNInstallData calldata initData;
         assembly {
             initData := _data.offset
         }
@@ -110,19 +108,19 @@ contract WebAuthNValidator is IValidator {
         }
 
         // Set the authentication data
-        WebAuthnValidatorStorage storage validatorStorage = webAuthnValidatorStorage[msg.sender];
+        WebAuthNValidatorStorage storage validatorStorage = signerStorage[msg.sender];
         validatorStorage.x = pubKeyX;
         validatorStorage.y = pubKeyY;
 
         // And emit the event
-        emit WebAuthnPublicKeyChanged(msg.sender, initData.b64AuthenticatorId, pubKeyX, pubKeyY);
+        emit WebAuthnPublicKeyChanged(msg.sender, initData.authenticatorIdHash, pubKeyX, pubKeyY);
     }
 
     /// @notice Uninstall WebAuthn validator for a smart account.
     /// @dev The smart account need to be the `msg.sender`.
     function onUninstall(bytes calldata) external payable override {
         if (!isInitialized(msg.sender)) revert NotInitialized(msg.sender);
-        delete webAuthnValidatorStorage[msg.sender];
+        delete signerStorage[msg.sender];
     }
 
     /* -------------------------------------------------------------------------- */
@@ -136,7 +134,9 @@ contract WebAuthNValidator is IValidator {
         override
         returns (uint256)
     {
-        return _checkSignature(_userOp.sender, _userOpHash, _userOp.signature) ? VALIDATION_SUCCESS : VALIDATION_FAILED;
+        return _checkSignature(_userOp.sender, _userOpHash, _userOp.signature)
+            ? SIG_VALIDATION_SUCCESS_UINT
+            : SIG_VALIDATION_FAILED_UINT;
     }
 
     /// @notice Verify the signature of the given `_hash` by the `_sender`.
@@ -158,11 +158,19 @@ contract WebAuthNValidator is IValidator {
         returns (bool isValid)
     {
         // Access the storage
-        WebAuthnValidatorStorage storage validatorStorage = webAuthnValidatorStorage[_sender];
+        WebAuthNValidatorStorage storage validatorStorage = signerStorage[_sender];
+
+        // If the signature is using the on-chain p256 verifier, we will use it
+        address p256Verifier;
+        if (_signature.useOnChainP256()) {
+            p256Verifier = WebAuthnVerifier.PRECOMPILED_P256_VERIFIER;
+        } else {
+            p256Verifier = P256_VERIFIER;
+        }
 
         // Extract the first byte of the signature to check
         return WebAuthnVerifier._verifyWebAuthNSignature(
-            P256_VERIFIER, _hash, _signature, validatorStorage.x, validatorStorage.y
+            p256Verifier, _hash, _signature.getSignatureBytes(), validatorStorage.x, validatorStorage.y
         );
     }
 }

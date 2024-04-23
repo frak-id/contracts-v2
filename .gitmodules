@@ -4,12 +4,12 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
-[submodule "lib/kernel_v3"]
-	path = lib/kernel_v3
-	url = https://github.com/zerodevapp/kernel_v3
 [submodule "lib/FreshCryptoLib"]
 	path = lib/FreshCryptoLib
 	url = https://github.com/rdubois-crypto/FreshCryptoLib
 [submodule "lib/kernel"]
 	path = lib/kernel
+	url = https://github.com/zerodevapp/kernel
+[submodule "lib/kernel-v2"]
+	path = lib/kernel-v2
 	url = https://github.com/zerodevapp/kernel
