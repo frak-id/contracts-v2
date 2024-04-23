@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import {CommunityToken} from "src/tokens/CommunityToken.sol";
 
 contract SetupPaywall is Script {
-    address COMMUNITY_TOKEN_communityToken_ADDRESS = 0xD2849EB12DAcACB4940063007CCbC325cBBb290d;
+    address COMMUNITY_TOKEN_communityToken_ADDRESS = 0xf98BA1b2fc7C55A01Efa6C8872Bcee85c6eC54e7;
 
     function run() public {
         setupCommunityTokens();

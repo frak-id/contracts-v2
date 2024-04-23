@@ -72,7 +72,7 @@ contract CommunityToken is ERC6909 {
     }
 
     function tokenURI(uint256 _id) public view override onlyCommunityAllowed(_id) returns (string memory) {
-        return string.concat("https://poc-wallet.frak.id/metadata/", LibString.toString(_id), ".json");
+        return string.concat("https://nexus.frak.id/metadata/", LibString.toString(_id), ".json");
     }
 
     function isEnabled(uint256 _id) public view returns (bool) {

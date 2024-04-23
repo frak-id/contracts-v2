@@ -4,7 +4,16 @@ This repo host the smart contracts related to the Nexus dApp, inside the [Frak](
 
 ## Addresses
 
-Plugin for Kernel smart accounts:
+Plugin for Nexus related contracts (only on arbitrum):
+
+| Name                                  | Address                                       |
+|--                                     |--                                             |
+| Content registry                      | `0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753`  |
+| Community token contract              | `0xf98BA1b2fc7C55A01Efa6C8872Bcee85c6eC54e7`  |
+| FRK Paywall token                     | `0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2`  |
+| Paywall contract                      | `0x9218521020EF26924B77188f4ddE0d0f7C405f21`  |
+
+Plugin for the Kernel smart accounts plugins:
 
 | Name                                  | Address                                       |
 |--                                     |--                                             |
