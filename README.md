@@ -25,3 +25,19 @@ Plugin for the Kernel smart accounts plugins:
 | Kernel V2                                                                             |
 | MultiWebAuthN - Kernel v2             | `0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808`  |
 | MultiWebAuthN Recovery - Kernel v2    | `0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9`  |
+
+## Modules
+
+All the module used by the Frak ecosystem to help Content or Creator create their custom dApp logic.
+
+### Referral Module
+
+This module permit to create simple referral system, with multi tree (tree identified by a `bytes32` selector).
+
+- The referral chain are stored from `referee` => `referrer`. It's easing the process to get the referrer of a user, most commonly action.
+- A user can add his referrer chain by using either of this two methods:
+    - Call the `saveReferrer(bytes32 _selector, address _referrer)` method.
+    - Create and sign the typed data `SaveReferrer`, then anyone could sent the signature to add it to the referral chain.
+- Two main interaction possible with it:
+    - The hook `onUserReferred(bytes32 _selector, address _referrer, address _referee)` will be called when a user is referred by another one.
+    - The function `getReferrer(bytes32 _selector, address _referee) returns (address)` will return the referrer of a user. 
