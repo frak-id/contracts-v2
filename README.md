@@ -41,3 +41,29 @@ This module permit to create simple referral system, with multi tree (tree ident
 - Two main interaction possible with it:
     - The hook `onUserReferred(bytes32 _selector, address _referrer, address _referee)` will be called when a user is referred by another one.
     - The function `getReferrer(bytes32 _selector, address _referee) returns (address)` will return the referrer of a user. 
+
+### Push Pull Module
+
+This module permit to create a push/pull system, where a user / contract can push some token reward to another user, without directly executing the token transfer.
+
+This can be usefull in system where a user is triggering an action, but we don't want him to pay the gas fee for the token transfer.
+
+- The user can push a reward by calling the `pushReward(address _recipient, uint256 _amount)` method.
+- The recipient can pull the reward by calling the `pullReward()` method.
+- Another person / contract can pull the reward for a _recipient by calling the `pullReward(address _recipient)` method (ofc, this wall transfer the token to the provided `_recipient` and not to the caller).
+- The recipient can also check the reward amount by calling the `getRewardAmount()` method.
+
+### Referral Campaign Module
+
+This module permit to create a referral campaign, where a user can refer another user to get some reward.
+
+- Each campaign is identified by a `bytes32` selector (Same bytes32 as the one for the `referralTree`).
+- The campaign is configured during the init (defining nbr of multi tier comission, per level decrease etc). The config contain the following fields:
+    - The `maxLevel` permit to define the maximum level of the referral tree we will explore for reward distribution (if set to 0 it will stop to the first referrer).
+    - The `perLevelPercentage` permit to define the percentage of reward per level (the first level will get the full comission, the second level will get `reward * perLevelPercentage`, etc).
+    - The `token` that will be used for token distribution.
+- The implementing contract can then call the `_distributeReferralRewards(bytes32 _tree, address _referee, bool _includeReferee, uint256 _initialReward)` to distribute reward to the referral chain.
+    - The `_tree` permit to select the referral tree to use.
+    - The `_referee` permit to define the referee to start the reward distribution.
+    - The `_initialReward` permit to define the initial reward amount, that will be distributed to the referral chain.
+    - The `_includeReferee` permit to include the referee in the reward distribution.

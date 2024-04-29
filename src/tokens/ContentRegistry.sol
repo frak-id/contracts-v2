@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {MINTER_ROLES} from "../utils/Roles.sol";
+import {MINTER_ROLES} from "../constants/Roles.sol";
 
 /// @notice Metadata defination of a content
 struct Metadata {

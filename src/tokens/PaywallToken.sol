@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {ERC20} from "solady/tokens/ERC20.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {MINTER_ROLES} from "../utils/Roles.sol";
+import {MINTER_ROLES} from "../constants/Roles.sol";
 
 /// @author @KONFeature
 /// @title PaywallToken

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {InvalidSignature} from "../constants/Errors.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 
@@ -24,9 +25,6 @@ abstract contract ReferralModule is EIP712 {
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Error when the provided signature is invalid
-    error InvalidSignature();
-
     /// @dev Error when the user already got a referer for the given `tree`
     error AlreadyHaveReferer(bytes32 tree, address currentReferrer);
 
@@ -37,8 +35,8 @@ abstract contract ReferralModule is EIP712 {
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
-    // bytes32(uint256(keccak256('frak.module.referral')) - 1)
-    bytes32 private constant REFERRAL_MODULE_STORAGE_SLOT =
+    /// @dev bytes32(uint256(keccak256('frak.module.referral')) - 1)
+    bytes32 private constant _REFERRAL_MODULE_STORAGE_SLOT =
         0xb92450f01791992c0c2e8a3e72eb34731c852391a0ef62877b6fcfe6e3795512;
 
     struct ReferralModuleStorage {
@@ -46,9 +44,9 @@ abstract contract ReferralModule is EIP712 {
         mapping(bytes32 selector => mapping(address referee => address referrer)) referralTrees;
     }
 
-    function _storage() private pure returns (ReferralModuleStorage storage storagePtr) {
+    function _referralStorage() private pure returns (ReferralModuleStorage storage storagePtr) {
         assembly {
-            storagePtr.slot := REFERRAL_MODULE_STORAGE_SLOT
+            storagePtr.slot := _REFERRAL_MODULE_STORAGE_SLOT
         }
     }
 
@@ -63,8 +61,8 @@ abstract contract ReferralModule is EIP712 {
     /*                               EIP-712 related                              */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Name and version for the EIP-712
-    function _domainNameAndVersion() internal view virtual returns (string memory name, string memory version) {
+    /// @notice Name and version for the EIP-712
+    function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
         name = "FrakModule.Referral";
         version = "0.0.1";
     }
@@ -73,12 +71,12 @@ abstract contract ReferralModule is EIP712 {
     /*                        Referral managements methods                        */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Specify that the `msg.sender` was referred by `_referrer` on the given `_selector`
+    /// @notice Specify that the `msg.sender` was referred by `_referrer` on the given `_selector`
     function saveReferrer(bytes32 _selector, address _referrer) public {
         _saveReferrer(_selector, msg.sender, _referrer);
     }
 
-    /// @dev Specify that the `_user` was referred by `_referrer` on the given `_selector`, validated via a signature
+    /// @notice Specify that the `_user` was referred by `_referrer` on the given `_selector`, validated via a signature
     function saveReferrer(bytes32 _selector, address _user, address _referrer, bytes calldata _signature) public {
         // Rebuild the digest of signed data
         bytes32 digest = _hashTypedData(keccak256(abi.encode(_SAVE_REFERRER_TYPEHASH, _selector, _user, _referrer)));
@@ -91,10 +89,10 @@ abstract contract ReferralModule is EIP712 {
         _saveReferrer(_selector, _user, _referrer);
     }
 
-    /// @dev Specify that the `_user` was referred by `_referrer` on the given `_selector`
+    /// @notice Specify that the `_user` was referred by `_referrer` on the given `_selector`
     function _saveReferrer(bytes32 _selector, address _user, address _referrer) private {
         // Get our referral tree
-        mapping(address referee => address referrer) storage tree = _storage().referralTrees[_selector];
+        mapping(address referee => address referrer) storage tree = _referralStorage().referralTrees[_selector];
 
         // Ensure the user doesn't have a referer yet
         address tmpReferer = tree[_user];
@@ -123,7 +121,7 @@ abstract contract ReferralModule is EIP712 {
 
     /// @notice Get the referrer of the given `_referee` on the given `_selector`
     function getReferrer(bytes32 _selector, address _referee) public view returns (address referrer) {
-        return _storage().referralTrees[_selector][_referee];
+        return _referralStorage().referralTrees[_selector][_referee];
     }
 
     /// @notice Get the referrer of the given `_referee` on the given `_selector`
@@ -135,7 +133,7 @@ abstract contract ReferralModule is EIP712 {
         returns (address[] memory referrerChains)
     {
         // Get our tree
-        mapping(address referee => address referrer) storage tree = _storage().referralTrees[_selector];
+        mapping(address referee => address referrer) storage tree = _referralStorage().referralTrees[_selector];
 
         // Get the length for our final array
         uint256 length;

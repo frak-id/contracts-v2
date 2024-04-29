@@ -8,7 +8,7 @@ import {ContentRegistry, Metadata} from "src/tokens/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 import {CommunityToken} from "src/tokens/CommunityToken.sol";
 import {Paywall} from "src/Paywall.sol";
-import {MINTER_ROLES} from "src/utils/Roles.sol";
+import {MINTER_ROLES} from "src/constants/Roles.sol";
 
 contract Deploy is Script {
     address TOKEN_ADDRESS = 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2;

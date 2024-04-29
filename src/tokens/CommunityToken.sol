@@ -105,7 +105,6 @@ contract CommunityToken is ERC6909 {
 
     /// @dev Mint a new token
     function mint(address _to, uint256 _id) public onlyCommunityAllowed(_id) {
-        // Ensure this
         // Mint the token
         _mint(_to, _id, 1);
     }
