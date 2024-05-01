@@ -9,7 +9,6 @@ import {ReferralCampaignModule, CampaignConfig} from "../modules/ReferralCampaig
 /// @notice Contract used for a registration campagn
 /// @custom:security-contact contact@frak.id
 abstract contract NexusDiscoverCampaign is ReferralCampaignModule {
-
     // TODO: Should store the allowed tree
     // TODO: Role management to do that
     // TODO: Shouldn't use the hook to distribute the reward, should be a role gated function, to ensure no system abuse

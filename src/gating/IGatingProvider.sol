@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: GNU GPLv3
+pragma solidity 0.8.23;
+
+import {ContentRegistry} from "../tokens/ContentRegistry.sol";
+import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+
+/// @dev The unlock type for a Gating Provider
+/// @dev This should be a Type Struct Hash
+type UnlockType is bytes32;
+
+/// @author @KONFeature
+/// @title IGatingProvider
+/// @notice Contract representing a GatingProvider
+interface IGatingProvider {
+    function unlockTypes() external pure returns (GatingType[] memory);
+
+    /// @dev Check if the access to an `item` on a `contentId` by the given `user` is allowed
+    /// @return isAllowed True if the access is allowed, false otherwise
+    function isAllowed(uint256 contentId, bytes32 articleId, address user) external view returns (bool isAllowed);
+}

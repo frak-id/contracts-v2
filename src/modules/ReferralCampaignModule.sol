@@ -34,6 +34,25 @@ abstract contract ReferralCampaignModule is ReferralModule, PushPullModule {
     address private immutable _token;
 
     /* -------------------------------------------------------------------------- */
+    /*                                   Storage                                  */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev bytes32(uint256(keccak256('frak.module.referral-campaign')) - 1)
+    bytes32 private constant _REFERRAL_CAMPAIGN_MODULE_STORAGE_SLOT =
+        0xca6fd11cdb4af68f0193ebfd72648afff0f9e9d406f3663d47d3a3a498d4406e;
+
+    struct ReferralCampaignModuleStorage {
+        /// @dev Is the current referral campaign acitve?
+        bool isActive;
+    }
+
+    function _referralCampaignStorage() private pure returns (ReferralCampaignModuleStorage storage storagePtr) {
+        assembly {
+            storagePtr.slot := _REFERRAL_CAMPAIGN_MODULE_STORAGE_SLOT
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
 
