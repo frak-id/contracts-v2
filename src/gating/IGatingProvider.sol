@@ -12,7 +12,8 @@ type UnlockType is bytes32;
 /// @title IGatingProvider
 /// @notice Contract representing a GatingProvider
 interface IGatingProvider {
-    function unlockTypes() external pure returns (GatingType[] memory);
+    /// @dev Get a list of all the unlock types supported by this Gating Provider
+    function unlockTypes() external pure returns (UnlockType[] memory);
 
     /// @dev Check if the access to an `item` on a `contentId` by the given `user` is allowed
     /// @return isAllowed True if the access is allowed, false otherwise
