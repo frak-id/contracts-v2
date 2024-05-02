@@ -16,8 +16,6 @@ struct CampaignConfig {
     address token;
 }
 
-// TODO: Option to pause the campagn
-
 /// @author @KONFeature
 /// @title ReferralCampaignModule
 /// @notice Contract providing utilities to distribute rewards for a referral campaign
@@ -32,6 +30,13 @@ abstract contract ReferralCampaignModule is ReferralModule, PushPullModule {
 
     /// @dev The token used for the reward
     address private immutable _token;
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Error when the campaign is inactive
+    error InactiveCampaign();
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -75,6 +80,11 @@ abstract contract ReferralCampaignModule is ReferralModule, PushPullModule {
     function _distributeReferralRewards(bytes32 _tree, address _referee, bool _includeReferee, uint256 _initialReward)
         internal
     {
+        // Check if the campaign is active
+        if (!_referralCampaignStorage().isActive) {
+            revert InactiveCampaign();
+        }
+
         // Current recipient
         address currentRecipient = _includeReferee ? _referee : getReferrer(_tree, _referee);
         // Early exit if no _currentRecipient
@@ -95,6 +105,20 @@ abstract contract ReferralCampaignModule is ReferralModule, PushPullModule {
             level++;
             rewardAirdrop = (rewardAirdrop * _perLevelPercentage) / 10_000;
         }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               State managment                              */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Pause the campaign
+    function _pauseCampaign() internal {
+        _referralCampaignStorage().isActive = false;
+    }
+
+    /// @dev Resume the campaign
+    function _resumeCampaign() internal {
+        _referralCampaignStorage().isActive = true;
     }
 
     /* -------------------------------------------------------------------------- */

@@ -10,12 +10,7 @@ import {CAMPAIGN_MANAGER_ROLES} from "../constants/Roles.sol";
 /// @title NexusRegisterCampaign
 /// @notice Contract used for a registration campagn
 /// @custom:security-contact contact@frak.id
-abstract contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
-    // TODO: Should store the allowed tree
-    // TODO: Role management to do that
-    // TODO: Shouldn't use the hook to distribute the reward, should be a role gated function, to ensure no system abuse
-    // TODO: Link with community token, ContentDiscover = has community token + referrer
-
+contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
@@ -126,6 +121,20 @@ abstract contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles 
         // Trigger the reward distribution
         bytes32 referallTree = getContentDiscoveryTree(_contentId);
         _distributeReferralRewards(referallTree, _referee, false, _REGISTRATION_INITIAL_REWARD);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               State managment                              */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Pause the campaign
+    function pauseCampaign() external onlyRoles(CAMPAIGN_MANAGER_ROLES) {
+        _pauseCampaign();
+    }
+
+    /// @dev Pause the campaign
+    function resumeCampaign() external onlyRoles(CAMPAIGN_MANAGER_ROLES) {
+        _resumeCampaign();
     }
 
     /* -------------------------------------------------------------------------- */
