@@ -31,6 +31,7 @@ export const nexusDiscoverCampaignAbi = [
     type: 'function',
     inputs: [
       { name: '_referee', internalType: 'address', type: 'address' },
+      { name: '_referrer', internalType: 'address', type: 'address' },
       { name: '_contentId', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'distributeContentDiscoveryReward',
@@ -39,7 +40,10 @@ export const nexusDiscoverCampaignAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_referee', internalType: 'address', type: 'address' }],
+    inputs: [
+      { name: '_referee', internalType: 'address', type: 'address' },
+      { name: '_referrer', internalType: 'address', type: 'address' },
+    ],
     name: 'distributeInstallationReward',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -247,28 +251,6 @@ export const nexusDiscoverCampaignAbi = [
   },
   {
     type: 'function',
-    inputs: [
-      { name: '_selector', internalType: 'bytes32', type: 'bytes32' },
-      { name: '_user', internalType: 'address', type: 'address' },
-      { name: '_referrer', internalType: 'address', type: 'address' },
-      { name: '_signature', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'saveReferrer',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '_selector', internalType: 'bytes32', type: 'bytes32' },
-      { name: '_referrer', internalType: 'address', type: 'address' },
-    ],
-    name: 'saveReferrer',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
     inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
     name: 'transferOwnership',
     outputs: [],
@@ -419,7 +401,6 @@ export const nexusDiscoverCampaignAbi = [
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'InactiveCampaign' },
   { type: 'error', inputs: [], name: 'InvalidConfig' },
-  { type: 'error', inputs: [], name: 'InvalidSignature' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
   { type: 'error', inputs: [], name: 'NotEnoughToken' },

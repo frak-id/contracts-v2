@@ -71,13 +71,10 @@ abstract contract ReferralModule is EIP712 {
     /*                        Referral managements methods                        */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Specify that the `msg.sender` was referred by `_referrer` on the given `_selector`
-    function saveReferrer(bytes32 _selector, address _referrer) public {
-        _saveReferrer(_selector, msg.sender, _referrer);
-    }
-
-    /// @notice Specify that the `_user` was referred by `_referrer` on the given `_selector`, validated via a signature
-    function saveReferrer(bytes32 _selector, address _user, address _referrer, bytes calldata _signature) public {
+    /// @notice Specify that the `_user` was referred by `_referrer` on the given `_selector`
+    function _saveReferrerViaSignature(bytes32 _selector, address _user, address _referrer, bytes calldata _signature)
+        internal
+    {
         // Rebuild the digest of signed data
         bytes32 digest = _hashTypedData(keccak256(abi.encode(_SAVE_REFERRER_TYPEHASH, _selector, _user, _referrer)));
 
@@ -90,7 +87,7 @@ abstract contract ReferralModule is EIP712 {
     }
 
     /// @notice Specify that the `_user` was referred by `_referrer` on the given `_selector`
-    function _saveReferrer(bytes32 _selector, address _user, address _referrer) private {
+    function _saveReferrer(bytes32 _selector, address _user, address _referrer) internal {
         // Get our referral tree
         mapping(address referee => address referrer) storage tree = _referralStorage().referralTrees[_selector];
 

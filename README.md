@@ -13,7 +13,7 @@ Plugin for Nexus related contracts (only on arbitrum):
 | FRK Paywall token                     | `0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2`  |
 | Paywall contract                      | `0x9218521020EF26924B77188f4ddE0d0f7C405f21`  |
 | FRK Referral token                    | `0x1Eca7AA9ABF2e53E773B4523B6Dc103002d22e7D`  |
-| Nexus Discovery Campaign              | `0x89E5AFF631bC4b2dAA3f55B13Dc8D4456343AD0c`  |
+| Nexus Discovery Campaign              | `0x8a37d1B3a17559F2BC4e6613834b1F13d0A623aC`  |
 
 Plugin for the Kernel smart accounts plugins:
 

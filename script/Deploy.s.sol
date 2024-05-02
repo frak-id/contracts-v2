@@ -25,7 +25,7 @@ contract Deploy is Script {
     address COMMUNITY_TOKEN_ADDRESS = 0xf98BA1b2fc7C55A01Efa6C8872Bcee85c6eC54e7;
 
     address REFERRAL_TOKEN_ADDRESS = 0x1Eca7AA9ABF2e53E773B4523B6Dc103002d22e7D;
-    address NEXUS_DISCOVER_CAMPAIGN_ADDRESS = 0x89E5AFF631bC4b2dAA3f55B13Dc8D4456343AD0c;
+    address NEXUS_DISCOVER_CAMPAIGN_ADDRESS = 0x8a37d1B3a17559F2BC4e6613834b1F13d0A623aC;
 
     function run() public {
         console.log("Deploying to chain: %s", block.chainid);

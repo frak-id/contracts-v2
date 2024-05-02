@@ -83,11 +83,17 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Admin can trigger the reward distribution for a referral
-    function distributeInstallationReward(address _referee) external onlyRoles(CAMPAIGN_MANAGER_ROLES) {
+    function distributeInstallationReward(address _referee, address _referrer)
+        external
+        onlyRoles(CAMPAIGN_MANAGER_ROLES)
+    {
         // Check if the user has already received the airdrop
         if (_discoveryCampaignStorage().registrationAirdrop[_referee]) {
             return;
         }
+
+        // Save the referrer
+        _saveReferrer(_REGISTRATION_TREE, _referee, _referrer);
 
         // Update storage
         _discoveryCampaignStorage().registrationAirdrop[_referee] = true;
@@ -103,7 +109,7 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
     }
 
     /// @dev Admin can trigger the reward distribution for a referral
-    function distributeContentDiscoveryReward(address _referee, uint256 _contentId)
+    function distributeContentDiscoveryReward(address _referee, address _referrer, uint256 _contentId)
         external
         onlyRoles(CAMPAIGN_MANAGER_ROLES)
     {
@@ -112,6 +118,12 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
             return;
         }
 
+        // Compute the referall tree
+        bytes32 referallTree = getContentDiscoveryTree(_contentId);
+
+        // Save the referrer
+        _saveReferrer(referallTree, _referee, _referrer);
+
         // Update storage
         _discoveryCampaignStorage().discoverContentAirdrop[_referee][_contentId] = true;
 
@@ -119,8 +131,7 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
         emit ContentDiscoveryAirdropDistributed(_referee, _contentId);
 
         // Trigger the reward distribution
-        bytes32 referallTree = getContentDiscoveryTree(_contentId);
-        _distributeReferralRewards(referallTree, _referee, false, _REGISTRATION_INITIAL_REWARD);
+        _distributeReferralRewards(referallTree, _referee, false, _DISCOVER_CONTENT_INITIAL_REWARD);
     }
 
     /* -------------------------------------------------------------------------- */
