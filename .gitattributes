@@ -1,0 +1,2 @@
+# Remove the generated abi from the language stats
+abi/* linguist-vendored

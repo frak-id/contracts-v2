@@ -19,6 +19,20 @@ export default defineConfig(
                 }),
             ],
         },
+        // Campaign related contract abis
+        {
+            out: "abi/campaign-abis.ts",
+            plugins: [
+                foundry({
+                    project: './',
+                    artifacts: 'out/',
+                    include: [
+                        'NexusDiscoverCampaign.json',
+                        'ReferralToken.json'
+                    ]
+                }),
+            ],
+        },
         // Kernel v2 abis
         {
             out: "abi/kernel-v2-abis.ts",
