@@ -16,3 +16,6 @@
 [submodule "lib/ERC721A"]
 	path = lib/ERC721A
 	url = https://github.com/chiru-labs/ERC721A
+[submodule "lib/secp256r1-verify"]
+	path = lib/secp256r1-verify
+	url = https://github.com/get-smooth/secp256r1-verify
