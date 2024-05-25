@@ -4,3 +4,4 @@ erc721a/=lib/ERC721A/contracts/
 kernel/=lib/kernel/src/
 kernel-v2/=lib/kernel-v2/src/
 FreshCryptoLib/=lib/FreshCryptoLib/solidity/src/
+secp256r1-verify/=lib/secp256r1-verify/src/

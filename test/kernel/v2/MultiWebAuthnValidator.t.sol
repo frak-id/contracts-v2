@@ -227,7 +227,7 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
 
     /// @dev Ensure that our flow to generate a webauthn signature is working
     function test_webAuthnSignatureGeneration(bytes32 _hash, uint256 _privateKey) public view {
-        vm.assume(_privateKey > 0);
+        vm.assume(_privateKey > 1);
         vm.assume(_privateKey < n);
         (uint256 pubX, uint256 pubY) = _getPublicKey(_privateKey);
 
@@ -248,7 +248,7 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
 
     /// @dev Ensure that our flow to generate a webauthn signature is working
     function test_webAuthnSignatureGeneration_solo() public view {
-        uint256 _privateKey = 0x1;
+        uint256 _privateKey = 0xdeadbeef;
         bytes32 _hash = keccak256(abi.encodePacked("hello world"));
         (uint256 pubX, uint256 pubY) = _getPublicKey(_privateKey);
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {FCL_ecdsa} from "FreshCryptoLib/FCL_ecdsa.sol";
+import {ECDSA256r1} from "secp256r1-verify/ECDSA256r1.sol";
 
 /// @title P256VerifierWrapper
 /// @author rdubois-crypto
@@ -38,7 +38,7 @@ contract P256VerifierWrapper {
         uint256 x = uint256(bytes32(input[96:128]));
         uint256 y = uint256(bytes32(input[128:160]));
 
-        uint256 ret = FCL_ecdsa.ecdsa_verify(hash, r, s, x, y) ? 1 : 0;
+        uint256 ret = ECDSA256r1.verify(hash, r, s, x, y) ? 1 : 0;
 
         return abi.encodePacked(ret);
     }
