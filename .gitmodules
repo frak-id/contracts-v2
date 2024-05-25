@@ -13,3 +13,6 @@
 [submodule "lib/kernel-v2"]
 	path = lib/kernel-v2
 	url = https://github.com/zerodevapp/kernel
+[submodule "lib/ERC721A"]
+	path = lib/ERC721A
+	url = https://github.com/chiru-labs/ERC721A
