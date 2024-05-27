@@ -31,6 +31,9 @@ abstract contract ReferralModule is EIP712 {
     /// @dev Error when the user is already in the referrer chain on the given `tree`
     error AlreadyInRefererChain(bytes32 tree);
 
+    /// @dev Error when the referrer in invalid
+    error InvalidReferrer();
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -79,7 +82,7 @@ abstract contract ReferralModule is EIP712 {
         bytes32 digest = _hashTypedData(keccak256(abi.encode(_SAVE_REFERRER_TYPEHASH, _selector, _user, _referrer)));
 
         // Ensure the `_user` address match the `_signature`
-        bool isValid = SignatureCheckerLib.isValidERC1271SignatureNowCalldata(_user, digest, _signature);
+        bool isValid = SignatureCheckerLib.isValidSignatureNowCalldata(_user, digest, _signature);
         if (!isValid) revert InvalidSignature();
 
         // Save the referrer
@@ -88,6 +91,8 @@ abstract contract ReferralModule is EIP712 {
 
     /// @notice Specify that the `_user` was referred by `_referrer` on the given `_selector`
     function _saveReferrer(bytes32 _selector, address _user, address _referrer) internal {
+        if (_referrer == address(0)) revert InvalidReferrer();
+
         // Get our referral tree
         mapping(address referee => address referrer) storage tree = _referralStorage().referralTrees[_selector];
 
@@ -135,8 +140,9 @@ abstract contract ReferralModule is EIP712 {
         // Get the length for our final array
         uint256 length;
         address tmpReferee = _referee;
-        while (tmpReferee != address(0)) {
+        while (true) {
             tmpReferee = tree[tmpReferee];
+            if (tmpReferee == address(0)) break;
             ++length;
         }
 

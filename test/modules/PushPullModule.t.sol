@@ -114,7 +114,7 @@ contract PushPullModuleTest is Test {
         token1.mint(address(pushPullModule), amount);
 
         pushPullModule.addReward(user, address(token1), amount);
-        
+
         if (amount % 2 == 0) {
             vm.prank(user);
             pushPullModule.pullReward(address(token1));
