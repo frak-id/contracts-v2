@@ -5,12 +5,6 @@ import {InvalidConfig} from "../constants/Errors.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 
-/// @dev Config struct for a push pull module
-struct PushPullConfig {
-    /// @dev The address of the token used for the reward
-    address token;
-}
-
 /// @author @KONFeature
 /// @title PushPullModule
 /// @notice Contract providing utilities to create push pull based module
@@ -18,18 +12,15 @@ struct PushPullConfig {
 abstract contract PushPullModule is ReentrancyGuard {
     using SafeTransferLib for address;
 
-    /// @dev The token used to distribute the reward
-    address private immutable _token;
-
     /* -------------------------------------------------------------------------- */
     /*                                   Event's                                  */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Emitted when a reward is added for a user
-    event RewardAdded(address indexed user, uint256 amount);
+    event RewardAdded(address indexed user, address indexed token, uint256 amount);
 
     /// @dev Emitted when a reward is claimed by a user
-    event RewardClaimed(address indexed user, uint256 amount);
+    event RewardClaimed(address indexed user, address indexed token, uint256 amount);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
@@ -46,11 +37,17 @@ abstract contract PushPullModule is ReentrancyGuard {
     bytes32 private constant _PUSH_PULL_MODULE_STORAGE_SLOT =
         0xb5d5f32fdcdcfca56d53b0b17de9c2bd793504ee1a7f7f226ef9e328f41bcfb5;
 
-    struct PushPullModuleStorage {
+    /// @dev Storage per token
+    struct PushPullStoragePerToken {
         /// @dev Total pending amount
         uint256 totalPending;
         /// @dev mapping of user to pending amount
         mapping(address wallet => uint256 amount) pendingAmount;
+    }
+
+    struct PushPullModuleStorage {
+        /// @dev All the tokens handled data
+        mapping(address token => PushPullStoragePerToken) tokens;
     }
 
     function _pushPullStorage() private pure returns (PushPullModuleStorage storage storagePtr) {
@@ -59,23 +56,17 @@ abstract contract PushPullModule is ReentrancyGuard {
         }
     }
 
-    /// @dev Constructor, set all our immutable fields
-    constructor(PushPullConfig memory config) {
-        if (config.token == address(0)) {
-            revert InvalidConfig();
-        }
-
-        _token = config.token;
-    }
-
     /* -------------------------------------------------------------------------- */
     /*                             Add reward methods                             */
     /* -------------------------------------------------------------------------- */
 
     /// @notice Add a reward for the given `_user` with the given `_amount`
-    function _pushReward(address _user, uint256 _amount) internal nonReentrant {
+    function _pushReward(address _user, address _token, uint256 _amount) internal nonReentrant {
+        // Get the given storage for the token
+        PushPullStoragePerToken storage tokenStorage = _pushPullStorage().tokens[_token];
+
         // Compute the new pending total amount
-        uint256 newTotalPending = _pushPullStorage().totalPending + _amount;
+        uint256 newTotalPending = tokenStorage.totalPending + _amount;
 
         // If greater than current balance, exit
         if (newTotalPending > _token.balanceOf(address(this))) {
@@ -83,11 +74,11 @@ abstract contract PushPullModule is ReentrancyGuard {
         }
 
         // Update the pending amount
-        _pushPullStorage().pendingAmount[_user] += _amount;
-        _pushPullStorage().totalPending = newTotalPending;
+        tokenStorage.pendingAmount[_user] += _amount;
+        tokenStorage.totalPending = newTotalPending;
 
         // Emit the event
-        emit RewardAdded(_user, _amount);
+        emit RewardAdded(_user, _token, _amount);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -95,41 +86,55 @@ abstract contract PushPullModule is ReentrancyGuard {
     /* -------------------------------------------------------------------------- */
 
     /// @notice Claim the pending amount for the given `msg.sender`
-    function pullReward() public {
-        pullReward(msg.sender);
+    function pullReward(address _token) public {
+        pullReward(msg.sender, _token);
     }
 
     /// @notice Claim the pending amount for the given `_user`
-    function pullReward(address _user) public nonReentrant {
+    function pullReward(address _user, address _token) public nonReentrant {
+        // Get the given storage for the token
+        PushPullStoragePerToken storage tokenStorage = _pushPullStorage().tokens[_token];
         // Get the pending amount
-        uint256 pendingAmount = _pushPullStorage().pendingAmount[_user];
+        uint256 pendingAmount = tokenStorage.pendingAmount[_user];
         // Early exit if no pending amount
         if (pendingAmount == 0) {
             return;
         }
 
         // Reset the pending amount
-        _pushPullStorage().pendingAmount[_user] = 0;
-        _pushPullStorage().totalPending -= pendingAmount;
+        tokenStorage.pendingAmount[_user] = 0;
+        tokenStorage.totalPending -= pendingAmount;
 
         // Transfer the pending amount
         _token.safeTransfer(_user, pendingAmount);
 
         // Emit the event
-        emit RewardClaimed(_user, pendingAmount);
+        emit RewardClaimed(_user, _token, pendingAmount);
+    }
+
+    /// @notice Claim the pending amount on every `_tokens` for the given `msg.sender`
+    function pullRewards(address[] calldata _tokens) public {
+        pullRewards(msg.sender, _tokens);
+    }
+
+    /// @notice Claim the pending amount on every `_tokens` for the given `_user`
+    function pullRewards(address _user, address[] calldata _tokens) public {
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            pullReward(_user, _tokens[i]);
+        }
     }
 
     /* -------------------------------------------------------------------------- */
     /*                            External view methods                           */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Get the current contract config
-    function getPushPullConfig() external view returns (PushPullConfig memory) {
-        return PushPullConfig({token: _token});
+    /// @notice Get the pending amount for the given `_user`
+    function getPendingAmount(address _user, address _token) external view returns (uint256) {
+        return _pushPullStorage().tokens[_token].pendingAmount[_user];
     }
 
     /// @notice Get the pending amount for the given `_user`
-    function getPendingAmount(address _user) external view returns (uint256) {
-        return _pushPullStorage().pendingAmount[_user];
+    function getTotalPending(address _token) external view returns (uint256) {
+        return _pushPullStorage().tokens[_token].totalPending;
     }
 }

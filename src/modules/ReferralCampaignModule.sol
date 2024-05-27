@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {InvalidConfig} from "../constants/Errors.sol";
 import {ReferralModule} from "./ReferralModule.sol";
-import {PushPullModule, PushPullConfig} from "./PushPullModule.sol";
+import {PushPullModule} from "./PushPullModule.sol";
 
 /// @dev Config struct for a referral campaign
 struct CampaignConfig {
@@ -62,7 +62,7 @@ abstract contract ReferralCampaignModule is ReferralModule, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Constructor, set all our immutable fields
-    constructor(CampaignConfig memory config) PushPullModule(PushPullConfig({token: config.token})) {
+    constructor(CampaignConfig memory config) {
         if (config.token == address(0)) {
             revert InvalidConfig();
         }
@@ -99,7 +99,7 @@ abstract contract ReferralCampaignModule is ReferralModule, PushPullModule {
         // Loop thrgouh the levels
         while (currentRecipient != address(0) && level < _maxLevel) {
             // Add a reward for the user
-            _pushReward(currentRecipient, rewardAirdrop);
+            _pushReward(currentRecipient, _token, rewardAirdrop);
             // Move to the next level
             currentRecipient = getReferrer(_tree, currentRecipient);
             level++;
