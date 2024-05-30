@@ -5,7 +5,7 @@ import {InvalidSignature} from "../constants/Errors.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLES} from "../constants/Roles.sol";
+import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "../constants/Roles.sol";
 
 /// @author @KONFeature
 /// @title ReferralRegistry
@@ -58,7 +58,7 @@ contract ReferralRegistry is OwnableRoles {
 
     constructor(address _owner) {
         _initializeOwner(_owner);
-        _setRoles(_owner, REFERRAL_ALLOWANCE_MANAGER_ROLES);
+        _setRoles(_owner, REFERRAL_ALLOWANCE_MANAGER_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -66,7 +66,7 @@ contract ReferralRegistry is OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Grant the access to the given tree for the given `_caller`
-    function grantAccessToTree(bytes32 _selector, address _caller) public onlyRoles(REFERRAL_ALLOWANCE_MANAGER_ROLES) {
+    function grantAccessToTree(bytes32 _selector, address _caller) public onlyRoles(REFERRAL_ALLOWANCE_MANAGER_ROLE) {
         _referralStorage().treeAllowance[_selector] = _caller;
     }
 

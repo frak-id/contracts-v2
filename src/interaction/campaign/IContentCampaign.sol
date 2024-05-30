@@ -5,5 +5,4 @@ pragma solidity 0.8.23;
 /// @title IContentCampaign
 /// @notice Interface representing a campaign around a content
 /// @custom:security-contact contact@frak.id
-interface IContentCampaign {
-}
+interface IContentCampaign {}

@@ -7,6 +7,7 @@ import "forge-std/console.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 import {Paywall} from "src/Paywall.sol";
+import {CONTENT_TYPE_PRESS} from "src/constants/Contents.sol";
 
 contract SetupPaywall is Script {
     address CONTENT_REGISTRY_ADDRESS = 0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753;
@@ -23,26 +24,29 @@ contract SetupPaywall is Script {
         Paywall paywall = Paywall(PAYWALL_ADDRESS);
 
         // Then mint the contents
-        uint256 cLeMonde = _mintContent(contentRegistry, "Le Monde", "news-example.frak.id");
-        uint256 cLequipe = _mintContent(contentRegistry, "L'equipe", "news-example.frak.id");
-        uint256 cWired = _mintContent(contentRegistry, "Wired", "news-example.frak.id");
+        uint256 cLeMonde =
+            _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "Le Monde", "news-example.frak.id/le-monde");
+        uint256 cLequipe = _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "L'equipe", "news-example.frak.id/lequipe");
+        uint256 cWired = _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "Wired", "news-example.frak.id/wired");
+        uint256 cFrak = _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "Frak", "news-paper.xyz");
 
         // And add the prices
         _addTestPrices(paywall, cLeMonde);
         _addTestPrices(paywall, cLequipe);
         _addTestPrices(paywall, cWired);
+        _addTestPrices(paywall, cFrak);
 
         vm.stopBroadcast();
     }
 
     /// @dev Mint a content with the given name and domain
-    function _mintContent(ContentRegistry _contentRegistry, string memory _name, string memory _domain)
-        internal
-        returns (uint256)
-    {
-        Metadata memory metadata = Metadata(_name, keccak256(bytes(_domain)));
-        bytes memory metadataBytes = abi.encode(metadata);
-        return _contentRegistry.mint(metadataBytes);
+    function _mintContent(
+        ContentRegistry _contentRegistry,
+        bytes32 _contentTypes,
+        string memory _name,
+        string memory _domain
+    ) internal returns (uint256) {
+        return _contentRegistry.mint(_contentTypes, _name, _domain);
     }
 
     /// @dev Add test prices to the given content

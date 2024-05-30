@@ -1,11 +1,25 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-/// @dev The role required to mint stuff (either pFrk or new contents)
-uint256 constant MINTER_ROLES = 1 << 0;
+/// @dev The role required to mint stuff
+uint256 constant MINTER_ROLE = 1 << 0;
+
+/// @dev The role required to upgrade stuff
+uint256 constant UPGRADE_ROLE = 1 << 1;
+
+/* -------------------------------------------------------------------------- */
+/*                         Content interaction related                        */
+/* -------------------------------------------------------------------------- */
 
 /// @dev The role for the campaign manager
-uint256 constant CAMPAIGN_MANAGER_ROLES = 2 << 0;
+uint256 constant CAMPAIGN_MANAGER_ROLE = 1 << 2;
+
+/// @dev The role that can validate a user interaction
+uint256 constant INTERCATION_VALIDATOR_ROLE = 1 << 3;
+
+/* -------------------------------------------------------------------------- */
+/*                              Referral related                              */
+/* -------------------------------------------------------------------------- */
 
 /// @dev The role for the referral allowance manager
-uint256 constant REFERRAL_ALLOWANCE_MANAGER_ROLES = 2 << 0;
+uint256 constant REFERRAL_ALLOWANCE_MANAGER_ROLE = 1 << 4;

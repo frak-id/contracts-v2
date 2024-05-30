@@ -2,26 +2,25 @@
 pragma solidity 0.8.23;
 
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+import {EIP712} from "solady/utils/EIP712.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
+import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-
-/// @dev Struct for all the metadatas of a platform
-struct PlatformMetadata {
-    /// @dev The content type for the given platform
-    bytes4 contentType;
-    /// @dev The platform name
-    string platformName;
-    /// @dev The platform origin
-    string platformOrigin;
-    /// @dev The hash of the origin
-    bytes32 originHash;
-}
+import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 
 /// @title ContentInteraction
 /// @author @KONFeature
 /// @notice Interface for a content platform
 /// @dev This interface is meant to be implemented by a contract that represents a content platform
 /// @custom:security-contact contact@frak.id
-abstract contract ContentInteraction is OwnableRoles {
+abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable {
+    /// @dev error throwned when the signer of an interaction is invalid
+    error WrongInteractionSigner();
+
+    /// @dev EIP-712 typehash used to validate the given transaction
+    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
+        keccak256("SaveReferrer(uint256 contentId, bytes32 interactionData,address user, uint256 nonce)");
+
     /// @dev The base content referral tree: `keccak256("ContentReferralTree")`
     bytes32 private constant _BASE_CONTENT_TREE = 0x3d16196f272c96153eabc4eb746e08ae541cf36535edb959ed80f5e5169b6787;
 
@@ -29,12 +28,35 @@ abstract contract ContentInteraction is OwnableRoles {
     uint256 internal immutable _CONTENT_ID;
 
     /// @dev The referral registry
-    ReferralRegistry internal immutable _REGERRAL_REGISTRY;
+    ReferralRegistry internal immutable _REFERRAL_REGISTRY;
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Storage                                  */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev bytes32(uint256(keccak256('frak.content.interaction')) - 1)
+    bytes32 private constant _CONTENT_INTERACTION_STORAGE_SLOT =
+        0xd966519fe3fe853ea9b03acd8a0422a17006c68dbe1d8fa2b9127b9e8e22eac4;
+
+    struct ContentInteractionStorage {
+        /// @dev Nonce for the validation of the interaction
+        mapping(bytes32 nonceKey => uint256 nonce) nonces;
+    }
+
+    function _contentInteractionStorage() private pure returns (ContentInteractionStorage storage storagePtr) {
+        assembly {
+            storagePtr.slot := _CONTENT_INTERACTION_STORAGE_SLOT
+        }
+    }
 
     constructor(uint256 _contentId, address _owner, address _referralRegistry) {
         _CONTENT_ID = _contentId;
+        _REFERRAL_REGISTRY = ReferralRegistry(_referralRegistry);
+
+        // Roles
         _initializeOwner(_owner);
-        _REGERRAL_REGISTRY = ReferralRegistry(_referralRegistry);
+        _setRoles(_owner, CAMPAIGN_MANAGER_ROLE);
+        _setRoles(_owner, INTERCATION_VALIDATOR_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -43,12 +65,72 @@ abstract contract ContentInteraction is OwnableRoles {
 
     /// @dev Save on the registry level that `_user` has been referred by `_referrer`
     function _saveReferrer(address _user, address _referrer) internal {
-        _REGERRAL_REGISTRY.saveReferrer(getReferralTree(), _user, _referrer);
+        _REFERRAL_REGISTRY.saveReferrer(getReferralTree(), _user, _referrer);
     }
 
     /// @dev Check on the registry if the `_user` has already a referrer
     function _isUserAlreadyReferred(address _user) internal view returns (bool) {
-        return _REGERRAL_REGISTRY.getReferrer(getReferralTree(), _user) != address(0);
+        return _REFERRAL_REGISTRY.getReferrer(getReferralTree(), _user) != address(0);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                           Interaction validation                           */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Name and version for the EIP-712
+    function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
+        name = "Frak.ContentInteraction";
+        version = "0.0.1";
+    }
+
+    /// @dev Expose the domain separator
+    function getDomainSeparator() external view returns (bytes32) {
+        return _domainSeparator();
+    }
+
+    /// @dev Check if the provided interaction is valid
+    function _validateInteraction(bytes32 _interactionData, address _user, bytes calldata _signature) internal {
+        // Get the key for our nonce
+        bytes32 nonceKey;
+        assembly {
+            mstore(0, _interactionData)
+            mstore(0x20, _user)
+            nonceKey := keccak256(0, 0x40)
+        }
+
+        // Rebuild the full typehas
+        bytes32 digest = _hashTypedData(
+            keccak256(
+                abi.encode(
+                    _VALIDATE_INTERACTION_TYPEHASH,
+                    _CONTENT_ID,
+                    _interactionData,
+                    _user,
+                    _contentInteractionStorage().nonces[nonceKey]++
+                )
+            )
+        );
+
+        // Retreive the signer
+        address signer = ECDSA.tryRecoverCalldata(digest, _signature);
+
+        // Check if the signer as the role to validate the interaction
+        bool isValidSigner = hasAllRoles(signer, INTERCATION_VALIDATOR_ROLE);
+        if (!isValidSigner) {
+            revert WrongInteractionSigner();
+        }
+    }
+
+    /// @dev Get the current user nonce for the given interaction
+    function getNonceForInteraction(bytes32 _interactionData, address _user) external view returns (uint256) {
+        bytes32 nonceKey;
+        assembly {
+            mstore(0, _interactionData)
+            mstore(0x20, _user)
+            nonceKey := keccak256(0, 0x40)
+        }
+
+        return _contentInteractionStorage().nonces[nonceKey];
     }
 
     /* -------------------------------------------------------------------------- */
@@ -56,7 +138,7 @@ abstract contract ContentInteraction is OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the type for the current content
-    function getContentType() public pure virtual returns (bytes4);
+    function getContentType() public pure virtual returns (bytes32);
 
     /// @dev Get the id for the current content
     function getContentId() public view returns (uint256) {
@@ -74,6 +156,6 @@ abstract contract ContentInteraction is OwnableRoles {
         }
     }
 
-    /// @dev Get all the platform metadata
-    function getMetadata() external pure virtual returns (PlatformMetadata memory);
+    /// @dev Upgrade check
+    function _authorizeUpgrade(address newImplementation) internal override onlyRoles(UPGRADE_ROLE) {}
 }

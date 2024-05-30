@@ -4,18 +4,23 @@ pragma solidity 0.8.23;
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {MINTER_ROLES} from "../constants/Roles.sol";
+import {MINTER_ROLE} from "../constants/Roles.sol";
 
 /// @notice Metadata defination of a content
 struct Metadata {
+    bytes32 contentTypes;
     string name;
-    bytes32 domainHash;
+    string domain;
 }
 
 /// @author @KONFeature
 /// @title ContentRegistry
 /// @notice Registery for content usable by the Nexus wallet
 contract ContentRegistry is ERC721, OwnableRoles {
+    error InvalidNameOrDomain();
+
+    error AlreadyExistingContent();
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -23,7 +28,6 @@ contract ContentRegistry is ERC721, OwnableRoles {
     /// @notice Storage for the content registry
     /// @custom:storage-location erc7201:content_registry.main
     struct ContentRegistryStorage {
-        uint256 _currentId;
         mapping(uint256 => Metadata) _metadata;
     }
 
@@ -39,7 +43,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
 
     constructor(address _owner) {
         _initializeOwner(_owner);
-        _setRoles(_owner, MINTER_ROLES);
+        _setRoles(_owner, MINTER_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -63,10 +67,22 @@ contract ContentRegistry is ERC721, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Mint a new content with the given metadata
-    function mint(bytes calldata _metadata) public onlyRoles(MINTER_ROLES) returns (uint256 id) {
-        ContentRegistryStorage storage crs = _getStorage();
-        id = crs._currentId++;
-        crs._metadata[id] = abi.decode(_metadata, (Metadata));
+    function mint(bytes32 _contentTypes, string calldata _name, string calldata _domain)
+        public
+        onlyRoles(MINTER_ROLE)
+        returns (uint256 id)
+    {
+        if (bytes(_name).length == 0 || bytes(_domain).length == 0) revert InvalidNameOrDomain();
+
+        // Compute the id (keccak of domain)
+        id = uint256(keccak256(abi.encode(_domain)));
+
+        // Ensure the content doesn't already exist
+        if (isExistingContent(id)) revert AlreadyExistingContent();
+
+        // Store the metadata and mint the content
+        _getStorage()._metadata[id] = Metadata({contentTypes: _contentTypes, name: _name, domain: _domain});
+
         _mint(msg.sender, id);
     }
 
@@ -75,16 +91,28 @@ contract ContentRegistry is ERC721, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @notice Get the metadata of a content
-    function getMetadata(uint256 tokenId) public view returns (Metadata memory) {
-        return _getStorage()._metadata[tokenId];
+    function getMetadata(uint256 _contentId) public view returns (Metadata memory) {
+        return _getStorage()._metadata[_contentId];
+    }
+
+    /// @notice Get the types of a content
+    function getContentTypes(uint256 _contentId) public view returns (bytes32) {
+        return _getStorage()._metadata[_contentId].contentTypes;
+    }
+
+    /// @notice Get the metadata of a content
+    function isExistingContent(uint256 _contentId) public view returns (bool) {
+        return _exists(_contentId);
     }
 
     /// @notice Update the metadata of a content
-    function updateMetadata(uint256 tokenId, Metadata calldata _metadata) public {
+    function updateMetadata(uint256 _contentId, bytes32 _contentTypes, string calldata _name) public {
         // Ensure it's an approved user doing the call
-        if (!_isApprovedOrOwner(msg.sender, tokenId)) revert ERC721.NotOwnerNorApproved();
+        if (!_isApprovedOrOwner(msg.sender, _contentId)) revert ERC721.NotOwnerNorApproved();
 
         // Update the metadata
-        _getStorage()._metadata[tokenId] = _metadata;
+        Metadata storage metadata = _getStorage()._metadata[_contentId];
+        metadata.contentTypes = _contentTypes;
+        metadata.name = _name;
     }
 }

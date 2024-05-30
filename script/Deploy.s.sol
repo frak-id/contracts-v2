@@ -10,7 +10,7 @@ import {CommunityToken} from "src/tokens/CommunityToken.sol";
 import {Paywall} from "src/Paywall.sol";
 import {NexusDiscoverCampaign} from "src/campaign/NexusDiscoverCampaign.sol";
 import {ReferralToken} from "src/tokens/ReferralToken.sol";
-import {MINTER_ROLES, CAMPAIGN_MANAGER_ROLES} from "src/constants/Roles.sol";
+import {MINTER_ROLE, CAMPAIGN_MANAGER_ROLE} from "src/constants/Roles.sol";
 
 contract Deploy is Script {
     // Config
@@ -43,7 +43,7 @@ contract Deploy is Script {
         if (TOKEN_ADDRESS.code.length == 0) {
             console.log("Deploying PaywallToken");
             pFrk = new PaywallToken{salt: 0}(owner);
-            pFrk.grantRoles(airdropper, MINTER_ROLES);
+            pFrk.grantRoles(airdropper, MINTER_ROLE);
         } else {
             pFrk = PaywallToken(TOKEN_ADDRESS);
         }
@@ -103,7 +103,7 @@ contract Deploy is Script {
         if (REFERRAL_TOKEN_ADDRESS.code.length == 0) {
             console.log("Deploying Referral token");
             referralToken = new ReferralToken{salt: 0}(owner);
-            referralToken.grantRoles(airdropper, MINTER_ROLES);
+            referralToken.grantRoles(airdropper, MINTER_ROLE);
         } else {
             referralToken = ReferralToken(REFERRAL_TOKEN_ADDRESS);
         }
@@ -113,7 +113,7 @@ contract Deploy is Script {
         if (NEXUS_DISCOVER_CAMPAIGN_ADDRESS.code.length == 0) {
             console.log("Deploying Discover campaign");
             discoverCampaign = new NexusDiscoverCampaign{salt: 0}(address(referralToken), owner);
-            discoverCampaign.grantRoles(airdropper, CAMPAIGN_MANAGER_ROLES);
+            discoverCampaign.grantRoles(airdropper, CAMPAIGN_MANAGER_ROLE);
         } else {
             discoverCampaign = NexusDiscoverCampaign(NEXUS_DISCOVER_CAMPAIGN_ADDRESS);
         }

@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {InvalidConfig} from "../constants/Errors.sol";
 import {ReferralCampaignModule, CampaignConfig} from "../modules/ReferralCampaignModule.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {CAMPAIGN_MANAGER_ROLES} from "../constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
 
 /// @author @KONFeature
 /// @title NexusRegisterCampaign
@@ -75,7 +75,7 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
 
         // Init owner
         _initializeOwner(_owner);
-        _setRoles(_owner, CAMPAIGN_MANAGER_ROLES);
+        _setRoles(_owner, CAMPAIGN_MANAGER_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -85,7 +85,7 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
     /// @dev Admin can trigger the reward distribution for a referral
     function distributeInstallationReward(address _referee, address _referrer)
         external
-        onlyRoles(CAMPAIGN_MANAGER_ROLES)
+        onlyRoles(CAMPAIGN_MANAGER_ROLE)
     {
         // Check if the user has already received the airdrop
         if (_discoveryCampaignStorage().registrationAirdrop[_referee]) {
@@ -111,7 +111,7 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
     /// @dev Admin can trigger the reward distribution for a referral
     function distributeContentDiscoveryReward(address _referee, address _referrer, uint256 _contentId)
         external
-        onlyRoles(CAMPAIGN_MANAGER_ROLES)
+        onlyRoles(CAMPAIGN_MANAGER_ROLE)
     {
         // Check if the user has already received the airdrop
         if (_discoveryCampaignStorage().discoverContentAirdrop[_referee][_contentId]) {
@@ -139,12 +139,12 @@ contract NexusDiscoverCampaign is ReferralCampaignModule, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Pause the campaign
-    function pauseCampaign() external onlyRoles(CAMPAIGN_MANAGER_ROLES) {
+    function pauseCampaign() external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
         _pauseCampaign();
     }
 
     /// @dev Pause the campaign
-    function resumeCampaign() external onlyRoles(CAMPAIGN_MANAGER_ROLES) {
+    function resumeCampaign() external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
         _resumeCampaign();
     }
 

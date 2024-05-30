@@ -1,27 +1,46 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentInteraction, PlatformMetadata} from "./ContentInteraction.sol";
-import {CAMPAIGN_MANAGER_ROLES} from "../constants/Roles.sol";
+import {ContentInteraction} from "./ContentInteraction.sol";
+import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
 import {CONTENT_TYPE_PRESS} from "../constants/Contents.sol";
 
 /// @title PressInteraction
 /// @author @KONFeature
-/// @notice Interface for a press type content
+/// @notice Contract managing a press content platform user interaction
 /// @custom:security-contact contact@frak.id
 contract PressInteraction is ContentInteraction {
+    /* -------------------------------------------------------------------------- */
+    /*                                  Constants                                 */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev keccak256('frak.press.interaction.open_article')
+    bytes32 private constant _OPEN_ARTICLE_INTERACTION =
+        0xc0a24ffb7afa254ad3052f8f1da6e4268b30580018115d9c10b63352b0004b2d;
+
+    /// @dev keccak256('frak.press.interaction.read_article')
+    bytes32 private constant _READ_ARTICLE_INTERACTION =
+        0xd5bd0fbe3510f2dde55a90e8bb325735d540cc475e1875f00abfd5a81015b073;
+
+    /// @dev keccak256('frak.press.interaction.create_share_link')
+    bytes32 private constant _CREATE_SHARE_LINK_INTERACTION =
+        0xaf75a9c1cea9f66971d8d341459fd474beb48c11cce7f5962860bec428704d98;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event when an article is opened by the given `user`
-    event ArticleOpened(bytes32 indexed articleId, address indexed user);
+    event ArticleOpened(bytes32 indexed articleId, address user);
 
-    /// @dev Event when a share link is used
-    event ShareLinkUsed(bytes32 indexed shareId, address indexed user);
+    /// @dev Event when an article is read by the given `user`
+    event ArticleRead(bytes32 indexed articleId, address user);
 
     /// @dev Event emitted when a share link is created by the given `user`
-    event ShareLinkCreated(bytes32 indexed articleId, address indexed user, bytes32 shareId);
+    event ShareLinkCreated(bytes32 indexed articleId, address user, bytes32 shareId);
+
+    /// @dev Event when a share link is used
+    event ShareLinkUsed(bytes32 indexed shareId, address user);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -50,21 +69,23 @@ contract PressInteraction is ContentInteraction {
 
     constructor(uint256 _contentId, address _owner, address _referralRegistry)
         ContentInteraction(_contentId, _owner, _referralRegistry)
-    {
-        // _setRoles(_owner, CAMPAIGN_MANAGER_ROLES);
-    }
+    {}
 
     /* -------------------------------------------------------------------------- */
     /*                          Open interaction methods                          */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Function called by a user when he openned an article
-    function articleOpened(bytes32 _articleId, bytes32 _shareId) external {
-        _articleOpened(_articleId, _shareId, msg.sender);
+    function articleOpened(bytes32 _articleId, bytes32 _shareId, bytes calldata _signature) external {
+        _articleOpened(_articleId, _shareId, msg.sender, _signature);
     }
 
     /// @dev Function called when a user openned an article `_articleId` via a shared link `_shareId`
-    function _articleOpened(bytes32 _articleId, bytes32 _shareId, address _user) private {
+    function _articleOpened(bytes32 _articleId, bytes32 _shareId, address _user, bytes calldata _signature) private {
+        // Validate the interaction
+        bytes32 interactionData = keccak256(abi.encode(_OPEN_ARTICLE_INTERACTION, _articleId, _shareId));
+        _validateInteraction(interactionData, _user, _signature);
+
         // Emit the open event
         emit ArticleOpened(_articleId, _user);
 
@@ -92,16 +113,39 @@ contract PressInteraction is ContentInteraction {
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                          Article read interaction                          */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Function called by a user when he read an article
+    function articleRead(bytes32 _articleId, bytes calldata _signature) external {
+        _articleRead(_articleId, msg.sender, _signature);
+    }
+
+    /// @dev Function called when a user read an article `_articleId`
+    function _articleRead(bytes32 _articleId, address _user, bytes calldata _signature) private {
+        // Validate the interaction
+        bytes32 interactionData = keccak256(abi.encode(_READ_ARTICLE_INTERACTION, _articleId));
+        _validateInteraction(interactionData, _user, _signature);
+
+        // Emit the read event
+        emit ArticleRead(_articleId, _user);
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                             Share link methods                             */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Function called when a user openned an article `articleId` via a shared link `shareId`
-    function createShareLink(bytes32 _articleId) external {
-        _createShareLink(_articleId, msg.sender);
+    function createShareLink(bytes32 _articleId, bytes calldata _signature) external {
+        _createShareLink(_articleId, msg.sender, _signature);
     }
 
     /// @dev Create a new share link for the given `_articleId` and `_user`
-    function _createShareLink(bytes32 _articleId, address _user) private {
+    function _createShareLink(bytes32 _articleId, address _user, bytes calldata _signature) private {
+        // Validate this interaction
+        bytes32 interactionData = keccak256(abi.encode(_CREATE_SHARE_LINK_INTERACTION, _articleId));
+        _validateInteraction(interactionData, _user, _signature);
+
         // Create the share id
         bytes32 shareId = keccak256(abi.encodePacked(_CONTENT_ID, _articleId, _user));
 
@@ -124,17 +168,7 @@ contract PressInteraction is ContentInteraction {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the content type for the given platform
-    function getContentType() public pure override returns (bytes4) {
+    function getContentType() public pure override returns (bytes32) {
         return CONTENT_TYPE_PRESS;
-    }
-
-    /// @dev Get all the platform metadata
-    function getMetadata() external pure override returns (PlatformMetadata memory) {
-        return PlatformMetadata({
-            contentType: CONTENT_TYPE_PRESS,
-            platformName: "Press",
-            platformOrigin: "Press",
-            originHash: keccak256("Press")
-        });
     }
 }
