@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
-import {ContentRegistry, Metadata} from "src/tokens/ContentRegistry.sol";
+import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 import {CommunityToken} from "src/tokens/CommunityToken.sol";
 import {Paywall} from "src/Paywall.sol";

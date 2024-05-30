@@ -16,8 +16,8 @@ struct CampaignConfig {
     address token;
 }
 
-/// @author @KONFeature
 /// @title ReferralCampaignModule
+/// @author @KONFeature
 /// @notice Contract providing utilities to distribute rewards for a referral campaign
 /// @custom:security-contact contact@frak.id
 abstract contract ReferralCampaignModule is ReferralModule, PushPullModule {

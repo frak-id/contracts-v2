@@ -6,3 +6,6 @@ uint256 constant MINTER_ROLES = 1 << 0;
 
 /// @dev The role for the campaign manager
 uint256 constant CAMPAIGN_MANAGER_ROLES = 2 << 0;
+
+/// @dev The role for the referral allowance manager
+uint256 constant REFERRAL_ALLOWANCE_MANAGER_ROLES = 2 << 0;

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentRegistry} from "../tokens/ContentRegistry.sol";
-import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
-
 /// @dev The unlock type for a Gating Provider
 /// @dev This should be a Type Struct Hash
 type UnlockType is bytes32;

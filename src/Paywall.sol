@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentRegistry} from "./tokens/ContentRegistry.sol";
+import {ContentRegistry} from "./registry/ContentRegistry.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /// @author @KONFeature
