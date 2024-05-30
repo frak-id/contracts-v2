@@ -367,7 +367,7 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
 
 /// @dev simple contract to format a webauthn challenge (using to convert stuff in memory during test to calldata)
 contract WebAuthNTester {
-    function formatSigLayout(bytes32 _hash, bytes calldata signatureLayout) public view returns (bytes32) {
+    function formatSigLayout(bytes32 _hash, bytes calldata signatureLayout) public pure returns (bytes32) {
         return WebAuthnVerifier._formatWebAuthNChallenge(_hash, signatureLayout);
     }
 

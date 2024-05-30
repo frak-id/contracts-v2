@@ -59,7 +59,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
     }
 
     function tokenURI(uint256 tokenId) public pure override returns (string memory) {
-        return string.concat("https://content.frak.id/metadata", LibString.toString(tokenId), ".json");
+        return string.concat("https://content.frak.id/metadata/", LibString.toString(tokenId), ".json");
     }
 
     /* -------------------------------------------------------------------------- */
@@ -75,7 +75,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
         if (bytes(_name).length == 0 || bytes(_domain).length == 0) revert InvalidNameOrDomain();
 
         // Compute the id (keccak of domain)
-        id = uint256(keccak256(abi.encode(_domain)));
+        id = uint256(keccak256(abi.encodePacked(_domain)));
 
         // Ensure the content doesn't already exist
         if (isExistingContent(id)) revert AlreadyExistingContent();
@@ -109,6 +109,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
     function updateMetadata(uint256 _contentId, bytes32 _contentTypes, string calldata _name) public {
         // Ensure it's an approved user doing the call
         if (!_isApprovedOrOwner(msg.sender, _contentId)) revert ERC721.NotOwnerNorApproved();
+        if (bytes(_name).length == 0) revert InvalidNameOrDomain();
 
         // Update the metadata
         Metadata storage metadata = _getStorage()._metadata[_contentId];

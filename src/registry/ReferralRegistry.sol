@@ -26,6 +26,9 @@ contract ReferralRegistry is OwnableRoles {
     /// @dev Error when the caller isn't allowed to update the state on the given tree
     error NotAllowedOnTheGivenTree();
 
+    /// @dev Error when the tree owner is invalid
+    error InvalidTreeOwner();
+
     /// @dev Error when the user already got a referer for the given `tree`
     error AlreadyHaveReferer(bytes32 tree, address currentReferrer);
 
@@ -47,7 +50,7 @@ contract ReferralRegistry is OwnableRoles {
         /// @dev Mapping of custom tree selector to referral tree
         mapping(bytes32 selector => mapping(address referee => address referrer)) referralTrees;
         /// @dev Mapping of allowed caller to tree selector
-        mapping(bytes32 selector => address) treeAllowance;
+        mapping(bytes32 selector => address) treeManager;
     }
 
     function _referralStorage() private pure returns (ReferralRegistryStorage storage storagePtr) {
@@ -65,21 +68,22 @@ contract ReferralRegistry is OwnableRoles {
     /*                            Tree allowance hooks                            */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Grant the access to the given tree for the given `_caller`
-    function grantAccessToTree(bytes32 _selector, address _caller) public onlyRoles(REFERRAL_ALLOWANCE_MANAGER_ROLE) {
-        _referralStorage().treeAllowance[_selector] = _caller;
+    /// @dev Grant the access to the given tree for the given `_owner`
+    function grantAccessToTree(bytes32 _selector, address _owner) public onlyRoles(REFERRAL_ALLOWANCE_MANAGER_ROLE) {
+        _referralStorage().treeManager[_selector] = _owner;
     }
 
-    /// @dev Transfer the access to the given tree for the given `_newCaller`
-    function transferAccessToTree(bytes32 _selector, address _newCaller) public {
+    /// @dev Transfer the access to the given tree for the given `_newOwner`
+    function transferAccessToTree(bytes32 _selector, address _newOwner) public {
+        if (_newOwner == address(0)) revert InvalidTreeOwner();
         ReferralRegistryStorage storage storageRef = _referralStorage();
-        if (msg.sender != storageRef.treeAllowance[_selector]) revert NotAllowedOnTheGivenTree();
-        storageRef.treeAllowance[_selector] = _newCaller;
+        if (msg.sender != storageRef.treeManager[_selector]) revert NotAllowedOnTheGivenTree();
+        storageRef.treeManager[_selector] = _newOwner;
     }
 
-    /// @dev Check if the given `_caller` is allowed on the tree `_selector`
-    function isAllowedOnTree(bytes32 _selector, address _caller) public view returns (bool) {
-        return _referralStorage().treeAllowance[_selector] == _caller;
+    /// @dev Check if the given `_owner` is allowed on the tree `_selector`
+    function isAllowedOnTree(bytes32 _selector, address _owner) public view returns (bool) {
+        return _referralStorage().treeManager[_selector] == _owner;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -88,7 +92,7 @@ contract ReferralRegistry is OwnableRoles {
 
     /// @notice Specify that the `_user` was referred by `_referrer` on the given `_selector`
     function saveReferrer(bytes32 _selector, address _user, address _referrer) public {
-        if (msg.sender != _referralStorage().treeAllowance[_selector]) revert NotAllowedOnTheGivenTree();
+        if (!isAllowedOnTree(_selector, msg.sender)) revert NotAllowedOnTheGivenTree();
         if (_referrer == address(0)) revert InvalidReferrer();
 
         // Get our referral tree
