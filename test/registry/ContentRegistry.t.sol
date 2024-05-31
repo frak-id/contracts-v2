@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
-import {ContentTypes, CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS} from "src/constants/ContentTypes.sol";
-import {MINTER_ROLE} from "src/constants/Roles.sol";
-import {ERC721} from "solady/tokens/ERC721.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {Test} from "forge-std/Test.sol";
 import "forge-std/Console.sol";
+import {Test} from "forge-std/Test.sol";
+import {Ownable} from "solady/auth/Ownable.sol";
+import {ERC721} from "solady/tokens/ERC721.sol";
+import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
+import {MINTER_ROLE} from "src/constants/Roles.sol";
+import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 
 contract ContentRegistryTest is Test {
     /// @dev The module we will test

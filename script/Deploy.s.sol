@@ -4,13 +4,15 @@ pragma solidity 0.8.23;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
-import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
-import {PaywallToken} from "src/tokens/PaywallToken.sol";
-import {CommunityToken} from "src/tokens/CommunityToken.sol";
 import {Paywall} from "src/Paywall.sol";
 import {NexusDiscoverCampaign} from "src/campaign/NexusDiscoverCampaign.sol";
+
+import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
+import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
+import {CommunityToken} from "src/tokens/CommunityToken.sol";
+import {PaywallToken} from "src/tokens/PaywallToken.sol";
+
 import {ReferralToken} from "src/tokens/ReferralToken.sol";
-import {MINTER_ROLE, CAMPAIGN_MANAGER_ROLE} from "src/constants/Roles.sol";
 
 contract Deploy is Script {
     // Config

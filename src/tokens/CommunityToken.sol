@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {ERC6909} from "solady/tokens/ERC6909.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {ContentRegistry} from "../registry/ContentRegistry.sol";
 
 /// @author @KONFeature
 /// @title CommunityToken

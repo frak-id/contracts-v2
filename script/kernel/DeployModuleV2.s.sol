@@ -5,8 +5,9 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
-import {MultiWebAuthNValidatorV2} from "src/kernel/v2/MultiWebAuthNValidator.sol";
+
 import {MultiWebAuthNRecoveryAction} from "src/kernel/v2/MultiWebAuthNRecoveryAction.sol";
+import {MultiWebAuthNValidatorV2} from "src/kernel/v2/MultiWebAuthNValidator.sol";
 
 contract DeployModuleV2 is Script {
     address P256_WRAPPER_ADDRESS = 0x97A24c95E317c44c0694200dd0415dD6F556663D;

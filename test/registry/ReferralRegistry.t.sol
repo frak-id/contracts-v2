@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {Test} from "forge-std/Test.sol";
 import "forge-std/Console.sol";
+import {Test} from "forge-std/Test.sol";
+import {Ownable} from "solady/auth/Ownable.sol";
+import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ReferralRegistryTest is Test {
     /// @dev The module we will test

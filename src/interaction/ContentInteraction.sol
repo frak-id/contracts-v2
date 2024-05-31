@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {ContentTypes} from "../constants/ContentTypes.sol";
+import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
+import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+import {ECDSA} from "solady/utils/ECDSA.sol";
+import {EIP712} from "solady/utils/EIP712.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
-import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {EIP712} from "solady/utils/EIP712.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";
-import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
-import {ContentTypes} from "../constants/ContentTypes.sol";
 
 /// @title ContentInteraction
 /// @author @KONFeature
@@ -21,7 +21,7 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("SaveReferrer(uint256 contentId, bytes32 interactionData,address user, uint256 nonce)");
+        keccak256("ValidateInteraction(uint256 contentId, bytes32 interactionData,address user, uint256 nonce)");
 
     /// @dev The base content referral tree: `keccak256("ContentReferralTree")`
     bytes32 private constant _BASE_CONTENT_TREE = 0x3d16196f272c96153eabc4eb746e08ae541cf36535edb959ed80f5e5169b6787;

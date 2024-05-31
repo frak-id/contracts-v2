@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {ReferralModule} from "src/modules/ReferralModule.sol";
-import {InvalidSignature} from "src/constants/Errors.sol";
-import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {Test} from "forge-std/Test.sol";
+import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
+import {InvalidSignature} from "src/constants/Errors.sol";
+import {ReferralModule} from "src/modules/ReferralModule.sol";
 
 contract ReferralModuleTest is Test {
     /// @dev The module we will test

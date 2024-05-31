@@ -5,11 +5,12 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
+
+import {MultiWebAuthNRecovery} from "src/kernel/v3/MultiWebAuthNRecovery.sol";
 import {MultiWebAuthNValidatorV3} from "src/kernel/v3/MultiWebAuthNValidator.sol";
-import {WebAuthNValidatorV3} from "src/kernel/v3/WebAuthNValidator.sol";
 import {NexusFactory} from "src/kernel/v3/NexusFactory.sol";
 import {RecoveryPolicy} from "src/kernel/v3/RecoveryPolicy.sol";
-import {MultiWebAuthNRecovery} from "src/kernel/v3/MultiWebAuthNRecovery.sol";
+import {WebAuthNValidatorV3} from "src/kernel/v3/WebAuthNValidator.sol";
 
 contract DeployModuleV3 is Script {
     // Validator themself

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {ContentTypes} from "../constants/ContentTypes.sol";
+import {MINTER_ROLE} from "../constants/Roles.sol";
+import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {MINTER_ROLE} from "../constants/Roles.sol";
-import {ContentTypes} from "../constants/ContentTypes.sol";
 
 /// @notice Metadata defination of a content
 struct Metadata {

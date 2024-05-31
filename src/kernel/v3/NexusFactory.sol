@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import {LibClone} from "solady/utils/LibClone.sol";
 import {Kernel} from "kernel/Kernel.sol";
 import {IValidator} from "kernel/interfaces/IERC7579Modules.sol";
-import {ValidatorLib} from "kernel/utils/ValidationTypeLib.sol";
+
 import {ValidationId} from "kernel/types/Types.sol";
+import {ValidatorLib} from "kernel/utils/ValidationTypeLib.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 
 /// @author @KONFeature
 /// @title NexusFactory

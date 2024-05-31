@@ -2,8 +2,9 @@
 pragma solidity 0.8.23;
 
 import {InvalidConfig} from "../constants/Errors.sol";
-import {ReferralModule} from "./ReferralModule.sol";
+
 import {PushPullModule} from "./PushPullModule.sol";
+import {ReferralModule} from "./ReferralModule.sol";
 
 /// @dev Config struct for a referral campaign
 struct CampaignConfig {

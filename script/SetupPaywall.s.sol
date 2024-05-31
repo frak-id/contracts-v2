@@ -4,10 +4,10 @@ pragma solidity 0.8.23;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
+import {Paywall} from "src/Paywall.sol";
+import {CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
-import {Paywall} from "src/Paywall.sol";
-import {ContentTypes, CONTENT_TYPE_PRESS} from "src/constants/ContentTypes.sol";
 
 contract SetupPaywall is Script {
     address CONTENT_REGISTRY_ADDRESS = 0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753;

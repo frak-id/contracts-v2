@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ERC20} from "solady/tokens/ERC20.sol";
-import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {MINTER_ROLE} from "../constants/Roles.sol";
+import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+import {ERC20} from "solady/tokens/ERC20.sol";
 
 /// @author @KONFeature
 /// @title ReferralToken

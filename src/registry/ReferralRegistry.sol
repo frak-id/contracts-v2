@@ -2,10 +2,11 @@
 pragma solidity 0.8.23;
 
 import {InvalidSignature} from "../constants/Errors.sol";
+
+import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "../constants/Roles.sol";
+import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
-import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "../constants/Roles.sol";
 
 /// @author @KONFeature
 /// @title ReferralRegistry

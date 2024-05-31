@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentInteraction} from "./ContentInteraction.sol";
+import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
-import {ContentTypes, CONTENT_TYPE_PRESS} from "../constants/ContentTypes.sol";
+import {ContentInteraction} from "./ContentInteraction.sol";
 
 /// @title PressInteraction
 /// @author @KONFeature

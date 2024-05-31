@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
+import {UPGRADE_ROLE} from "../constants/Roles.sol";
+
+import {ContentInteraction} from "../interaction/ContentInteraction.sol";
+import {PressInteraction} from "../interaction/PressInteraction.sol";
+import {ContentRegistry} from "../registry/ContentRegistry.sol";
+import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
-import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
-import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {ContentRegistry} from "../registry/ContentRegistry.sol";
-import {UPGRADE_ROLE} from "../constants/Roles.sol";
-import {ContentTypes, CONTENT_TYPE_PRESS} from "../constants/ContentTypes.sol";
-import {PressInteraction} from "../interaction/PressInteraction.sol";
-import {ContentInteraction} from "../interaction/ContentInteraction.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
+import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 
 /// @title ContentInteractionManager
 /// @author @KONFeature

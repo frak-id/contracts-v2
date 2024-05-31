@@ -2,9 +2,10 @@
 pragma solidity 0.8.23;
 
 import {InvalidConfig} from "../constants/Errors.sol";
-import {ReferralCampaignModule, CampaignConfig} from "../modules/ReferralCampaignModule.sol";
-import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+
 import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
+import {CampaignConfig, ReferralCampaignModule} from "../modules/ReferralCampaignModule.sol";
+import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 
 /// @author @KONFeature
 /// @title NexusRegisterCampaign

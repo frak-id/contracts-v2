@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {PushPullModule} from "src/modules/PushPullModule.sol";
-import {ERC20} from "solady/tokens/ERC20.sol";
 import {Test} from "forge-std/Test.sol";
+import {ERC20} from "solady/tokens/ERC20.sol";
+import {PushPullModule} from "src/modules/PushPullModule.sol";
 
 contract PushPullModuleTest is Test {
     /// @dev The module we will test

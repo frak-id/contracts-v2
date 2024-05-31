@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "forge-std/Console.sol";
+import {Test} from "forge-std/Test.sol";
+import {Ownable} from "solady/auth/Ownable.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
+import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
+import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
+import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
-import {ContentTypes, CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS} from "src/constants/ContentTypes.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
-import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {Test} from "forge-std/Test.sol";
-import "forge-std/Console.sol";
 
 contract ContentInteractionManagerTest is Test {
     address owner = makeAddr("owner");
