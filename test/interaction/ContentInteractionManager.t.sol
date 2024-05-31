@@ -6,6 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
+import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
@@ -32,6 +33,10 @@ contract ContentInteractionManagerTest is Test {
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
         contentInteractionManager.init(owner);
+
+        // Grant the right roles to the content interaction manager
+        vm.prank(owner);
+        referralRegistry.grantRoles(address(contentInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
 
         vm.startPrank(owner);
         contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain");

@@ -110,6 +110,10 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         address proxy = LibClone.deployERC1967(interactionContract);
         ContentInteraction(proxy).init(address(this), owner(), contentOwner);
 
+        // Grant the allowance manager role to the referral registry
+        bytes32 referralTree = ContentInteraction(proxy).getReferralTree();
+        _REFERRAL_REGISTRY.grantAccessToTree(referralTree, proxy);
+
         // Emit the creation event type
         emit InteractionContractDeployed(_contentId, proxy);
 
@@ -118,14 +122,14 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Deploy the right interaction contract for the given content type
-    function _deployContractForContentTypes(uint256 __contentId, ContentTypes _contentTypes)
+    function _deployContractForContentTypes(uint256 _contentId, ContentTypes _contentTypes)
         private
         returns (address interactionContract)
     {
         // Handle the press type of content
         if (_contentTypes.isPressType()) {
             // Deploy the press interaction contract
-            PressInteraction pressInteraction = new PressInteraction(__contentId, address(_REFERRAL_REGISTRY));
+            PressInteraction pressInteraction = new PressInteraction(_contentId, address(_REFERRAL_REGISTRY));
             interactionContract = address(pressInteraction);
         }
     }
@@ -135,9 +139,9 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Retreive the interaction contract for the given content id
-    function getInteractionContract(uint256 __contentId) public view returns (address interactionContract) {
+    function getInteractionContract(uint256 _contentId) public view returns (address interactionContract) {
         // Retreive the interaction contract
-        interactionContract = _storage().contentInteractions[__contentId];
+        interactionContract = _storage().contentInteractions[_contentId];
         if (interactionContract == address(0)) revert NoInteractionContractFound();
     }
 

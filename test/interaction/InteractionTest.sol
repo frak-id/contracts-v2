@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {INTERCATION_VALIDATOR_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
@@ -12,6 +12,8 @@ import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 /// @dev Generic contract to test interaction
 abstract contract InteractionTest is Test {
+    uint256 internal contentId;
+
     address internal owner = makeAddr("owner");
     address internal minter = makeAddr("minter");
 
@@ -24,7 +26,7 @@ abstract contract InteractionTest is Test {
 
     ContentInteraction internal contentInteraction;
 
-    function _initInteractionTest(uint256 contentId) internal returns (address interactionContract) {
+    function _initInteractionTest() internal returns (address interactionContract) {
         // Create our validator ECDSA
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
 
@@ -33,6 +35,10 @@ abstract contract InteractionTest is Test {
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
         contentInteractionManager.init(owner);
+
+        // Grant the right roles to the content interaction manager
+        vm.prank(owner);
+        referralRegistry.grantRoles(address(contentInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
 
         // Deploy the interaction contract
         contentInteractionManager.deployInteractionContract(contentId);
@@ -58,11 +64,8 @@ abstract contract InteractionTest is Test {
         bytes32 domainSeparator = contentInteraction.getDomainSeparator();
 
         // Build the digest
-        bytes32 dataHash = keccak256(
-            abi.encode(
-                _VALIDATE_INTERACTION_TYPEHASH, contentInteraction.getContentId(), _interactionData, _user, nonce
-            )
-        );
+        bytes32 dataHash =
+            keccak256(abi.encode(_VALIDATE_INTERACTION_TYPEHASH, contentId, _interactionData, _user, nonce));
         bytes32 fullHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, dataHash));
 
         // Sign the full hash
