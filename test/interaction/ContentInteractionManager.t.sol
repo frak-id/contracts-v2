@@ -7,8 +7,6 @@ import {LibClone} from "solady/utils/LibClone.sol";
 import {ContentTypes, CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS} from "src/constants/ContentTypes.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
-import {MINTER_ROLE} from "src/constants/Roles.sol";
-import {ERC721} from "solady/tokens/ERC721.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {Test} from "forge-std/Test.sol";
 import "forge-std/Console.sol";
