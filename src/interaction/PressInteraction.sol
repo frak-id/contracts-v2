@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {ContentInteraction} from "./ContentInteraction.sol";
 import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
-import {CONTENT_TYPE_PRESS} from "../constants/Contents.sol";
+import {ContentTypes, CONTENT_TYPE_PRESS} from "../constants/ContentTypes.sol";
 
 /// @title PressInteraction
 /// @author @KONFeature
@@ -168,7 +168,7 @@ contract PressInteraction is ContentInteraction {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the content type for the given platform
-    function getContentType() public pure override returns (bytes32) {
+    function getContentType() public pure override returns (ContentTypes) {
         return CONTENT_TYPE_PRESS;
     }
 }

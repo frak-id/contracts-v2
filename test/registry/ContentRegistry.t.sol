@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
+import {ContentTypes, CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS} from "src/constants/ContentTypes.sol";
 import {MINTER_ROLE} from "src/constants/Roles.sol";
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
@@ -40,79 +41,79 @@ contract ContentRegistryTest is Test {
 
     function test_mint_Unauthorized() public {
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentRegistry.mint(0, "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
     }
 
     function test_mint_InvalidNameOrDomain() public {
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.InvalidNameOrDomain.selector);
-        contentRegistry.mint(0, "", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "", "domain");
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.InvalidNameOrDomain.selector);
-        contentRegistry.mint(0, "name", "");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "");
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.InvalidNameOrDomain.selector);
-        contentRegistry.mint(0, "", "");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "", "");
     }
 
     function test_mint_AlreadyExistingContent() public {
         vm.prank(minter);
-        contentRegistry.mint(0, "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.AlreadyExistingContent.selector);
-        contentRegistry.mint(0, "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.AlreadyExistingContent.selector);
-        contentRegistry.mint(0, "name-wtf", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name-wtf", "domain");
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.AlreadyExistingContent.selector);
-        contentRegistry.mint(bytes32(uint256(13)), "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "domain");
     }
 
     function test_mint() public {
         uint256 id = uint256(keccak256("domain"));
 
         vm.prank(minter);
-        uint256 mintedId = contentRegistry.mint(0, "name", "domain");
+        uint256 mintedId = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
 
         assertEq(mintedId, id);
         assertEq(contentRegistry.ownerOf(mintedId), address(minter));
-        assertEq(contentRegistry.getContentTypes(id), 0);
+        assertEq(ContentTypes.unwrap(contentRegistry.getContentTypes(id)), ContentTypes.unwrap(CONTENT_TYPE_DAPP));
         assertEq(contentRegistry.isExistingContent(id), true);
 
         Metadata memory metadata = contentRegistry.getMetadata(id);
-        assertEq(metadata.contentTypes, 0);
+        assertEq(ContentTypes.unwrap(metadata.contentTypes), ContentTypes.unwrap(CONTENT_TYPE_DAPP));
         assertEq(metadata.name, "name");
         assertEq(metadata.domain, "domain");
     }
 
     function test_updateMetadata() public {
         vm.prank(minter);
-        uint256 id = contentRegistry.mint(0, "name", "domain");
+        uint256 id = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
 
         Metadata memory metadata = contentRegistry.getMetadata(id);
-        assertEq(metadata.contentTypes, 0);
+        assertEq(ContentTypes.unwrap(metadata.contentTypes), ContentTypes.unwrap(CONTENT_TYPE_DAPP));
         assertEq(metadata.name, "name");
         assertEq(metadata.domain, "domain");
 
         vm.prank(minter);
-        contentRegistry.updateMetadata(id, bytes32(uint256(1)), "new-name");
+        contentRegistry.updateMetadata(id, ContentTypes.wrap(bytes32(uint256(13))), "new-name");
 
         metadata = contentRegistry.getMetadata(id);
-        assertEq(metadata.contentTypes, bytes32(uint256(1)));
+        assertEq(ContentTypes.unwrap(metadata.contentTypes), bytes32(uint256(13)));
         assertEq(metadata.name, "new-name");
         assertEq(metadata.domain, "domain");
 
         vm.expectRevert(ERC721.NotOwnerNorApproved.selector);
-        contentRegistry.updateMetadata(id, 0, "new-name");
+        contentRegistry.updateMetadata(id, CONTENT_TYPE_DAPP, "new-name");
 
         vm.expectRevert(ContentRegistry.InvalidNameOrDomain.selector);
         vm.prank(minter);
-        contentRegistry.updateMetadata(id, 0, "");
+        contentRegistry.updateMetadata(id, CONTENT_TYPE_DAPP, "");
     }
 }

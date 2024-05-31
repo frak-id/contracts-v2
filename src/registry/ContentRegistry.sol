@@ -5,10 +5,11 @@ import {ERC721} from "solady/tokens/ERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {MINTER_ROLE} from "../constants/Roles.sol";
+import {ContentTypes} from "../constants/ContentTypes.sol";
 
 /// @notice Metadata defination of a content
 struct Metadata {
-    bytes32 contentTypes;
+    ContentTypes contentTypes;
     string name;
     string domain;
 }
@@ -67,7 +68,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Mint a new content with the given metadata
-    function mint(bytes32 _contentTypes, string calldata _name, string calldata _domain)
+    function mint(ContentTypes _contentTypes, string calldata _name, string calldata _domain)
         public
         onlyRoles(MINTER_ROLE)
         returns (uint256 id)
@@ -96,7 +97,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
     }
 
     /// @notice Get the types of a content
-    function getContentTypes(uint256 _contentId) public view returns (bytes32) {
+    function getContentTypes(uint256 _contentId) public view returns (ContentTypes) {
         return _getStorage()._metadata[_contentId].contentTypes;
     }
 
@@ -106,7 +107,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
     }
 
     /// @notice Update the metadata of a content
-    function updateMetadata(uint256 _contentId, bytes32 _contentTypes, string calldata _name) public {
+    function updateMetadata(uint256 _contentId, ContentTypes _contentTypes, string calldata _name) public {
         // Ensure it's an approved user doing the call
         if (!_isApprovedOrOwner(msg.sender, _contentId)) revert ERC721.NotOwnerNorApproved();
         if (bytes(_name).length == 0) revert InvalidNameOrDomain();

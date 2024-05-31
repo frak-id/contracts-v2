@@ -5,16 +5,18 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {Initializable} from "solady/utils/Initializable.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {UPGRADE_ROLE} from "../constants/Roles.sol";
-import {CONTENT_TYPE_PRESS} from "../constants/Contents.sol";
+import {ContentTypes, CONTENT_TYPE_PRESS} from "../constants/ContentTypes.sol";
+import {PressInteraction} from "../interaction/PressInteraction.sol";
 
 /// @title ContentInteractionManager
 /// @author @KONFeature
 /// @notice Top level manager for different types of interactions
 /// @custom:security-contact contact@frak.id
-contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable {
+contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializable {
     /* -------------------------------------------------------------------------- */
     /*                                  Constants                                 */
     /* -------------------------------------------------------------------------- */
@@ -32,6 +34,10 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable {
     error InteractionContractAlreadyDeployed();
 
     error ContentDoesntExist();
+
+    error CantHandleContentTypes();
+
+    error NoInteractionContractFound();
 
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
@@ -63,10 +69,17 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable {
         }
     }
 
-    constructor(address _owner, address _referralRegistry, address _contentRegistry) {
-        _CONTENT_REGISTRY = ContentRegistry(_contentRegistry);
-        _REFERRAL_REGISTRY = ReferralRegistry(_referralRegistry);
+    constructor(ContentRegistry _contentRegistry, ReferralRegistry _referralRegistry) {
+        // Set immutable variable (since embeded inside the bytecode)
+        _CONTENT_REGISTRY = _contentRegistry;
+        _REFERRAL_REGISTRY = _referralRegistry;
 
+        // Disable init on deployed raw instance
+        _disableInitializers();
+    }
+
+    /// @dev Init our contract with the right owner
+    function init(address _owner) external initializer {
         _initializeOwner(_owner);
         _setRoles(_owner, UPGRADE_ROLE);
     }
@@ -80,23 +93,53 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable {
         // Check if we already have an interaction contract for this content
         if (_storage().contentInteractions[contentId] != address(0)) revert InteractionContractAlreadyDeployed();
 
-        // TODO: Find the right implementation contracts to deploy, and save them
-        // TODO: Handle a sort of multicall stuff for multi content type of content??
-
-        bytes32 contentTypes = _CONTENT_REGISTRY.getContentTypes(contentId);
-        if (contentTypes == 0) revert ContentDoesntExist();
+        // Retreive the content types, if at 0 it mean that the content doesn't exist
+        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(contentId);
+        if (contentTypes.isEmpty()) revert ContentDoesntExist();
 
         // Handle the press type of content
-        address interactionContract;
-        if (contentTypes & CONTENT_TYPE_PRESS != 0) {
-            // Deploy the press interaction contract
-            //address interactionContract = LibClone.clone(address(this));
-            //PressInteraction(interactionContract).initialize(contentId, msg.sender, address(_REFERRAL_REGISTRY));
-        }
+        address interactionContract = _deployContractForContentTypes(contentId, contentTypes);
+        if (interactionContract == address(0)) revert CantHandleContentTypes();
 
-        _storage().contentInteractions[contentId] = interactionContract;
-        emit InteractionContractDeployed(contentId, interactionContract);
+        // Deploy the proxy arround the contract
+        address proxy = LibClone.deployERC1967(interactionContract);
+
+        // Emit the creation event type
+        emit InteractionContractDeployed(contentId, proxy);
+
+        // Save the interaction contract
+        _storage().contentInteractions[contentId] = proxy;
     }
+
+    /// @dev Deploy the right interaction contract for the given content type
+    function _deployContractForContentTypes(uint256 _contentId, ContentTypes _contentTypes)
+        private
+        returns (address interactionContract)
+    {
+        // Handle the press type of content
+        if (_contentTypes.isPressType()) {
+            // Retreive the owner of this content
+            address owner = _CONTENT_REGISTRY.ownerOf(_contentId);
+            // Deploy the press interaction contract
+            // TODO: Are we sure about the owner?
+            // TODO: Wouldn't it be better if the owner was the manager owner, and then grant the right roles to the nft owner?
+            PressInteraction pressInteraction = new PressInteraction(_contentId, owner, address(_REFERRAL_REGISTRY));
+            interactionContract = address(pressInteraction);
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                            Top level interaction                           */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Retreive the interaction contract for the given content id
+    function getInteractionContract(uint256 _contentId) public view returns (address interactionContract) {
+        // Retreive the interaction contract
+        interactionContract = _storage().contentInteractions[_contentId];
+        if (interactionContract == address(0)) revert NoInteractionContractFound();
+    }
+
+    // TODO: Wallet migration interaction
 
     /// @dev Upgrade check
     function _authorizeUpgrade(address newImplementation) internal override onlyRoles(UPGRADE_ROLE) {}

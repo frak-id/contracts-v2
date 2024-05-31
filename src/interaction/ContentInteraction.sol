@@ -7,6 +7,7 @@ import {ECDSA} from "solady/utils/ECDSA.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {ContentTypes} from "../constants/ContentTypes.sol";
 
 /// @title ContentInteraction
 /// @author @KONFeature
@@ -138,7 +139,7 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the type for the current content
-    function getContentType() public pure virtual returns (bytes32);
+    function getContentType() public pure virtual returns (ContentTypes);
 
     /// @dev Get the id for the current content
     function getContentId() public view returns (uint256) {
