@@ -277,4 +277,24 @@ contract PressInteractionTest is InteractionTest {
         vm.prank(charlie);
         pressInteraction.createShareLink(_articleId, signature);
     }
+
+    function test_reinit() public {
+        vm.expectRevert();
+        pressInteraction.init(address(1), address(1), address(1));
+
+        // Ensure we can't init raw instance
+        PressInteraction rawImplem = new PressInteraction(contentId, address(referralRegistry));
+        vm.expectRevert();
+        rawImplem.init(address(1), address(1), address(1));
+    }
+
+    function test_upgrade() public {
+        address newImplem = address(new PressInteraction(contentId, address(referralRegistry)));
+
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.upgradeToAndCall(newImplem, "");
+
+        vm.prank(owner);
+        contentInteractionManager.upgradeToAndCall(newImplem, "");
+    }
 }

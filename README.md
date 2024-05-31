@@ -31,21 +31,46 @@ Plugin for the Kernel smart accounts plugins:
 | MultiWebAuthN - Kernel v2             | `0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808`  |
 | MultiWebAuthN Recovery - Kernel v2    | `0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9`  |
 
+## Registries
+
+### Content Registry
+
+The content registry is a contract managing every content inside the Frak ecosystem.
+Each content is represented by a few on-chain metadata:
+ - name
+ - domain
+ - contentTypes (type of content this content is distributing, like press, video, dapp and stuff)
+The domain is immutable for each content, and the id of a content is a `keccak256` hash of it's domain.
+
+Under the hood, it's using an ERC-721 token to represent each content, handle ownership, transfers etc.
+
+### Referral Registry
+
+The referral registry is a contract managing every referral tree inside the Frak ecosystem.
+Each tree is identified by a `bytes32` selector.
+
+A referral tree is basicaly the list of user to their referrer. 
+Like that you can have some airdrop campaign using a multi level comission system for each users and their referrer.
+
+Each referral tree are public, but need specific permissions to store new user in the referral chain.
+
+For instance, every ContentInteraction contract are granted a write permissions on their own referral tree (referral tree being `keccak256("ContentReferralTree", contentId)`).
+
+## Interactions
+
+Interaction are basically contract receiving some web2 user interaction on a content, and executing some web3 logic around it.
+
+### Content Interaction Manager
+
+This is the higher level contract, responsible to deploy, and store, every ContentInteraction contract.
+
+A Content Interaction contract is specific to a single ContentType, it's responsible to handle the interaction between a user and a specific content (immutable).
+
+The manager will, when requested, deploy the interaction contract for the given content, specificly for it's content types. It will sotre a mapping of all of that, and help end-users retreive the interaction contract for the content they are consuming.
+
 ## Modules
 
 All the module used by the Frak ecosystem to help Content or Creator create their custom dApp logic.
-
-### Referral Module
-
-This module permit to create simple referral system, with multi tree (tree identified by a `bytes32` selector).
-
-- The referral chain are stored from `referee` => `referrer`. It's easing the process to get the referrer of a user, most commonly action.
-- A user can add his referrer chain by using either of this two methods:
-    - Call the `saveReferrer(bytes32 _selector, address _referrer)` method.
-    - Create and sign the typed data `SaveReferrer`, then anyone could sent the signature to add it to the referral chain.
-- Two main interaction possible with it:
-    - The hook `onUserReferred(bytes32 _selector, address _referrer, address _referee)` will be called when a user is referred by another one.
-    - The function `getReferrer(bytes32 _selector, address _referee) returns (address)` will return the referrer of a user. 
 
 ### Push Pull Module
 

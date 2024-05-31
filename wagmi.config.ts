@@ -3,7 +3,25 @@ import { foundry } from '@wagmi/cli/plugins'
 
 export default defineConfig(
     [
-        // Poc contract abis
+        // Frak related abis
+        {
+            out: "abi/frak-abis.ts",
+            plugins: [
+                foundry({
+                    project: './',
+                    artifacts: 'out/',
+                    include: [
+                        // Prod stuff
+                        'ContentRegistry.json',
+                        'ReferralRegistry.json',
+                        'ContentInteraction.json',
+                        'PressInteraction.json',
+                        'ContentInteractionManager.json'
+                    ]
+                }),
+            ],
+        },
+        // Frak POC related abis
         {
             out: "abi/poc-abis.ts",
             plugins: [
@@ -11,24 +29,9 @@ export default defineConfig(
                     project: './',
                     artifacts: 'out/',
                     include: [
-                        'ContentRegistry.json',
                         'PaywallToken.json',
                         'CommunityToken.json',
                         'Paywall.json'
-                    ]
-                }),
-            ],
-        },
-        // Campaign related contract abis
-        {
-            out: "abi/campaign-abis.ts",
-            plugins: [
-                foundry({
-                    project: './',
-                    artifacts: 'out/',
-                    include: [
-                        'NexusDiscoverCampaign.json',
-                        'ReferralToken.json'
                     ]
                 }),
             ],
