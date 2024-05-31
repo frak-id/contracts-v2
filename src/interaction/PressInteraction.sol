@@ -67,9 +67,7 @@ contract PressInteraction is ContentInteraction {
         }
     }
 
-    constructor(uint256 _contentId, address _owner, address _referralRegistry)
-        ContentInteraction(_contentId, _owner, _referralRegistry)
-    {}
+    constructor(uint256 _contentId, address _referralRegistry) ContentInteraction(_contentId, _referralRegistry) {}
 
     /* -------------------------------------------------------------------------- */
     /*                          Open interaction methods                          */

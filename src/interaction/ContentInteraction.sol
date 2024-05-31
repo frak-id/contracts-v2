@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {Initializable} from "solady/utils/Initializable.sol";
+import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
-import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ContentTypes} from "../constants/ContentTypes.sol";
@@ -14,7 +15,7 @@ import {ContentTypes} from "../constants/ContentTypes.sol";
 /// @notice Interface for a content platform
 /// @dev This interface is meant to be implemented by a contract that represents a content platform
 /// @custom:security-contact contact@frak.id
-abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable {
+abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, Initializable {
     /// @dev error throwned when the signer of an interaction is invalid
     error WrongInteractionSigner();
 
@@ -50,14 +51,27 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable {
         }
     }
 
-    constructor(uint256 _contentId, address _owner, address _referralRegistry) {
+    constructor(uint256 _contentId, address _referralRegistry) {
+        // Set immutable variable (since embeded inside the bytecode)
         _CONTENT_ID = _contentId;
         _REFERRAL_REGISTRY = ReferralRegistry(_referralRegistry);
 
-        // Roles
-        _initializeOwner(_owner);
-        _setRoles(_owner, CAMPAIGN_MANAGER_ROLE);
-        _setRoles(_owner, INTERCATION_VALIDATOR_ROLE);
+        // Disable init on deployed raw instance
+        _disableInitializers();
+    }
+
+    /// @dev Init our contract with the right owner
+    function init(address _interactionMananger, address _interactionManangerOwner, address _contentOwner)
+        external
+        initializer
+    {
+        // Global owner is the same as the interaction manager owner
+        _initializeOwner(_interactionManangerOwner);
+        _setRoles(_interactionManangerOwner, UPGRADE_ROLE);
+        // The interaction manager can trigger updates
+        _setRoles(_interactionMananger, UPGRADE_ROLE);
+        // The content owner can manage almost everything
+        _setRoles(_contentOwner, CAMPAIGN_MANAGER_ROLE | INTERCATION_VALIDATOR_ROLE | UPGRADE_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */

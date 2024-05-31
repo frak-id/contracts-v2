@@ -11,6 +11,7 @@ import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ContentTypes, CONTENT_TYPE_PRESS} from "../constants/ContentTypes.sol";
 import {PressInteraction} from "../interaction/PressInteraction.sol";
+import {ContentInteraction} from "../interaction/ContentInteraction.sol";
 
 /// @title ContentInteractionManager
 /// @author @KONFeature
@@ -48,7 +49,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     event WalletLinked(address indexed prevWallet, address indexed newWallet);
 
     /// @dev Event emitted when an interaction contract is deployed
-    event InteractionContractDeployed(uint256 indexed contentId, address interactionContract);
+    event InteractionContractDeployed(uint256 indexed _contentId, address interactionContract);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -60,7 +61,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     struct InteractionManagerStorage {
         /// @dev Mapping of content id to the content interaction contract
-        mapping(uint256 contentId => address) contentInteractions;
+        mapping(uint256 _contentId => address) contentInteractions;
     }
 
     function _storage() private pure returns (InteractionManagerStorage storage storagePtr) {
@@ -88,42 +89,42 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /*                           Interaction deployment                           */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Deploy a new interaction contract for the given `contentId`
-    function deployInteractionContract(uint256 contentId) external {
+    /// @dev Deploy a new interaction contract for the given `_contentId`
+    function deployInteractionContract(uint256 _contentId) external {
         // Check if we already have an interaction contract for this content
-        if (_storage().contentInteractions[contentId] != address(0)) revert InteractionContractAlreadyDeployed();
+        if (_storage().contentInteractions[_contentId] != address(0)) revert InteractionContractAlreadyDeployed();
 
         // Retreive the content types, if at 0 it mean that the content doesn't exist
-        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(contentId);
+        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
         if (contentTypes.isEmpty()) revert ContentDoesntExist();
 
         // Handle the press type of content
-        address interactionContract = _deployContractForContentTypes(contentId, contentTypes);
+        address interactionContract = _deployContractForContentTypes(_contentId, contentTypes);
         if (interactionContract == address(0)) revert CantHandleContentTypes();
 
-        // Deploy the proxy arround the contract
+        // Retreive the owner of this content
+        address contentOwner = _CONTENT_REGISTRY.ownerOf(_contentId);
+
+        // Deploy the proxy arround the contract and init it
         address proxy = LibClone.deployERC1967(interactionContract);
+        ContentInteraction(proxy).init(address(this), owner(), contentOwner);
 
         // Emit the creation event type
-        emit InteractionContractDeployed(contentId, proxy);
+        emit InteractionContractDeployed(_contentId, proxy);
 
         // Save the interaction contract
-        _storage().contentInteractions[contentId] = proxy;
+        _storage().contentInteractions[_contentId] = proxy;
     }
 
     /// @dev Deploy the right interaction contract for the given content type
-    function _deployContractForContentTypes(uint256 _contentId, ContentTypes _contentTypes)
+    function _deployContractForContentTypes(uint256 __contentId, ContentTypes _contentTypes)
         private
         returns (address interactionContract)
     {
         // Handle the press type of content
         if (_contentTypes.isPressType()) {
-            // Retreive the owner of this content
-            address owner = _CONTENT_REGISTRY.ownerOf(_contentId);
             // Deploy the press interaction contract
-            // TODO: Are we sure about the owner?
-            // TODO: Wouldn't it be better if the owner was the manager owner, and then grant the right roles to the nft owner?
-            PressInteraction pressInteraction = new PressInteraction(_contentId, owner, address(_REFERRAL_REGISTRY));
+            PressInteraction pressInteraction = new PressInteraction(__contentId, address(_REFERRAL_REGISTRY));
             interactionContract = address(pressInteraction);
         }
     }
@@ -133,9 +134,9 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Retreive the interaction contract for the given content id
-    function getInteractionContract(uint256 _contentId) public view returns (address interactionContract) {
+    function getInteractionContract(uint256 __contentId) public view returns (address interactionContract) {
         // Retreive the interaction contract
-        interactionContract = _storage().contentInteractions[_contentId];
+        interactionContract = _storage().contentInteractions[__contentId];
         if (interactionContract == address(0)) revert NoInteractionContractFound();
     }
 
