@@ -10,9 +10,10 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 /// @notice Interface representing a campaign around some content interactions
 /// @custom:security-contact contact@frak.id
 abstract contract InteractionCampaign is OwnableRoles {
-    constructor(address _owner, address _contentInteration_manager) {
+    constructor(address _owner, address _contentInterationManager) {
         _initializeOwner(_owner);
-        _setRoles(_contentInteration_manager, CAMPAIGN_DEPLOYER_ROLE);
+        _setRoles(_owner, CAMPAIGN_MANAGER_ROLE);
+        _setRoles(_contentInterationManager, CAMPAIGN_DEPLOYER_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -60,3 +61,6 @@ uint256 constant CAMPAIGN_DEPLOYER_ROLE = 1 << 1;
 
 /// @dev The role for the a campaign event emitter
 uint256 constant CAMPAIGN_EVENT_EMITTER_ROLE = 1 << 2;
+
+/// @dev The role for the a campaign event emitter
+uint256 constant CAMPAIGN_MANAGER_ROLE = 1 << 3;

@@ -13,8 +13,8 @@ contract ContentRegistryTest is Test {
     /// @dev The module we will test
     ContentRegistry private contentRegistry;
 
-    address owner = makeAddr("owner");
-    address minter = makeAddr("minter");
+    address private owner = makeAddr("owner");
+    address private minter = makeAddr("minter");
 
     function setUp() public {
         contentRegistry = new ContentRegistry(owner);

@@ -10,23 +10,23 @@ contract ReferralRegistryTest is Test {
     /// @dev The module we will test
     ReferralRegistry private referralRegistry;
 
-    /// @dev a few test users
-    address alice;
-    address bob;
-    address charlie;
+    address private owner = makeAddr("owner");
 
-    address owner = makeAddr("owner");
+    /// @dev a few test users
+    address private alice;
+    address private bob;
+    address private charlie;
 
     /// @dev a few test users private keys
-    uint256 alicePrivKey;
-    uint256 bobPrivKey;
-    uint256 charliePrivKey;
+    uint256 private alicePrivKey;
+    uint256 private bobPrivKey;
+    uint256 private charliePrivKey;
 
-    bytes32 TREE_1 = keccak256("tree1");
-    bytes32 TREE_2 = keccak256("tree2");
+    bytes32 private TREE_1 = keccak256("tree1");
+    bytes32 private TREE_2 = keccak256("tree2");
 
-    address tree1Owner = makeAddr("tree1Owner");
-    address tree2Owner = makeAddr("tree2Owner");
+    address private tree1Owner = makeAddr("tree1Owner");
+    address private tree2Owner = makeAddr("tree2Owner");
 
     function setUp() public {
         referralRegistry = new ReferralRegistry(owner);

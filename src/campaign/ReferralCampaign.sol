@@ -3,10 +3,9 @@ pragma solidity 0.8.23;
 
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {INTERACTION_PRESS_USED_SHARE_LINK, InteractionType} from "../constants/InteractionType.sol";
-import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {InteractionCampaign} from "./InteractionCampaign.sol";
+import {CAMPAIGN_MANAGER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
 import {InteractionDecoderLib} from "./lib/InteractionDecoderLib.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
@@ -82,10 +81,11 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         uint256 _perLevelPercentage,
         uint256 _initialReferrerReward,
         uint256 _dailyDistributionCap,
+        bytes32 _referralTree,
         ReferralRegistry _referralRegistry,
         address _owner,
-        address _contentInteration_manager
-    ) InteractionCampaign(_owner, _contentInteration_manager) {
+        address _contentInterationManager
+    ) InteractionCampaign(_owner, _contentInterationManager) {
         if (_token == address(0)) {
             revert InvalidConfig();
         }
@@ -102,6 +102,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         _INITIAL_REFERRER_REWARD = _initialReferrerReward;
         _DAILY_DISTRIBUTION_CAP = _dailyDistributionCap;
         _REFERRAL_REGISTRY = _referralRegistry;
+        _REFERRAL_TREE = _referralTree;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -153,7 +154,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev External method callable by the manager, to distribute token to all the user referrers
     function distributeTokenToUserReferrers(address _user, uint256 _initialAmount)
         external
-        nonReentrant
         onlyRoles(CAMPAIGN_MANAGER_ROLE)
     {
         _performTokenDistribution(_user, _initialAmount);
@@ -173,7 +173,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
             // Update total distributed + current reward
             totalDistributed += currentReward;
-            currentReward = currentReward * (_PER_LEVEL_PERCENTAGE / 10_000);
+            currentReward = (currentReward * _PER_LEVEL_PERCENTAGE) / 10_000;
         }
 
         // Check with the cap
@@ -199,15 +199,11 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /*                           Campaign Administration                          */
     /* -------------------------------------------------------------------------- */
 
-    function withdrawToken() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+    function withdraw() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
         _TOKEN.safeTransfer(msg.sender, _TOKEN.balanceOf(address(this)));
     }
 
-    function pause() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
-        _referralCampaignStorage().isActive = false;
-    }
-
-    function resume() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
-        _referralCampaignStorage().isActive = true;
+    function setActive(bool activate) external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+        _referralCampaignStorage().isActive = activate;
     }
 }

@@ -13,15 +13,15 @@ import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ContentInteractionManagerTest is Test {
-    address owner = makeAddr("owner");
-    address minter = makeAddr("minter");
+    address private owner = makeAddr("owner");
+    address private minter = makeAddr("minter");
 
     ContentRegistry private contentRegistry;
     ReferralRegistry private referralRegistry;
 
-    uint256 contentIdDapp;
-    uint256 contentIdPress;
-    uint256 contentIdUnknown;
+    uint256 private contentIdDapp;
+    uint256 private contentIdPress;
+    uint256 private contentIdUnknown;
 
     ContentInteractionManager private contentInteractionManager;
 

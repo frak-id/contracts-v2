@@ -109,7 +109,10 @@ contract PressInteraction is ContentInteraction {
         }
 
         // Emit the share link used event
-        emit ShareLinkUsed(_shareId, _user);
+        {
+            emit ShareLinkUsed(_shareId, _user);
+            _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeOpenShare(_articleId, _user));
+        }
         // Save the info inside the right referral tree
         _saveReferrer(_user, shareInfo.user);
     }

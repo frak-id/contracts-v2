@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {MockErc20} from "../utils/MockErc20.sol";
 import {Test} from "forge-std/Test.sol";
-import {ERC20} from "solady/tokens/ERC20.sol";
 import {PushPullModule} from "src/modules/PushPullModule.sol";
 
 contract PushPullModuleTest is Test {
@@ -10,23 +10,16 @@ contract PushPullModuleTest is Test {
     MockPushPull private pushPullModule;
 
     /// @dev A few mock erc20 tokens
-    MockErc20 private token1;
-    MockErc20 private token2;
-    MockErc20 private token3;
+    MockErc20 private token1 = new MockErc20();
+    MockErc20 private token2 = new MockErc20();
+    MockErc20 private token3 = new MockErc20();
 
     /// @dev a few test users
-    address alice;
-    address bob;
+    address private alice = makeAddr("alice");
+    address private bob = makeAddr("bob");
 
     function setUp() public {
         pushPullModule = new MockPushPull();
-
-        token1 = new MockErc20();
-        token2 = new MockErc20();
-        token3 = new MockErc20();
-
-        alice = makeAddr("alice");
-        bob = makeAddr("bob");
     }
 
     /// @dev Test the addReward method, ensure it's failing if it hasn't enough token
@@ -204,21 +197,5 @@ contract PushPullModuleTest is Test {
 contract MockPushPull is PushPullModule {
     function addReward(address user, address token, uint256 amount) public {
         _pushReward(user, token, amount);
-    }
-}
-
-contract MockErc20 is ERC20 {
-    /// @dev Returns the name of the token.
-    function name() public pure override returns (string memory) {
-        return "Mock-ERC20";
-    }
-
-    /// @dev Returns the symbol of the token.
-    function symbol() public pure override returns (string memory) {
-        return "MOCK";
-    }
-
-    function mint(address to, uint256 amount) public {
-        _mint(to, amount);
     }
 }
