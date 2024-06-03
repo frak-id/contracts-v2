@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ContentTypes} from "../constants/ContentTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
@@ -43,6 +44,8 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     struct ContentInteractionStorage {
         /// @dev Nonce for the validation of the interaction
         mapping(bytes32 nonceKey => uint256 nonce) nonces;
+        /// @dev Array of all the current interactions campaigns
+        InteractionCampaign[] campaigns;
     }
 
     function _contentInteractionStorage() private pure returns (ContentInteractionStorage storage storagePtr) {
@@ -67,7 +70,7 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     {
         // Global owner is the same as the interaction manager owner
         _initializeOwner(_interactionManangerOwner);
-        _setRoles(_interactionManangerOwner, UPGRADE_ROLE);
+        _setRoles(_interactionManangerOwner, UPGRADE_ROLE | CAMPAIGN_MANAGER_ROLE);
         // The interaction manager can trigger updates
         _setRoles(_interactionMananger, UPGRADE_ROLE);
         // The content owner can manage almost everything
@@ -173,4 +176,76 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
 
     /// @dev Upgrade check
     function _authorizeUpgrade(address newImplementation) internal override onlyRoles(UPGRADE_ROLE) {}
+
+    /* -------------------------------------------------------------------------- */
+    /*                           Campaign related logics                          */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Send an inbteraction to all the concerned campaigns
+    function _sendInteractionToCampaign(bytes memory _data) internal {
+        InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
+        if (campaigns.length == 0) {
+            return;
+        }
+
+        for (uint256 i = 0; i < campaigns.length; i++) {
+            campaigns[i].handleInteraction(_data);
+        }
+    }
+
+    /// @dev Send an inbteraction to all the concerned campaigns
+    function _sendInteractionsToCampaign(bytes[] memory _data) internal {
+        InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
+        if (campaigns.length == 0) {
+            return;
+        }
+
+        for (uint256 i = 0; i < campaigns.length; i++) {
+            campaigns[i].handleInteractions(_data);
+        }
+    }
+
+    /// @dev Activate a new campaign
+    function attachCampaign(InteractionCampaign _campaign) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+        _contentInteractionStorage().campaigns.push(_campaign);
+    }
+
+    /// @dev Detach multiple campaigns
+    function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+        for (uint256 i = 0; i < _campaigns.length; i++) {
+            _detachCampaign(_campaigns[i]);
+        }
+    }
+
+    /// @dev Detach a campaign
+    function _detachCampaign(InteractionCampaign _campaign) private {
+        InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
+        InteractionCampaign lastCampaign = campaigns[campaigns.length - 1];
+
+        // If the campaign to remove is the last one, directly pop the element out of the array and exit
+        if (address(lastCampaign) == address(_campaign)) {
+            lastCampaign.disallowMe();
+            campaigns.pop();
+            return;
+        }
+
+        // If the campaign array only has one element, and it's not the one we want to remove, we exit cause not found
+        if (campaigns.length == 1) {
+            return;
+        }
+
+        // Find the campaign to remove
+        for (uint256 i = 0; i < campaigns.length; i++) {
+            // If that's not the campaign, we continue
+            if (address(campaigns[i]) != address(_campaign)) {
+                continue;
+            }
+            // Remove the roles on the campagn
+            campaigns[i].disallowMe();
+            // If we found the campaign, we replace it by the last item of our campaigns
+            campaigns[i] = campaigns[campaigns.length - 1];
+            campaigns.pop();
+            return;
+        }
+    }
 }

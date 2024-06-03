@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {InvalidSignature} from "../constants/Errors.sol";
-
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "../constants/Roles.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
@@ -154,6 +153,33 @@ contract ReferralRegistry is OwnableRoles {
         for (uint256 i = 0; i < length; ++i) {
             tmpReferee = tree[tmpReferee];
             referrerChains[i] = tmpReferee;
+        }
+    }
+
+    /// @notice Get the referrer of the given `_referee` on the given `_selector`, capped by `_maxLength`
+    function getCappedReferrers(bytes32 _selector, address _referee, uint256 _maxLength)
+        external
+        view
+        returns (address[] memory referrerChains)
+    {
+        // Get our tree
+        mapping(address referee => address referrer) storage tree = _referralStorage().referralTrees[_selector];
+
+        // Build our output addresses
+        referrerChains = new address[](_maxLength);
+
+        // Fill it
+        address tmpReferee = _referee;
+        uint256 iter;
+        for (; iter < _maxLength; ++iter) {
+            tmpReferee = tree[tmpReferee];
+            if (tmpReferee == address(0)) break;
+            referrerChains[iter] = tmpReferee;
+        }
+
+        // Correct the length to the real output
+        assembly {
+            mstore(referrerChains, iter)
         }
     }
 }

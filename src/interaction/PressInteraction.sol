@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
 import {ContentInteraction} from "./ContentInteraction.sol";
+import {InteractionEncoderLib} from "./lib/InteractionEncoderLib.sol";
 
 /// @title PressInteraction
 /// @author @KONFeature
@@ -84,8 +85,11 @@ contract PressInteraction is ContentInteraction {
         bytes32 interactionData = keccak256(abi.encode(_OPEN_ARTICLE_INTERACTION, _articleId, _shareId));
         _validateInteraction(interactionData, _user, _signature);
 
-        // Emit the open event
-        emit ArticleOpened(_articleId, _user);
+        // Emit the open event and send the interaction to the campaign if needed
+        {
+            emit ArticleOpened(_articleId, _user);
+            _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeOpenArticle(_articleId, _user));
+        }
 
         // If we got no share id, we can just stop here
         if (_shareId == 0) {
@@ -125,8 +129,11 @@ contract PressInteraction is ContentInteraction {
         bytes32 interactionData = keccak256(abi.encode(_READ_ARTICLE_INTERACTION, _articleId));
         _validateInteraction(interactionData, _user, _signature);
 
-        // Emit the read event
-        emit ArticleRead(_articleId, _user);
+        // Emit the read event and send the interaction to the campaign if needed
+        {
+            emit ArticleRead(_articleId, _user);
+            _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeReadArticle(_articleId, _user));
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -155,8 +162,12 @@ contract PressInteraction is ContentInteraction {
             return;
         }
 
-        // Otherwise, emit the event and set the right values
-        emit ShareLinkCreated(_articleId, _user, shareId);
+        // Emit the read event and send the interaction to the campaign if needed
+        {
+            emit ShareLinkCreated(_articleId, _user, shareId);
+            _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeCreateShare(_articleId, _user));
+        }
+        // Set the right values
         shareInfo.articleId = _articleId;
         shareInfo.user = _user;
     }

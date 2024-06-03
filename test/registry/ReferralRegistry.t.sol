@@ -71,6 +71,25 @@ contract ReferralRegistryTest is Test {
         assertEq(referrers[1], charlie);
     }
 
+    function test_getCappedReferrers() public {
+        // First level of the chain, bob is referrer of alice
+        vm.startPrank(tree1Owner);
+        referralRegistry.saveReferrer(TREE_1, alice, bob);
+        referralRegistry.saveReferrer(TREE_1, bob, charlie);
+        vm.stopPrank();
+
+        // Ensure our capped list is ok
+        address[] memory referrers = referralRegistry.getCappedReferrers(TREE_1, alice, 10);
+        assertEq(referrers.length, 2);
+        assertEq(referrers[0], bob);
+        assertEq(referrers[1], charlie);
+
+        // Ensure that the cap is respected and order keeped
+        referrers = referralRegistry.getCappedReferrers(TREE_1, alice, 1);
+        assertEq(referrers.length, 1);
+        assertEq(referrers[0], bob);
+    }
+
     function test_saveReferrer_multi() public {
         // First level of the chain, bob is referrer of alice
         vm.prank(tree1Owner);

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {UPGRADE_ROLE} from "../constants/Roles.sol";
-
 import {ContentInteraction} from "../interaction/ContentInteraction.sol";
 import {PressInteraction} from "../interaction/PressInteraction.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
@@ -132,6 +132,30 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
             PressInteraction pressInteraction = new PressInteraction(_contentId, address(_REFERRAL_REGISTRY));
             interactionContract = address(pressInteraction);
         }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Campaign deployment                            */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Attach a new campaign to the given `_contentId`
+    function attachCampaignToContent(uint256 _contentId, InteractionCampaign _campaign) external {
+        // Retreive the interaction contract
+        address interactionContract = getInteractionContract(_contentId);
+
+        // Attach the campaign to the interaction contract
+        ContentInteraction(interactionContract).attachCampaign(_campaign);
+
+        // Tell the campaign that this interaction is allowed to push events
+        _campaign.allowInteractionContract(interactionContract);
+    }
+
+    function detachCampaignsFromContent(uint256 _contentId, InteractionCampaign[] calldata _campaigns) external {
+        // Retreive the interaction contract
+        address interactionContract = getInteractionContract(_contentId);
+
+        // Loop over the campaigns and detach them
+        ContentInteraction(interactionContract).detachCampaigns(_campaigns);
     }
 
     /* -------------------------------------------------------------------------- */
