@@ -5,7 +5,7 @@ import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {INTERACTION_PRESS_USED_SHARE_LINK, InteractionType} from "../constants/InteractionType.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {CAMPAIGN_MANAGER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
+import {CAMPAIGN_EVENT_EMITTER_ROLE, CAMPAIGN_MANAGER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
 import {InteractionDecoderLib} from "./lib/InteractionDecoderLib.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
@@ -17,6 +17,13 @@ import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 contract ReferralCampaign is InteractionCampaign, PushPullModule {
     using SafeTransferLib for address;
     using InteractionDecoderLib for bytes;
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Events                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Event when the daily distribution cap is reset
+    event DailyDistrubutionCapReset(uint48 previousTimestamp, uint256 distributedAmount);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
@@ -48,7 +55,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     bytes32 private immutable _REFERRAL_TREE;
 
     /// @dev The referral registry
-    ReferralRegistry internal immutable _REFERRAL_REGISTRY;
+    ReferralRegistry private immutable _REFERRAL_REGISTRY;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -130,7 +137,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Handle the given interaction
-    function handleInteraction(bytes calldata _data) public override nonReentrant {
+    function handleInteraction(bytes calldata _data) public override onlyRoles(CAMPAIGN_EVENT_EMITTER_ROLE) {
         // If the campaign isn't active, directly exit
         if (!isActive()) {
             return;
@@ -142,13 +149,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         // If the interaction is a usage of a share link, handle it
         if (interactionType == INTERACTION_PRESS_USED_SHARE_LINK) {
             (, address user) = interactionData.pressDecodeUseShareLink();
-            _onUserReferralActivated(user);
+            _performTokenDistribution(user, _INITIAL_REFERRER_REWARD);
         }
-    }
-
-    /// @dev Handle the referral activation
-    function _onUserReferralActivated(address _user) internal {
-        _performTokenDistribution(_user, _INITIAL_REFERRER_REWARD);
     }
 
     /// @dev External method callable by the manager, to distribute token to all the user referrers
@@ -181,6 +183,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
         // If we reached a new timeframe, reset the cap
         if (block.timestamp > campaignStorage.capStartTimestamp + 1 days) {
+            emit DailyDistrubutionCapReset(campaignStorage.capStartTimestamp, campaignStorage.capDistributedAmount);
             campaignStorage.capStartTimestamp = uint48(block.timestamp);
             campaignStorage.capDistributedAmount = uint208(totalDistributed);
         } else {
@@ -203,7 +206,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         _TOKEN.safeTransfer(msg.sender, _TOKEN.balanceOf(address(this)));
     }
 
-    function setActive(bool activate) external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+    function setActive(bool activate) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
         _referralCampaignStorage().isActive = activate;
     }
 }

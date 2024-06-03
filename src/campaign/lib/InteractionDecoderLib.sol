@@ -15,6 +15,11 @@ library InteractionDecoderLib {
         pure
         returns (InteractionType interactionType, bytes calldata remaining)
     {
+        if (_data.length < 4) {
+            remaining = _data;
+            return (interactionType, remaining);
+        }
+
         interactionType = InteractionType.wrap(bytes4(_data[0:4]));
         remaining = _data[4:];
     }

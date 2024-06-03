@@ -188,20 +188,9 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
             return;
         }
 
+        // Call the campaign using a try catch to avoid blocking the whole process if a campaign is locked
         for (uint256 i = 0; i < campaigns.length; i++) {
-            campaigns[i].handleInteraction(_data);
-        }
-    }
-
-    /// @dev Send an inbteraction to all the concerned campaigns
-    function _sendInteractionsToCampaign(bytes[] memory _data) internal {
-        InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
-        if (campaigns.length == 0) {
-            return;
-        }
-
-        for (uint256 i = 0; i < campaigns.length; i++) {
-            campaigns[i].handleInteractions(_data);
+            try campaigns[i].handleInteraction(_data) {} catch {}
         }
     }
 

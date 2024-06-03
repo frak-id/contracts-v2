@@ -46,14 +46,6 @@ abstract contract InteractionCampaign is OwnableRoles {
 
     /// @dev Handle the given interaction
     function handleInteraction(bytes calldata _data) public virtual;
-
-    /// @dev Handle multiple interactions
-    function handleInteractions(bytes[] calldata _datas) public {
-        // Just loop over the datas and handle them
-        for (uint256 i = 0; i < _datas.length; i++) {
-            handleInteraction(_datas[i]);
-        }
-    }
 }
 
 /// @dev The role for the a campaign event emitter
