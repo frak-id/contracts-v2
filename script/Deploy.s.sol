@@ -5,7 +5,6 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
 import {Paywall} from "src/Paywall.sol";
-import {NexusDiscoverCampaign} from "src/campaign/NexusDiscoverCampaign.sol";
 
 import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
@@ -111,7 +110,7 @@ contract Deploy is Script {
         }
 
         // Deploy the discover campaign
-        NexusDiscoverCampaign discoverCampaign;
+        /*NexusDiscoverCampaign discoverCampaign;
         if (NEXUS_DISCOVER_CAMPAIGN_ADDRESS.code.length == 0) {
             console.log("Deploying Discover campaign");
             discoverCampaign = new NexusDiscoverCampaign{salt: 0}(address(referralToken), owner);
@@ -121,11 +120,11 @@ contract Deploy is Script {
         }
 
         // Perform an airdrop of 50K rFrk to the discover campaign
-        referralToken.mint(address(discoverCampaign), 50_000 ether);
+        referralToken.mint(address(discoverCampaign), 50_000 ether);*/
 
         console.log("Campaign addresses:");
         console.log(" - Referral token: %s", address(referralToken));
-        console.log(" - Discover campaign: %s", address(discoverCampaign));
+        // console.log(" - Discover campaign: %s", address(discoverCampaign));
 
         vm.stopBroadcast();
     }

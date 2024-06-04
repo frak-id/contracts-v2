@@ -17,6 +17,12 @@ abstract contract InteractionCampaign is OwnableRoles {
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                               Metadata reader                              */
+    /* -------------------------------------------------------------------------- */
+
+    function getMetadata() public pure virtual returns (string memory name, string memory version);
+
+    /* -------------------------------------------------------------------------- */
     /*                               Role managments                              */
     /* -------------------------------------------------------------------------- */
 
@@ -27,11 +33,7 @@ abstract contract InteractionCampaign is OwnableRoles {
 
     /// @dev Deregsiter the campaign deployer role for the calling contract
     function disallowMe() public {
-        // If the user havn't any roles, directly exit
-        if (!hasAnyRole(msg.sender, CAMPAIGN_DEPLOYER_ROLE)) {
-            return;
-        }
-        _updateRoles(msg.sender, CAMPAIGN_EVENT_EMITTER_ROLE, false);
+        _removeRoles(msg.sender, CAMPAIGN_EVENT_EMITTER_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */

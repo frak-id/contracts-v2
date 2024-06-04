@@ -117,4 +117,13 @@ contract ContentRegistry is ERC721, OwnableRoles {
         metadata.contentTypes = _contentTypes;
         metadata.name = _name;
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                Roles checker                               */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Check if the `_caller` is authorized to manage the `_contentId`
+    function isAuthorized(uint256 _contentId, address _caller) public view returns (bool) {
+        return _isApprovedOrOwner(_caller, _contentId);
+    }
 }

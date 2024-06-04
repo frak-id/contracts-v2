@@ -116,4 +116,23 @@ contract ContentRegistryTest is Test {
         vm.prank(minter);
         contentRegistry.updateMetadata(id, CONTENT_TYPE_DAPP, "");
     }
+
+    function test_isAuthorized() public {
+        vm.prank(minter);
+        uint256 id = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
+
+        assertEq(contentRegistry.isAuthorized(id, minter), true);
+        assertEq(contentRegistry.isAuthorized(id, owner), false);
+
+        address operator = makeAddr("operator");
+        vm.prank(minter);
+        contentRegistry.setApprovalForAll(operator, true);
+
+        assertEq(contentRegistry.isAuthorized(id, operator), true);
+
+        vm.prank(minter);
+        contentRegistry.setApprovalForAll(operator, false);
+
+        assertEq(contentRegistry.isAuthorized(id, operator), false);
+    }
 }

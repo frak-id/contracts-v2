@@ -16,13 +16,7 @@ function interactionEq(InteractionType self, InteractionType other) pure returns
 
 /// @dev Set of helper functions for content types
 library InteractionTypeLib {
-    // TODO: some stuff here
-
-    function fromUint(uint32 _value) internal pure returns (InteractionType interactionType) {
-        assembly {
-            interactionType := _value
-        }
-    }
+// TODO: some stuff here???
 }
 
 /* -------------------------------------------------------------------------- */

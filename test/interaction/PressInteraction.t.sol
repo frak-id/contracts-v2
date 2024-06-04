@@ -8,7 +8,6 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
-
 import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
 import {PressInteraction} from "src/interaction/PressInteraction.sol";
 
@@ -23,11 +22,33 @@ contract PressInteractionTest is InteractionTest {
         // TODO: Setup with a more granular approach
         vm.prank(owner);
         contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
+        vm.prank(owner);
+        contentRegistry.setApprovalForAll(operator, true);
 
         // Deploy the press interaction contract
         pressInteraction = PressInteraction(_initInteractionTest());
         vm.label(address(pressInteraction), "PressInteraction");
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                            Generic test function                           */
+    /* -------------------------------------------------------------------------- */
+
+    function getNewInstance() internal override returns (address) {
+        return address(new PressInteraction(contentId, address(referralRegistry)));
+    }
+
+    function performSingleInteraction() internal override {
+        bytes32 articleId = 0;
+        bytes memory signature = _getInteractionSignature(_readArticleData(articleId), alice);
+        // Call the open article method
+        vm.prank(alice);
+        pressInteraction.articleRead(articleId, signature);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Press related tests                            */
+    /* -------------------------------------------------------------------------- */
 
     function test_description() public view {
         // TODO: More specific test?
@@ -286,15 +307,5 @@ contract PressInteractionTest is InteractionTest {
         PressInteraction rawImplem = new PressInteraction(contentId, address(referralRegistry));
         vm.expectRevert();
         rawImplem.init(address(1), address(1), address(1));
-    }
-
-    function test_upgrade() public {
-        address newImplem = address(new PressInteraction(contentId, address(referralRegistry)));
-
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.upgradeToAndCall(newImplem, "");
-
-        vm.prank(owner);
-        contentInteractionManager.upgradeToAndCall(newImplem, "");
     }
 }

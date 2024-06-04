@@ -18,3 +18,6 @@ log/
 
 # Node related
 node_modules/
+
+# Code coverage file
+lcov.info

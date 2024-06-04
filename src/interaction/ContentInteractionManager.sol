@@ -49,8 +49,14 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     ///  Mostly use in case of initial nexus creation, when a burner wallet is linked to a new wallet
     event WalletLinked(address indexed prevWallet, address indexed newWallet);
 
+    /// @dev Event when a campaign is attached to a content
+    event CampaignAttached(uint256 contentId, address campaign);
+
+    /// @dev Event when a campaign is attached to a content
+    event CampaignsDetached(uint256 contentId, InteractionCampaign[] campaigns);
+
     /// @dev Event emitted when an interaction contract is deployed
-    event InteractionContractDeployed(uint256 indexed _contentId, address interactionContract);
+    event InteractionContractDeployed(uint256 indexed contentId, address interactionContract);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -139,7 +145,11 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Attach a new campaign to the given `_contentId`
-    function attachCampaignToContent(uint256 _contentId, InteractionCampaign _campaign) external {
+    function attachCampaign(uint256 _contentId, InteractionCampaign _campaign) external {
+        if (!_CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender)) {
+            revert Unauthorized();
+        }
+
         // Retreive the interaction contract
         address interactionContract = getInteractionContract(_contentId);
 
@@ -148,14 +158,23 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
         // Tell the campaign that this interaction is allowed to push events
         _campaign.allowInteractionContract(interactionContract);
+
+        emit CampaignAttached(_contentId, address(_campaign));
     }
 
-    function detachCampaignsFromContent(uint256 _contentId, InteractionCampaign[] calldata _campaigns) external {
+    function detachCampaigns(uint256 _contentId, InteractionCampaign[] calldata _campaigns) external {
+        if (!_CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender)) {
+            revert Unauthorized();
+        }
+
         // Retreive the interaction contract
         address interactionContract = getInteractionContract(_contentId);
 
         // Loop over the campaigns and detach them
         ContentInteraction(interactionContract).detachCampaigns(_campaigns);
+
+        // Tell the campaign that this interaction is allowed to push events
+        emit CampaignsDetached(_contentId, _campaigns);
     }
 
     /* -------------------------------------------------------------------------- */

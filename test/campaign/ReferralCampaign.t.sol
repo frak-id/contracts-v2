@@ -28,10 +28,10 @@ contract ReferralCampaignTest is Test {
     /// @dev A mocked erc20 token
     MockErc20 private token = new MockErc20();
 
-    // The registry we will use
+    /// @dev The registry we will use
     ReferralRegistry private referralRegistry;
 
-    // The campaign we will test
+    /// @dev The campaign we will test
     ReferralCampaign private referralCampaign;
 
     function setUp() public {
@@ -50,10 +50,6 @@ contract ReferralCampaignTest is Test {
 
         // Mint a few test tokens to the campaign
         token.mint(address(referralCampaign), 1_000 ether);
-
-        // Set the campaign as active by default
-        vm.prank(owner);
-        referralCampaign.setActive(true);
     }
 
     function test_init() public {
@@ -68,18 +64,20 @@ contract ReferralCampaignTest is Test {
         );
     }
 
-    function test_isActive() public {
-        // Test start with campaign active
-        assertEq(referralCampaign.isActive(), true);
+    function test_metadata() public view {
+        (string memory name, string memory version) = referralCampaign.getMetadata();
+        assertEq(name, "frak.campaign.referral");
+        assertEq(version, "0.0.1");
+    }
 
+    function test_isActive() public {
         // Not enogutth token work
         deal(address(token), address(referralCampaign), 1 ether);
         assertEq(referralCampaign.isActive(), false);
 
-        // Disable works
-        vm.prank(owner);
-        referralCampaign.setActive(false);
-        assertEq(referralCampaign.isActive(), false);
+        // Not Enough token work
+        deal(address(token), address(referralCampaign), 101 ether);
+        assertEq(referralCampaign.isActive(), true);
     }
 
     function test_supportContentType() public view {
@@ -159,7 +157,7 @@ contract ReferralCampaignTest is Test {
 
         // Ensure it won't do anything if campaign stopped
         vm.prank(owner);
-        referralCampaign.setActive(false);
+        referralCampaign.withdraw();
         vm.prank(emitter);
         referralCampaign.handleInteraction(fckedUpData);
 
@@ -183,7 +181,7 @@ contract ReferralCampaignTest is Test {
 
         // Ensure it won't do anything if campaign stopped
         vm.prank(owner);
-        referralCampaign.setActive(false);
+        referralCampaign.withdraw();
         vm.prank(emitter);
         referralCampaign.handleInteraction(interactionData);
 

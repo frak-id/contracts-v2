@@ -19,6 +19,8 @@ import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, Initializable {
     /// @dev error throwned when the signer of an interaction is invalid
     error WrongInteractionSigner();
+    /// @dev error throwned when a campaign is already present
+    error CampaignAlreadyPresent();
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
@@ -44,7 +46,7 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     struct ContentInteractionStorage {
         /// @dev Nonce for the validation of the interaction
         mapping(bytes32 nonceKey => uint256 nonce) nonces;
-        /// @dev Array of all the current interactions campaigns
+        /// @dev Array of all the current active campaigns
         InteractionCampaign[] campaigns;
     }
 
@@ -70,11 +72,11 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     {
         // Global owner is the same as the interaction manager owner
         _initializeOwner(_interactionManangerOwner);
-        _setRoles(_interactionManangerOwner, UPGRADE_ROLE | CAMPAIGN_MANAGER_ROLE);
+        _setRoles(_interactionManangerOwner, UPGRADE_ROLE);
         // The interaction manager can trigger updates
-        _setRoles(_interactionMananger, UPGRADE_ROLE);
+        _setRoles(_interactionMananger, UPGRADE_ROLE | CAMPAIGN_MANAGER_ROLE);
         // The content owner can manage almost everything
-        _setRoles(_contentOwner, CAMPAIGN_MANAGER_ROLE | INTERCATION_VALIDATOR_ROLE | UPGRADE_ROLE);
+        _setRoles(_contentOwner, INTERCATION_VALIDATOR_ROLE | UPGRADE_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -196,19 +198,30 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
 
     /// @dev Activate a new campaign
     function attachCampaign(InteractionCampaign _campaign) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
-        _contentInteractionStorage().campaigns.push(_campaign);
+        InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
+
+        // Ensure we don't already have this campaign attached
+        for (uint256 i = 0; i < campaigns.length; i++) {
+            if (address(campaigns[i]) == address(_campaign)) {
+                revert CampaignAlreadyPresent();
+            }
+        }
+
+        // If all good, add it
+        campaigns.push(_campaign);
     }
 
     /// @dev Detach multiple campaigns
     function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+        InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
+
         for (uint256 i = 0; i < _campaigns.length; i++) {
-            _detachCampaign(_campaigns[i]);
+            _detachCampaign(_campaigns[i], campaigns);
         }
     }
 
     /// @dev Detach a campaign
-    function _detachCampaign(InteractionCampaign _campaign) private {
-        InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
+    function _detachCampaign(InteractionCampaign _campaign, InteractionCampaign[] storage campaigns) private {
         InteractionCampaign lastCampaign = campaigns[campaigns.length - 1];
 
         // If the campaign to remove is the last one, directly pop the element out of the array and exit
@@ -236,5 +249,10 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
             campaigns.pop();
             return;
         }
+    }
+
+    /// @dev Get all the campaigns attached to this interaction
+    function getCampaigns() external view returns (InteractionCampaign[] memory) {
+        return _contentInteractionStorage().campaigns;
     }
 }

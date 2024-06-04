@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {CAMPAIGN_EVENT_EMITTER_ROLE, MockCampaign} from "../utils/MockCampaign.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
@@ -14,7 +16,7 @@ import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ContentInteractionManagerTest is Test {
     address private owner = makeAddr("owner");
-    address private minter = makeAddr("minter");
+    address private operator = makeAddr("operator");
 
     ContentRegistry private contentRegistry;
     ReferralRegistry private referralRegistry;
@@ -42,6 +44,7 @@ contract ContentInteractionManagerTest is Test {
         contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain");
         contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
         contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(bytes32(uint256(1 << 99))), "name", "unknown-domain");
+        contentRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
     }
 
@@ -87,6 +90,142 @@ contract ContentInteractionManagerTest is Test {
         address deployedAddress = contentInteractionManager.getInteractionContract(contentIdPress);
         assertNotEq(deployedAddress, address(0));
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                          Campaign management test                          */
+    /* -------------------------------------------------------------------------- */
+
+    function test_attachCampaign() public {
+        MockCampaign campaign1 = new MockCampaign(owner, address(contentInteractionManager));
+        MockCampaign campaign2 = new MockCampaign(owner, address(contentInteractionManager));
+        MockCampaign campaign3 = new MockCampaign(owner, address(contentInteractionManager));
+
+        // Test role required
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
+
+        // Test fail if interaction not present
+        vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
+        vm.prank(operator);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
+
+        // Deploy interaction
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+        ContentInteraction interactionContract =
+            ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
+
+        // Test op with interaction
+        vm.prank(operator);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
+        assertEq(interactionContract.getCampaigns().length, 1);
+        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
+
+        // Test op with multiple campaign
+        vm.startPrank(operator);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign2);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign3);
+        vm.stopPrank();
+        assertEq(interactionContract.getCampaigns().length, 3);
+        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
+        assertEq(address(interactionContract.getCampaigns()[1]), address(campaign2));
+        assertEq(address(interactionContract.getCampaigns()[2]), address(campaign3));
+
+        // Test can't repush an existing campaign
+        vm.expectRevert(ContentInteraction.CampaignAlreadyPresent.selector);
+        vm.prank(operator);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
+
+        // Ensure each campaign has the right roles from the interaction contract
+        assertTrue(campaign1.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+        assertTrue(campaign2.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+        assertTrue(campaign3.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+    }
+
+    function test_detachCampaigns_single() public {
+        MockCampaign campaign1 = new MockCampaign(owner, address(contentInteractionManager));
+        MockCampaign campaign2 = new MockCampaign(owner, address(contentInteractionManager));
+
+        // Deploy interaction and add campaign
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+        ContentInteraction interactionContract =
+            ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
+        vm.prank(operator);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
+
+        InteractionCampaign[] memory toRemove = new InteractionCampaign[](1);
+        toRemove[0] = campaign1;
+
+        // Test role required
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
+        assertEq(interactionContract.getCampaigns().length, 1);
+        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
+
+        // Test not present campaign
+        toRemove[0] = campaign2;
+        vm.prank(operator);
+        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
+        assertEq(interactionContract.getCampaigns().length, 1);
+        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
+
+        // Test ok
+        toRemove[0] = campaign1;
+        vm.prank(operator);
+        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
+
+        assertEq(interactionContract.getCampaigns().length, 0);
+        assertFalse(campaign1.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+    }
+
+    function test_detachCampaigns_multi() public {
+        MockCampaign campaign1 = new MockCampaign(owner, address(contentInteractionManager));
+        MockCampaign campaign2 = new MockCampaign(owner, address(contentInteractionManager));
+        MockCampaign campaign3 = new MockCampaign(owner, address(contentInteractionManager));
+        MockCampaign campaign4 = new MockCampaign(owner, address(contentInteractionManager));
+
+        // Deploy interaction and add campaign
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+        ContentInteraction interactionContract =
+            ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
+        vm.startPrank(operator);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign2);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign3);
+        contentInteractionManager.attachCampaign(contentIdPress, campaign4);
+        vm.stopPrank();
+
+        InteractionCampaign[] memory toRemove = new InteractionCampaign[](1);
+        toRemove[0] = campaign1;
+
+        // Test ok with reordering
+        toRemove[0] = campaign1;
+        vm.prank(operator);
+        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
+        assertEq(interactionContract.getCampaigns().length, 3);
+        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign4));
+        assertEq(address(interactionContract.getCampaigns()[1]), address(campaign2));
+        assertEq(address(interactionContract.getCampaigns()[2]), address(campaign3));
+
+        // Test remove all
+        toRemove = new InteractionCampaign[](4);
+        toRemove[0] = campaign1;
+        toRemove[1] = campaign2;
+        toRemove[2] = campaign3;
+        toRemove[3] = campaign4;
+
+        vm.prank(operator);
+        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
+
+        assertEq(interactionContract.getCampaigns().length, 0);
+        assertFalse(campaign1.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+        assertFalse(campaign2.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+        assertFalse(campaign3.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+        assertFalse(campaign4.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                Upgrade check                               */
+    /* -------------------------------------------------------------------------- */
 
     function test_reinit() public {
         vm.expectRevert();

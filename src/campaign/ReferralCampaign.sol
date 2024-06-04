@@ -3,6 +3,8 @@ pragma solidity 0.8.23;
 
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {INTERACTION_PRESS_USED_SHARE_LINK, InteractionType} from "../constants/InteractionType.sol";
+
+import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {CAMPAIGN_EVENT_EMITTER_ROLE, CAMPAIGN_MANAGER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
@@ -66,8 +68,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f;
 
     struct ReferralCampaignStorage {
-        /// @dev High level pause / resume of the campaign
-        bool isActive;
         /// @dev The start timestamp for the cap computation
         uint48 capStartTimestamp;
         /// @dev The current amount during the given timeframe
@@ -116,12 +116,14 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /*                               Campaign status                              */
     /* -------------------------------------------------------------------------- */
 
+    /// @dev Get the campaign metadata
+    function getMetadata() public pure override returns (string memory name, string memory version) {
+        name = "frak.campaign.referral";
+        version = "0.0.1";
+    }
+
     /// @dev Check if the campaign is active or not
     function isActive() public view override returns (bool) {
-        // If not active, directly return false
-        if (!_referralCampaignStorage().isActive) {
-            return false;
-        }
         // Active only if we can distribute a few rewards
         return _TOKEN.balanceOf(address(this)) > _INITIAL_REFERRER_REWARD * 2;
     }
@@ -204,9 +206,5 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
     function withdraw() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
         _TOKEN.safeTransfer(msg.sender, _TOKEN.balanceOf(address(this)));
-    }
-
-    function setActive(bool activate) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
-        _referralCampaignStorage().isActive = activate;
     }
 }
