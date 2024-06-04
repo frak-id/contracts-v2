@@ -1,21 +1,27 @@
-# Nexus - Contracts
+# Frak - Contracts v2
 
-This repo host the smart contracts related to the Nexus dApp, inside the [Frak](https://frak.id/) ecosystem.
+This repo hosts the smart contracts related to the Nexus dApp, inside the [Frak](https://frak.id/) ecosystem.
 
 ## Addresses
 
-Plugin for Nexus related contracts (only on arbitrum):
+### Frak ecosystem
 
-| Name                                  | Address                                       |
-|--                                     |--                                             |
-| Content registry                      | `0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753`  |
-| Community token contract              | `0xf98BA1b2fc7C55A01Efa6C8872Bcee85c6eC54e7`  |
-| FRK Paywall token                     | `0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2`  |
-| Paywall contract                      | `0x9218521020EF26924B77188f4ddE0d0f7C405f21`  |
-| FRK Referral token                    | `0x1Eca7AA9ABF2e53E773B4523B6Dc103002d22e7D`  |
-| Nexus Discovery Campaign              | `0x8a37d1B3a17559F2BC4e6613834b1F13d0A623aC`  |
+Address of the Frak contracts, deployed on Arbitrum and arbitrum sepolia.
 
-Plugin for the Kernel smart accounts plugins:
+
+| Name                      | Address                                       |
+|---------------------------|-----------------------------------------------|
+| Content Registry          | `0x5be7ae9f47dfe007CecA06b299e7CdAcD0A5C40e`  |
+| Referral Registry         | `0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43`  |
+| Content Interaction Mgr   | `0x7A710e18a12E1C832c6f833c60e2ac389Aa14e96`  |
+| FRK Paywall Token         | `0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2`  |
+| Paywall Contract          | `0x2Ed88d7A95d687aE262A385DaB7255FA1cA39901`  |
+| Community Token           | `0x581199D05d01B949c91933636EB90014cDB0168c`  | 
+
+### Kernel plugins
+
+Plugin for the Kernel smart accounts plugins
+They can be deployed on any chain via the `deploy/` folder, using [orchestra](https://github.com/zerodevapp/orchestra)
 
 | Name                                  | Address                                       |
 |--                                     |--                                             |
@@ -31,69 +37,119 @@ Plugin for the Kernel smart accounts plugins:
 | MultiWebAuthN - Kernel v2             | `0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808`  |
 | MultiWebAuthN Recovery - Kernel v2    | `0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9`  |
 
+
+## Folder Structure
+
+```
+├─src
+├── campaign
+│   ├── lib/
+│   ├── InteractionCampaign.sol
+│   └── ReferralCampaign.sol
+├── interaction
+│   ├── lib/
+│   ├── PressInteraction.sol
+│   ├── ContentInteraction.sol
+│   └── ContentInteractionManager.sol
+├── registry
+│   ├── ContentRegistry.sol
+│   └── ReferralRegistry.sol
+├── gating
+│   └── Paywall.sol
+├── constants
+├── tokens
+├── kernel
+```
+
 ## Registries
 
-### Content Registry
+### `registry/`
 
-The content registry is a contract managing every content inside the Frak ecosystem.
-Each content is represented by a few on-chain metadata:
- - name
- - domain
- - contentTypes (type of content this content is distributing, like press, video, dapp and stuff)
-The domain is immutable for each content, and the id of a content is a `keccak256` hash of it's domain.
+This directory houses contracts that function as registries for essential data within the Frak ecosystem. 
 
-Under the hood, it's using an ERC-721 token to represent each content, handle ownership, transfers etc.
+#### `ContentRegistry.sol`
 
-### Referral Registry
+- Manages metadata associated with content within the Frak ecosystem.
+- Each content piece is represented by an ERC-721 token and is identified by a unique domain.
+- Stores content metadata: name, domain, and supported content types.
+- Handles content registration, metadata updates, ownership transfers, and content discovery.
 
-The referral registry is a contract managing every referral tree inside the Frak ecosystem.
-Each tree is identified by a `bytes32` selector.
+#### `ReferralRegistry.sol`
 
-A referral tree is basicaly the list of user to their referrer. 
-Like that you can have some airdrop campaign using a multi level comission system for each users and their referrer.
-
-Each referral tree are public, but need specific permissions to store new user in the referral chain.
-
-For instance, every ContentInteraction contract are granted a write permissions on their own referral tree (referral tree being `keccak256("ContentReferralTree", contentId)`).
+- Manages referral trees for implementing referral programs and reward distributions.
+- Allows creation of referral trees, each identified by a unique `bytes32` selector.
+- Tracks referrals within each tree, establishing relationships between referrers and referees.
+- Controls write access to referral trees to ensure only authorized contracts or users can add new referrals.
 
 ## Interactions
 
-Interaction are basically contract receiving some web2 user interaction on a content, and executing some web3 logic around it.
+### `interaction/`
 
-### Content Interaction Manager
+This directory contains contracts that facilitate interactions between users and content within the Frak ecosystem. 
 
-This is the higher level contract, responsible to deploy, and store, every ContentInteraction contract.
+#### `ContentInteractionManager.sol`
 
-A Content Interaction contract is specific to a single ContentType, it's responsible to handle the interaction between a user and a specific content (immutable).
+- Acts as a factory and registry for `ContentInteraction` contracts.
+- **Responsibilities:**
+    - Deploys new interaction contracts for specific content types on demand.
+    - Maintains a mapping between content types and their corresponding interaction contracts.
+    - Allows retrieval of the appropriate interaction contract for a given content.
 
-The manager will, when requested, deploy the interaction contract for the given content, specificly for it's content types. It will sotre a mapping of all of that, and help end-users retreive the interaction contract for the content they are consuming.
+#### `ContentInteraction.sol`
 
-## Modules
+- Abstract base contract that defines the interface for user interactions with content.
+- **Key Features:**
+    - Provides an abstract framework for handling user interactions, allowing for customization in derived contracts.
+    - Associates each `ContentInteraction` contract with a specific content ID for accurate tracking.
+    - Includes logic for:
+        - Validating user interactions using EIP-712 signatures to prevent unauthorized actions.
+        - Managing referral relationships with the `ReferralRegistry`.
+        - Interacting with `InteractionCampaign` contracts to trigger reward distributions.
 
-All the module used by the Frak ecosystem to help Content or Creator create their custom dApp logic.
+#### `PressInteraction.sol`
 
-### Push Pull Module
+- A concrete implementation of the `ContentInteraction` contract specifically designed for press articles.
+- **Functionality:**
+    - Tracks user interactions with press articles, such as article opens, reads, and share link creation.
+    - Emits events for each interaction type, providing a record of user engagement.
+    - Emit press related interaction for potential linked Campaign.
 
-This module permit to create a push/pull system, where a user / contract can push some token reward to another user, without directly executing the token transfer.
+## Campaigns
 
-This can be usefull in system where a user is triggering an action, but we don't want him to pay the gas fee for the token transfer.
+### `campaign/`
 
-- The user can push a reward by calling the `pushReward(address _recipient, uint256 _amount)` method.
-- The recipient can pull the reward by calling the `pullReward()` method.
-- Another person / contract can pull the reward for a _recipient by calling the `pullReward(address _recipient)` method (ofc, this wall transfer the token to the provided `_recipient` and not to the caller).
-- The recipient can also check the reward amount by calling the `getRewardAmount()` method.
+Contracts for running campaigns within the Frak ecosystem.
 
-### Referral Campaign Module
+#### `InteractionCampaign.sol`
 
-This module permit to create a referral campaign, where a user can refer another user to get some reward.
+- Abstract contract providing the base logic for campaigns that distribute rewards based on user interactions with content.
+- **Key Features:**
+    - Defines an interface for handling user interactions and managing campaign state.
+    - Requires implementations to specify:
+        - Supported content types.
+        - Whether the campaign is currently active.
+        - Logic for processing user interactions and distributing rewards.
 
-- Each campaign is identified by a `bytes32` selector (Same bytes32 as the one for the `referralTree`).
-- The campaign is configured during the init (defining nbr of multi tier comission, per level decrease etc). The config contain the following fields:
-    - The `maxLevel` permit to define the maximum level of the referral tree we will explore for reward distribution (if set to 0 it will stop to the first referrer).
-    - The `perLevelPercentage` permit to define the percentage of reward per level (the first level will get the full comission, the second level will get `reward * perLevelPercentage`, etc).
-    - The `token` that will be used for token distribution.
-- The implementing contract can then call the `_distributeReferralRewards(bytes32 _tree, address _referee, bool _includeReferee, uint256 _initialReward)` to distribute reward to the referral chain.
-    - The `_tree` permit to select the referral tree to use.
-    - The `_referee` permit to define the referee to start the reward distribution.
-    - The `_initialReward` permit to define the initial reward amount, that will be distributed to the referral chain.
-    - The `_includeReferee` permit to include the referee in the reward distribution.
+#### `ReferralCampaign.sol`
+
+- A concrete implementation of `InteractionCampaign` focused on rewarding users for referring new users to the platform.
+- **Features:**
+    - Integrates with the `ReferralRegistry` to track referral relationships.
+    - Supports multi-level referral systems, rewarding both referrers and referees at multiple levels.
+    - Allows for customizable reward distribution, where the percentage of rewards allocated to each referral level can be configured.
+    - Implements a daily distribution cap to prevent abuse and ensure the sustainability of the campaign.
+
+
+## Gating
+
+### `gating/`
+
+This directory contains contracts related to content access control and monetization within the Frak ecosystem.
+
+#### `Paywall.sol`
+
+- Allows content creators to restrict access to their content and require payment for access.
+- **Key Features:**
+    - Enables content creators to define access rules for their content, specifying which users or wallets are allowed to access it.
+    - Supports integration with payment tokens, allowing users to pay for content access using designated cryptocurrencies.
+    - Can be extended to implement subscription-based access models, where users pay a recurring fee for ongoing content access. 

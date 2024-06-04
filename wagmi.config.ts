@@ -11,12 +11,16 @@ export default defineConfig(
                     project: './',
                     artifacts: 'out/',
                     include: [
-                        // Prod stuff
+                        // Registry
                         'ContentRegistry.json',
                         'ReferralRegistry.json',
+                        // Interaction
                         'ContentInteraction.json',
                         'PressInteraction.json',
-                        'ContentInteractionManager.json'
+                        'ContentInteractionManager.json',
+                        // Campaign
+                        'InteractionCampaign.json',
+                        'ReferralCampaign.json',
                     ]
                 }),
             ],

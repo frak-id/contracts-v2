@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
-import {Paywall} from "src/Paywall.sol";
 import {CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
+import {Paywall} from "src/gating/Paywall.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 
