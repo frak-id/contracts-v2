@@ -3,10 +3,8 @@ pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-
 import {LibClone} from "solady/utils/LibClone.sol";
-
-import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
@@ -17,17 +15,6 @@ import {PaywallToken} from "src/tokens/PaywallToken.sol";
 contract Deploy is Script {
     // Config
     address airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
-
-    // Registry addresses
-    address constant CONTENT_REGISTRY_ADDRESS = 0x5be7ae9f47dfe007CecA06b299e7CdAcD0A5C40e;
-    address constant REFERRAL_REGISTRY_ADDRESS = 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43;
-
-    address constant CONTENT_INTERACTION_MANAGER_ADDRESS = 0x7ce89920844aa49750b03C29aAd74E8e84A9620C;
-
-    address constant PAYWALL_TOKEN_ADDRESS = 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2;
-    address constant PAYWALL_ADDRESS = 0x2Ed88d7A95d687aE262A385DaB7255FA1cA39901;
-
-    address constant COMMUNITY_TOKEN_ADDRESS = 0x581199D05d01B949c91933636EB90014cDB0168c;
 
     bool internal forceDeploy = vm.envOr("FORCE_DEPLOY", false);
 
@@ -54,9 +41,9 @@ contract Deploy is Script {
         Addresses memory addresses = Addresses({
             contentRegistry: 0x5be7ae9f47dfe007CecA06b299e7CdAcD0A5C40e,
             referralRegistry: 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43,
-            contentInteractionManager: 0x7A710e18a12E1C832c6f833c60e2ac389Aa14e96,
+            contentInteractionManager: 0x34a6B1eAafEdf93A6B8658B7EA3035738929b159,
             paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,
-            paywall: 0x2Ed88d7A95d687aE262A385DaB7255FA1cA39901,
+            paywall: 0x6a958DfCc9f00d00DE8Bf756D3d8A567368fdDD5,
             communityToken: 0x581199D05d01B949c91933636EB90014cDB0168c
         });
 
@@ -97,7 +84,7 @@ contract Deploy is Script {
             console.log("Deploying ContentInteractionManager under erc1967 proxy");
             // Dpeloy implem
             address implem = address(
-                new ContentInteractionManager(
+                new ContentInteractionManager{salt: 0}(
                     ContentRegistry(addresses.contentRegistry), ReferralRegistry(addresses.referralRegistry)
                 )
             );
@@ -105,6 +92,9 @@ contract Deploy is Script {
             address proxy = LibClone.deployDeterministicERC1967(implem, 0);
             ContentInteractionManager(proxy).init(msg.sender);
             addresses.contentInteractionManager = proxy;
+
+            // Granr it the role to grant tree access on the referral registry
+            ReferralRegistry(addresses.referralRegistry).grantRoles(proxy, REFERRAL_ALLOWANCE_MANAGER_ROLE);
         }
 
         vm.stopBroadcast();
@@ -125,7 +115,7 @@ contract Deploy is Script {
         // Deploy paywall if needed
         if (addresses.paywall.code.length == 0 || forceDeploy) {
             console.log("Deploying Paywall");
-            Paywall paywall = new Paywall{salt: 0}(addresses.paywallToken, addresses.referralRegistry);
+            Paywall paywall = new Paywall{salt: 0}(addresses.paywallToken, addresses.contentRegistry);
             addresses.paywall = address(paywall);
         }
 

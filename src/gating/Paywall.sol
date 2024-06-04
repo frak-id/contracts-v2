@@ -120,16 +120,15 @@ contract Paywall {
 
         // Get the owner of this content
         address contentOwner = contentRegistry.ownerOf(_contentId);
-        address user = msg.sender;
 
         // Emit the unlock event
-        emit PaidItemUnlocked(_contentId, _articleId, user, unlockPrice.price, uint48(newUnlockedUntil));
+        emit PaidItemUnlocked(_contentId, _articleId, msg.sender, unlockPrice.price, uint48(newUnlockedUntil));
 
         // Transfer the FRK amount to the owner
-        paymentToken.safeTransferFrom(user, contentOwner, unlockPrice.price);
+        paymentToken.safeTransferFrom(msg.sender, contentOwner, unlockPrice.price);
 
         // Save the unlock status for this article
-        userUnlockedUntil[user] = newUnlockedUntil;
+        userUnlockedUntil[msg.sender] = newUnlockedUntil;
     }
 
     /// @dev Get all the article prices for the given content
@@ -201,7 +200,7 @@ contract Paywall {
 
     /// @dev Modifier to only allow the content owner to call the function
     modifier onlyContentOwner(uint256 _contentId) {
-        if (contentRegistry.ownerOf(_contentId) != msg.sender) revert NotAuthorized();
+        if (!contentRegistry.isAuthorized(_contentId, msg.sender)) revert NotAuthorized();
         _;
     }
 }

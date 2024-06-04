@@ -1,71 +1,66 @@
-import { defineConfig } from "@wagmi/cli"
-import { foundry } from '@wagmi/cli/plugins'
+import { defineConfig, Plugin } from "@wagmi/cli"
+import { foundry, FoundryConfig } from '@wagmi/cli/plugins'
+
+function foundryPlugin(artifacts: string[]): Plugin[] {
+    return [
+        foundry({
+            project: './',
+            artifacts: 'out/',
+            include: artifacts
+        })
+    ]
+}
 
 export default defineConfig(
     [
-        // Frak related abis
+        // Frak registry abis
         {
-            out: "abi/frak-abis.ts",
-            plugins: [
-                foundry({
-                    project: './',
-                    artifacts: 'out/',
-                    include: [
-                        // Registry
-                        'ContentRegistry.json',
-                        'ReferralRegistry.json',
-                        // Interaction
-                        'ContentInteraction.json',
-                        'PressInteraction.json',
-                        'ContentInteractionManager.json',
-                        // Campaign
-                        'InteractionCampaign.json',
-                        'ReferralCampaign.json',
-                    ]
-                }),
-            ],
+            out: "abi/frak-registry-abis.ts",
+            plugins: foundryPlugin([
+                'ContentRegistry.json',
+                'ReferralRegistry.json',
+            ]),
         },
-        // Frak POC related abis
+        // Frak interaction abis
         {
-            out: "abi/poc-abis.ts",
-            plugins: [
-                foundry({
-                    project: './',
-                    artifacts: 'out/',
-                    include: [
-                        'PaywallToken.json',
-                        'CommunityToken.json',
-                        'Paywall.json'
-                    ]
-                }),
-            ],
+            out: "abi/frak-interaction-abis.ts",
+            plugins: foundryPlugin([
+                'ContentInteraction.json',
+                'PressInteraction.json',
+                'ContentInteractionManager.json',
+            ]),
+        },
+        // Frak campaign abi
+        {
+            out: "abi/frak-campaign-abis.ts",
+            plugins: foundryPlugin([
+                'InteractionCampaign.json',
+                'ReferralCampaign.json',
+            ]),
+        },
+        // Frak gating abis
+        {
+            out: "abi/frak-gating-abis.ts",
+            plugins: foundryPlugin([
+                'PaywallToken.json',
+                'CommunityToken.json',
+                'Paywall.json'
+            ]),
         },
         // Kernel v2 abis
         {
             out: "abi/kernel-v2-abis.ts",
-            plugins: [
-                foundry({
-                    project: './',
-                    artifacts: 'out/',
-                    include: [
-                        'MultiWebAuthNRecoveryAction.json',
-                        'MultiWebAuthNValidatorV2.json'
-                    ]
-                }),
-            ],
+            plugins: foundryPlugin([
+                'MultiWebAuthNRecoveryAction.json',
+                'MultiWebAuthNValidatorV2.json'
+            ]),
         },
         // Kernel v3 abis
         {
             out: "abi/kernel-v3-abis.ts",
-            plugins: [
-                foundry({
-                    project: './',
-                    artifacts: 'out/',
-                    include: [
-                        'MultiWebAuthNValidatorV3.json'
-                    ]
-                }),
-            ],
+            plugins: foundryPlugin([
+                'MultiWebAuthNValidatorV3.json'
+            ]),
         },
     ]
 )
