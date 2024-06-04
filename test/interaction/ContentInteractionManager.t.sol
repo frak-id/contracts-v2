@@ -223,6 +223,17 @@ contract ContentInteractionManagerTest is Test {
         assertFalse(campaign4.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
     }
 
+    function test_walletLinked() public {
+        address alice = makeAddr("alice");
+        address bob = makeAddr("bob");
+
+        vm.expectEmit(true, true, true, true);
+        emit ContentInteractionManager.WalletLinked(alice, bob);
+
+        vm.prank(alice);
+        contentInteractionManager.walletLinked(bob);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                Upgrade check                               */
     /* -------------------------------------------------------------------------- */

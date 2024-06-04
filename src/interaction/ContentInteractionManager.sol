@@ -188,7 +188,10 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         if (interactionContract == address(0)) revert NoInteractionContractFound();
     }
 
-    // TODO: Wallet migration interaction
+    /// @dev Emit the wallet linked event (only used for indexing purpose)
+    function walletLinked(address _newWallet) external {
+        emit WalletLinked(msg.sender, _newWallet);
+    }
 
     /// @dev Upgrade check
     function _authorizeUpgrade(address newImplementation) internal override onlyRoles(UPGRADE_ROLE) {}
