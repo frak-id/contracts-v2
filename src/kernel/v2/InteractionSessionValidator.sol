@@ -16,9 +16,9 @@ ValidationData constant SIG_VALIDATION_SUCCESS = ValidationData.wrap(0);
 /// @dev Storage layout for a session
 struct InteractionSessionValidatorStorage {
     // From when the session is allowed
-    uint48 allowedAfter;
+    uint48 sessionStart;
     // Until when the session is allowed
-    uint48 allowedUntil;
+    uint48 sessionEnd;
     // The session validator
     address sessionValidator;
 }
@@ -26,9 +26,9 @@ struct InteractionSessionValidatorStorage {
 /// @dev The initialisation data for a session
 struct InteractionSessionInitializationData {
     // The duration of the session
-    uint256 allowedAfter;
+    uint256 sessionStart;
     // The duration of the session
-    uint256 allowedUntil;
+    uint256 sessionEnd;
     // The session validator
     address sessionValidator;
 }
@@ -39,11 +39,16 @@ struct InteractionSessionInitializationData {
 contract InteractionSessionValidator is IKernelValidator, EIP712 {
     /// @dev EIP-712 typehash used to validate the given user op
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteractionOp(uint256 contentId, address target,bytes32 userOpHash)");
+        keccak256("ValidateInteractionOp(uint256 contentId,bytes32 userOpHash)");
 
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
+
+    /// @dev Event emitted when a session is enabled
+    event InteractionSessionEnabled(
+        address indexed wallet, address sessionValidator, uint256 sessionStart, uint256 sessionEnd
+    );
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
@@ -95,7 +100,7 @@ contract InteractionSessionValidator is IKernelValidator, EIP712 {
 
         // Ensure params are valid
         if (
-            initData.allowedAfter > initData.allowedUntil || initData.allowedUntil < block.timestamp
+            initData.sessionStart > initData.sessionEnd || block.timestamp > initData.sessionEnd 
                 || initData.sessionValidator == address(0)
         ) {
             revert InvalidEnableParams();
@@ -103,15 +108,25 @@ contract InteractionSessionValidator is IKernelValidator, EIP712 {
 
         // Store the session
         sessionStorage[msg.sender] = InteractionSessionValidatorStorage({
-            allowedAfter: uint48(initData.allowedAfter),
-            allowedUntil: uint48(initData.allowedUntil),
+            sessionStart: uint48(initData.sessionStart),
+            sessionEnd: uint48(initData.sessionEnd),
             sessionValidator: initData.sessionValidator
         });
+
+        // Emit the event
+        emit InteractionSessionEnabled(
+            msg.sender, initData.sessionValidator, initData.sessionStart, initData.sessionEnd
+        );
     }
 
     /// @dev Disable the session for the given smart account
     function disable(bytes calldata) external payable override {
         delete sessionStorage[msg.sender];
+    }
+
+    /// @dev Fetch the current `wallet` session
+    function getCurrentSession(address _wallet) external view returns (InteractionSessionValidatorStorage memory) {
+        return sessionStorage[_wallet];
     }
 
     /* -------------------------------------------------------------------------- */
@@ -134,7 +149,7 @@ contract InteractionSessionValidator is IKernelValidator, EIP712 {
         // Extract content id from signature, and so the allowed target contract
         uint256 contentId = uint256(bytes32(_userOp.signature[0:32]));
         address allowedContract;
-        if (contentId == 0) {
+        if (contentId == 0 || contentId == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) {
             allowedContract = address(_INTERACTION_MANAGER);
         } else {
             allowedContract = _INTERACTION_MANAGER.getInteractionContract(contentId);
@@ -160,7 +175,7 @@ contract InteractionSessionValidator is IKernelValidator, EIP712 {
 
         // If valid, the signature is only valid for the given duration
         return packValidationData(
-            ValidAfter.wrap(validatorStorage.allowedAfter), ValidUntil.wrap(validatorStorage.allowedUntil)
+            ValidAfter.wrap(validatorStorage.sessionStart), ValidUntil.wrap(validatorStorage.sessionEnd)
         );
     }
 
@@ -174,6 +189,8 @@ contract InteractionSessionValidator is IKernelValidator, EIP712 {
         revert NotImplemented();
     }
 
+    /// @dev Check if the `_userOpData` will only perform external call to the `_allowedTarget`
+    /// Under the hood, it's decoding the userOpData (depending on if it's an execution or a batch execution), and checking every targets
     function _isAllowedTarget(bytes calldata _userOpData, address _allowedTarget) internal pure returns (bool) {
         // Extract the target method signature (valid is only execute or executeBatch)
         bytes4 targetMethod = bytes4(_userOpData[0:4]);

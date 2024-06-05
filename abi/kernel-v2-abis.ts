@@ -45,6 +45,28 @@ export const interactionSessionValidatorAbi = [
   },
   {
     type: 'function',
+    inputs: [{ name: '_wallet', internalType: 'address', type: 'address' }],
+    name: 'getCurrentSession',
+    outputs: [
+      {
+        name: '',
+        internalType: 'struct InteractionSessionValidatorStorage',
+        type: 'tuple',
+        components: [
+          { name: 'sessionStart', internalType: 'uint48', type: 'uint48' },
+          { name: 'sessionEnd', internalType: 'uint48', type: 'uint48' },
+          {
+            name: 'sessionValidator',
+            internalType: 'address',
+            type: 'address',
+          },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
     inputs: [],
     name: 'getDomainSeparator',
     outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
@@ -109,6 +131,37 @@ export const interactionSessionValidatorAbi = [
     name: 'validateUserOp',
     outputs: [{ name: '', internalType: 'ValidationData', type: 'uint256' }],
     stateMutability: 'payable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'wallet',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'sessionValidator',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'sessionStart',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'sessionEnd',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'InteractionSessionEnabled',
   },
   { type: 'error', inputs: [], name: 'InvalidEnableParams' },
   { type: 'error', inputs: [], name: 'NotImplemented' },
