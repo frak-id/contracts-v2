@@ -24,7 +24,7 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteraction(uint256 contentId, bytes32 interactionData,address user, uint256 nonce)");
+        keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)");
 
     /// @dev The base content referral tree: `keccak256("ContentReferralTree")`
     bytes32 private constant _BASE_CONTENT_TREE = 0x3d16196f272c96153eabc4eb746e08ae541cf36535edb959ed80f5e5169b6787;
@@ -118,7 +118,7 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
             nonceKey := keccak256(0, 0x40)
         }
 
-        // Rebuild the full typehas
+        // Rebuild the full typehash
         bytes32 digest = _hashTypedData(
             keccak256(
                 abi.encode(

@@ -52,7 +52,8 @@ export default defineConfig(
             out: "abi/kernel-v2-abis.ts",
             plugins: foundryPlugin([
                 'MultiWebAuthNRecoveryAction.json',
-                'MultiWebAuthNValidatorV2.json'
+                'MultiWebAuthNValidatorV2.json',
+                'InteractionSessionValidator.json'
             ]),
         },
         // Kernel v3 abis

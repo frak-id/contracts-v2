@@ -67,7 +67,7 @@ abstract contract InteractionTest is Test {
 
     // Validation type hash
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteraction(uint256 contentId, bytes32 interactionData,address user, uint256 nonce)");
+        keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)");
 
     /// @dev Generate an interaction signature for the given interaction data
     function _getInteractionSignature(bytes32 _interactionData, address _user)

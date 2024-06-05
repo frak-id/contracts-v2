@@ -3,9 +3,7 @@ pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
-
 import {MultiWebAuthNRecovery} from "src/kernel/v3/MultiWebAuthNRecovery.sol";
 import {MultiWebAuthNValidatorV3} from "src/kernel/v3/MultiWebAuthNValidator.sol";
 import {NexusFactory} from "src/kernel/v3/NexusFactory.sol";

@@ -9,7 +9,6 @@ import {PressInteraction} from "../interaction/PressInteraction.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {EIP712} from "solady/utils/EIP712.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
