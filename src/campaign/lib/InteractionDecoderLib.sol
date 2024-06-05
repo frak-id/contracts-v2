@@ -29,34 +29,9 @@ library InteractionDecoderLib {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Decode the data of a read article interaction
-    function pressDecodeOpenArticle(bytes calldata _data) internal pure returns (bytes32 articleId, address user) {
+    function pressDecodeUseShareLink(bytes calldata _data) internal pure returns (address user) {
         assembly {
-            articleId := calldataload(_data.offset)
-            user := shr(96, calldataload(add(_data.offset, 0x20)))
-        }
-    }
-
-    /// @dev Decode the data of a read article interaction
-    function pressDecodeReadArticle(bytes calldata _data) internal pure returns (bytes32 articleId, address user) {
-        assembly {
-            articleId := calldataload(_data.offset)
-            user := shr(96, calldataload(add(_data.offset, 0x20)))
-        }
-    }
-
-    /// @dev Decode the data of a read article interaction
-    function pressDecodeCreateShareLink(bytes calldata _data) internal pure returns (bytes32 articleId, address user) {
-        assembly {
-            articleId := calldataload(_data.offset)
-            user := shr(96, calldataload(add(_data.offset, 0x20)))
-        }
-    }
-
-    /// @dev Decode the data of a read article interaction
-    function pressDecodeUseShareLink(bytes calldata _data) internal pure returns (bytes32 articleId, address user) {
-        assembly {
-            articleId := calldataload(_data.offset)
-            user := shr(96, calldataload(add(_data.offset, 0x20)))
+            user := shr(96, calldataload(_data.offset))
         }
     }
 }

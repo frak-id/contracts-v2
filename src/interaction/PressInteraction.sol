@@ -23,10 +23,6 @@ contract PressInteraction is ContentInteraction {
     bytes32 private constant _READ_ARTICLE_INTERACTION =
         0xd5bd0fbe3510f2dde55a90e8bb325735d540cc475e1875f00abfd5a81015b073;
 
-    /// @dev keccak256('frak.press.interaction.create_share_link')
-    bytes32 private constant _CREATE_SHARE_LINK_INTERACTION =
-        0xaf75a9c1cea9f66971d8d341459fd474beb48c11cce7f5962860bec428704d98;
-
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
@@ -37,36 +33,8 @@ contract PressInteraction is ContentInteraction {
     /// @dev Event when an article is read by the given `user`
     event ArticleRead(bytes32 indexed articleId, address user);
 
-    /// @dev Event emitted when a share link is created by the given `user`
-    event ShareLinkCreated(bytes32 indexed articleId, address user, bytes32 shareId);
-
-    /// @dev Event when a share link is used
-    event ShareLinkUsed(bytes32 indexed shareId, address user);
-
-    /* -------------------------------------------------------------------------- */
-    /*                                   Storage                                  */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev bytes32(uint256(keccak256('frak.press.interaction')) - 1)
-    bytes32 private constant _PRESS_INTERACTION_STORAGE_SLOT =
-        0xf37141af23c6aeeb0bd5dacffe9b19ec3b801f111eab5899fcd9f42681bb538e;
-
-    /// @dev Info about the sharing of an article
-    struct PressShareInfo {
-        bytes32 articleId;
-        address user;
-    }
-
-    struct PressInteractionStorage {
-        /// @dev Mapping of share id to article and user referring
-        mapping(bytes32 shareId => PressShareInfo shareInfo) sharings;
-    }
-
-    function _storage() private pure returns (PressInteractionStorage storage storagePtr) {
-        assembly {
-            storagePtr.slot := _PRESS_INTERACTION_STORAGE_SLOT
-        }
-    }
+    /// @dev Event emitted when a `user` was referred by `referrer`
+    event UserReferred(address indexed user, address indexed referrer);
 
     constructor(uint256 _contentId, address _referralRegistry) ContentInteraction(_contentId, _referralRegistry) {}
 
@@ -75,14 +43,19 @@ contract PressInteraction is ContentInteraction {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Function called by a user when he openned an article
-    function articleOpened(bytes32 _articleId, bytes32 _shareId, bytes calldata _signature) external {
-        _articleOpened(_articleId, _shareId, msg.sender, _signature);
+    function articleOpened(bytes32 _articleId, bytes calldata _signature) external {
+        _articleOpened(_articleId, msg.sender, address(0), _signature);
+    }
+
+    /// @dev Function called by a user when he openned an article
+    function articleOpened(bytes32 _articleId, address _referrer, bytes calldata _signature) external {
+        _articleOpened(_articleId, msg.sender, _referrer, _signature);
     }
 
     /// @dev Function called when a user openned an article `_articleId` via a shared link `_shareId`
-    function _articleOpened(bytes32 _articleId, bytes32 _shareId, address _user, bytes calldata _signature) private {
+    function _articleOpened(bytes32 _articleId, address _user, address _referrer, bytes calldata _signature) private {
         // Validate the interaction
-        bytes32 interactionData = keccak256(abi.encode(_OPEN_ARTICLE_INTERACTION, _articleId, _shareId));
+        bytes32 interactionData = keccak256(abi.encode(_OPEN_ARTICLE_INTERACTION, _articleId, _referrer));
         _validateInteraction(interactionData, _user, _signature);
 
         // Emit the open event and send the interaction to the campaign if needed
@@ -91,14 +64,8 @@ contract PressInteraction is ContentInteraction {
             _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeOpenArticle(_articleId, _user));
         }
 
-        // If we got no share id, we can just stop here
-        if (_shareId == 0) {
-            return;
-        }
-
-        // Check if the sharing exist, and that it match the article id
-        PressShareInfo storage shareInfo = _storage().sharings[_shareId];
-        if (shareInfo.user == address(0) || shareInfo.articleId != _articleId) {
+        // If we got no referrer, we can just stop here
+        if (_referrer == address(0)) {
             return;
         }
 
@@ -110,11 +77,11 @@ contract PressInteraction is ContentInteraction {
 
         // Emit the share link used event
         {
-            emit ShareLinkUsed(_shareId, _user);
-            _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeOpenShare(_articleId, _user));
+            emit UserReferred(_user, _referrer);
+            _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeReferred(_user));
         }
         // Save the info inside the right referral tree
-        _saveReferrer(_user, shareInfo.user);
+        _saveReferrer(_user, _referrer);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -137,42 +104,6 @@ contract PressInteraction is ContentInteraction {
             emit ArticleRead(_articleId, _user);
             _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeReadArticle(_articleId, _user));
         }
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                             Share link methods                             */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev Function called when a user openned an article `articleId` via a shared link `shareId`
-    function createShareLink(bytes32 _articleId, bytes calldata _signature) external {
-        _createShareLink(_articleId, msg.sender, _signature);
-    }
-
-    /// @dev Create a new share link for the given `_articleId` and `_user`
-    function _createShareLink(bytes32 _articleId, address _user, bytes calldata _signature) private {
-        // Validate this interaction
-        bytes32 interactionData = keccak256(abi.encode(_CREATE_SHARE_LINK_INTERACTION, _articleId));
-        _validateInteraction(interactionData, _user, _signature);
-
-        // Create the share id
-        bytes32 shareId = keccak256(abi.encodePacked(_CONTENT_ID, _articleId, _user));
-
-        // Get the current storage slot
-        PressShareInfo storage shareInfo = _storage().sharings[shareId];
-
-        // If we already got a user, directly exit
-        if (shareInfo.user != address(0)) {
-            return;
-        }
-
-        // Emit the read event and send the interaction to the campaign if needed
-        {
-            emit ShareLinkCreated(_articleId, _user, shareId);
-            _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeCreateShare(_articleId, _user));
-        }
-        // Set the right values
-        shareInfo.articleId = _articleId;
-        shareInfo.user = _user;
     }
 
     /* -------------------------------------------------------------------------- */

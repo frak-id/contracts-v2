@@ -169,7 +169,7 @@ contract ReferralCampaignTest is Test {
     }
 
     function test_handleInteraction_sharedArticleUsed() public withReferralChain withAllowedEmitter {
-        bytes memory interactionData = InteractionEncoderLib.pressEncodeOpenShare(0, alice);
+        bytes memory interactionData = InteractionEncoderLib.pressEncodeReferred(alice);
 
         // Ensure call won't fail with fcked up data
         vm.prank(emitter);
@@ -191,7 +191,7 @@ contract ReferralCampaignTest is Test {
     }
 
     function test_disallowMe() public withReferralChain withAllowedEmitter {
-        bytes memory interactionData = InteractionEncoderLib.pressEncodeOpenShare(0, alice);
+        bytes memory interactionData = InteractionEncoderLib.pressEncodeReferred(alice);
 
         vm.prank(emitter);
         referralCampaign.disallowMe();

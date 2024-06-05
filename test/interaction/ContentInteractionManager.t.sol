@@ -48,29 +48,34 @@ contract ContentInteractionManagerTest is Test {
         vm.stopPrank();
     }
 
-    function test_deployInteractionContract_ContentDoesntExist() public {
-        vm.expectRevert(ContentInteractionManager.ContentDoesntExist.selector);
-        contentInteractionManager.deployInteractionContract(0);
+    function test_deployInteractionContract_Unauthorized() public {
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.deployInteractionContract(contentIdDapp);
     }
 
     function test_deployInteractionContract_CantHandleContentTypes() public {
+        vm.prank(operator);
         vm.expectRevert(ContentInteractionManager.CantHandleContentTypes.selector);
         contentInteractionManager.deployInteractionContract(contentIdDapp);
 
+        vm.prank(operator);
         vm.expectRevert(ContentInteractionManager.CantHandleContentTypes.selector);
         contentInteractionManager.deployInteractionContract(contentIdUnknown);
     }
 
     function test_deployInteractionContract_InteractionContractAlreadyDeployed() public {
+        vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
         assertNotEq(contentInteractionManager.getInteractionContract(contentIdPress), address(0));
 
+        vm.prank(operator);
         vm.expectRevert(ContentInteractionManager.InteractionContractAlreadyDeployed.selector);
         contentInteractionManager.deployInteractionContract(contentIdPress);
     }
 
     function test_deployInteractionContract() public {
         // Deploy the interaction contract
+        vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
 
         // Assert it's deployed
@@ -86,9 +91,28 @@ contract ContentInteractionManagerTest is Test {
         vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
         contentInteractionManager.getInteractionContract(contentIdPress);
 
+        vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
         address deployedAddress = contentInteractionManager.getInteractionContract(contentIdPress);
         assertNotEq(deployedAddress, address(0));
+    }
+
+    function test_updateInteractionContract_Unauthorized() public {
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.updateInteractionContract(contentIdDapp);
+    }
+
+    function test_updateInteractionContract_NoInteractionContractFound() public {
+        vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
+        vm.prank(operator);
+        contentInteractionManager.updateInteractionContract(contentIdDapp);
+    }
+
+    function test_updateInteractionContract() public {
+        vm.prank(operator);
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+        vm.prank(operator);
+        contentInteractionManager.updateInteractionContract(contentIdPress);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -110,6 +134,7 @@ contract ContentInteractionManagerTest is Test {
         contentInteractionManager.attachCampaign(contentIdPress, campaign1);
 
         // Deploy interaction
+        vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
         ContentInteraction interactionContract =
             ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
@@ -146,6 +171,7 @@ contract ContentInteractionManagerTest is Test {
         MockCampaign campaign2 = new MockCampaign(owner, address(contentInteractionManager));
 
         // Deploy interaction and add campaign
+        vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
         ContentInteraction interactionContract =
             ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
@@ -184,6 +210,7 @@ contract ContentInteractionManagerTest is Test {
         MockCampaign campaign4 = new MockCampaign(owner, address(contentInteractionManager));
 
         // Deploy interaction and add campaign
+        vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
         ContentInteraction interactionContract =
             ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));

@@ -49,6 +49,7 @@ abstract contract InteractionTest is Test {
         referralRegistry.grantRoles(address(contentInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
 
         // Deploy the interaction contract
+        vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentId);
         interactionContract = contentInteractionManager.getInteractionContract(contentId);
         contentInteraction = ContentInteraction(interactionContract);

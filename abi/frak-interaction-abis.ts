@@ -523,6 +523,13 @@ export const contentInteractionManagerAbi = [
   },
   {
     type: 'function',
+    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
+    name: 'updateInteractionContract',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [
       { name: 'newImplementation', internalType: 'address', type: 'address' },
       { name: 'data', internalType: 'bytes', type: 'bytes' },
@@ -607,6 +614,19 @@ export const contentInteractionManagerAbi = [
       },
     ],
     name: 'InteractionContractDeployed',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'contentId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'InteractionContractUpdated',
   },
   {
     type: 'event',
@@ -701,7 +721,6 @@ export const contentInteractionManagerAbi = [
   },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'CantHandleContentTypes' },
-  { type: 'error', inputs: [], name: 'ContentDoesntExist' },
   { type: 'error', inputs: [], name: 'InteractionContractAlreadyDeployed' },
   { type: 'error', inputs: [], name: 'InvalidInitialization' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
@@ -730,7 +749,17 @@ export const pressInteractionAbi = [
     type: 'function',
     inputs: [
       { name: '_articleId', internalType: 'bytes32', type: 'bytes32' },
-      { name: '_shareId', internalType: 'bytes32', type: 'bytes32' },
+      { name: '_signature', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'articleOpened',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_articleId', internalType: 'bytes32', type: 'bytes32' },
+      { name: '_referrer', internalType: 'address', type: 'address' },
       { name: '_signature', internalType: 'bytes', type: 'bytes' },
     ],
     name: 'articleOpened',
@@ -775,16 +804,6 @@ export const pressInteractionAbi = [
     name: 'completeOwnershipHandover',
     outputs: [],
     stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '_articleId', internalType: 'bytes32', type: 'bytes32' },
-      { name: '_signature', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'createShareLink',
-    outputs: [],
-    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -1107,50 +1126,6 @@ export const pressInteractionAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'articleId',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: true,
-      },
-      {
-        name: 'user',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-      {
-        name: 'shareId',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: false,
-      },
-    ],
-    name: 'ShareLinkCreated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'shareId',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: true,
-      },
-      {
-        name: 'user',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'ShareLinkUsed',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
         name: 'implementation',
         internalType: 'address',
         type: 'address',
@@ -1158,6 +1133,20 @@ export const pressInteractionAbi = [
       },
     ],
     name: 'Upgraded',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'referrer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'UserReferred',
   },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'CampaignAlreadyPresent' },

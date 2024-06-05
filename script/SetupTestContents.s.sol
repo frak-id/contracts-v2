@@ -1,28 +1,27 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
-import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
+import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 
-contract SetupTestContents is Script {
-    address private CONTENT_REGISTRY_ADDRESS = 0x5be7ae9f47dfe007CecA06b299e7CdAcD0A5C40e;
-    address private PAYWALL_ADDRESS = 0x6a958DfCc9f00d00DE8Bf756D3d8A567368fdDD5;
-    address private CONTENT_INTERACTION_MANAGER_ADDRESS = 0x34a6B1eAafEdf93A6B8658B7EA3035738929b159;
-
+contract SetupTestContents is Script, DeterminedAddress {
     function run() public {
         setupContents();
     }
 
     function setupContents() internal {
-        vm.startBroadcast();
+        ContentRegistry contentRegistry = ContentRegistry(_getAddresses().contentRegistry);
+        Paywall paywall = Paywall(_getAddresses().paywall);
+        ContentInteractionManager contentInteractionManager =
+            ContentInteractionManager(_getAddresses().contentInteractionManager);
 
-        ContentRegistry contentRegistry = ContentRegistry(CONTENT_REGISTRY_ADDRESS);
-        Paywall paywall = Paywall(PAYWALL_ADDRESS);
+        vm.startBroadcast();
 
         // Mint the tests contents
         uint256 cLeMonde =
@@ -32,10 +31,10 @@ contract SetupTestContents is Script {
         uint256 cFrak = _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "Frak", "news-paper.xyz");
 
         console.log("Content id:");
-        console.log(" - Le Monde: %s", cLeMonde);   // 106219508196454080375526586478153583586194937194493887259467424694676997453395
-        console.log(" - L'equipe: %s", cLequipe);   // 108586150798115180574743190405367285583167702751783717273705027881651322809951
-        console.log(" - Wired: %s", cWired);        // 61412812549033025435811962204424170589965658763482764336017940556663446417829
-        console.log(" - Frak: %s", cFrak);          // 20376791661718660580662410765070640284736320707848823176694931891585259913409
+        console.log(" - Le Monde: %s", cLeMonde); // 106219508196454080375526586478153583586194937194493887259467424694676997453395
+        console.log(" - L'equipe: %s", cLequipe); // 108586150798115180574743190405367285583167702751783717273705027881651322809951
+        console.log(" - Wired: %s", cWired); // 61412812549033025435811962204424170589965658763482764336017940556663446417829
+        console.log(" - Frak: %s", cFrak); // 20376791661718660580662410765070640284736320707848823176694931891585259913409
 
         // Add a few the prices for the gating providers
         _addTestPrices(paywall, cLeMonde);
@@ -44,8 +43,6 @@ contract SetupTestContents is Script {
         _addTestPrices(paywall, cFrak);
 
         // Deploy the interaction contracts
-        ContentInteractionManager contentInteractionManager =
-            ContentInteractionManager(CONTENT_INTERACTION_MANAGER_ADDRESS);
         contentInteractionManager.deployInteractionContract(cLeMonde);
         contentInteractionManager.deployInteractionContract(cLequipe);
         contentInteractionManager.deployInteractionContract(cWired);

@@ -28,7 +28,6 @@ InteractionType constant INTERACTION_WALLET_LINK = InteractionType.wrap(bytes4(0
 /*                       Press related interaction type                       */
 /* -------------------------------------------------------------------------- */
 
-InteractionType constant INTERACTION_PRESS_OPEN_ARTICLE = InteractionType.wrap(bytes4(0x00000002));
-InteractionType constant INTERACTION_PRESS_READ_ARTICLE = InteractionType.wrap(bytes4(0x00000003));
-InteractionType constant INTERACTION_PRESS_CREATE_SHARE_LINK = InteractionType.wrap(bytes4(0x00000004));
-InteractionType constant INTERACTION_PRESS_USED_SHARE_LINK = InteractionType.wrap(bytes4(0x00000005));
+InteractionType constant INTERACTION_PRESS_OPEN_ARTICLE = InteractionType.wrap(bytes4(0x00000100));
+InteractionType constant INTERACTION_PRESS_READ_ARTICLE = InteractionType.wrap(bytes4(0x00000101));
+InteractionType constant INTERACTION_PRESS_REFERRED = InteractionType.wrap(bytes4(0x00000102));

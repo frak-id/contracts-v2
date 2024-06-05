@@ -31,6 +31,7 @@ contract CommunityToken is ERC6909 {
     /// @custom:storage-location erc7201:community_token.main
     struct CommunityTokenStorage {
         mapping(uint256 contentId => bool isCommunityAllowed) _communityAllowedMap;
+        string baseUrl;
     }
 
     /// Note: This is equivalent to `keccak256(abi.encode(uint256(keccak256("community_token.main")) - 1)) & ~bytes32(uint256(0xff));`.
@@ -49,8 +50,9 @@ contract CommunityToken is ERC6909 {
     /// @dev The base content id
     uint256 private immutable contentId;
 
-    constructor(ContentRegistry _contentRegistry) {
+    constructor(ContentRegistry _contentRegistry, string memory _baseUrl) {
         contentRegistry = _contentRegistry;
+        _getStorage().baseUrl = _baseUrl;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -72,7 +74,7 @@ contract CommunityToken is ERC6909 {
     }
 
     function tokenURI(uint256 _id) public view override onlyCommunityAllowed(_id) returns (string memory) {
-        return string.concat("https://nexus.frak.id/metadata/", LibString.toString(_id), ".json");
+        return string.concat(_getStorage().baseUrl, LibString.toString(_id), ".json");
     }
 
     function isEnabled(uint256 _id) public view returns (bool) {

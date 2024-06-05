@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
-import {INTERACTION_PRESS_USED_SHARE_LINK, InteractionType} from "../constants/InteractionType.sol";
+import {INTERACTION_PRESS_REFERRED, InteractionType} from "../constants/InteractionType.sol";
 
 import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
@@ -149,8 +149,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         (InteractionType interactionType, bytes calldata interactionData) = _data.decodeInteraction();
 
         // If the interaction is a usage of a share link, handle it
-        if (interactionType == INTERACTION_PRESS_USED_SHARE_LINK) {
-            (, address user) = interactionData.pressDecodeUseShareLink();
+        if (interactionType == INTERACTION_PRESS_REFERRED) {
+            address user = interactionData.pressDecodeUseShareLink();
             _performTokenDistribution(user, _INITIAL_REFERRER_REWARD);
         }
     }

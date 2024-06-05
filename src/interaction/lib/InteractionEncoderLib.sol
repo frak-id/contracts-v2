@@ -2,10 +2,9 @@
 pragma solidity 0.8.23;
 
 import {
-    INTERACTION_PRESS_CREATE_SHARE_LINK,
     INTERACTION_PRESS_OPEN_ARTICLE,
     INTERACTION_PRESS_READ_ARTICLE,
-    INTERACTION_PRESS_USED_SHARE_LINK,
+    INTERACTION_PRESS_REFERRED,
     InteractionType
 } from "../../constants/InteractionType.sol";
 
@@ -26,11 +25,7 @@ library InteractionEncoderLib {
         return abi.encodePacked(InteractionType.unwrap(INTERACTION_PRESS_READ_ARTICLE), _articleId, _user);
     }
 
-    function pressEncodeCreateShare(bytes32 _articleId, address _user) internal pure returns (bytes memory encoded) {
-        return abi.encodePacked(InteractionType.unwrap(INTERACTION_PRESS_CREATE_SHARE_LINK), _articleId, _user);
-    }
-
-    function pressEncodeOpenShare(bytes32 _articleId, address _user) internal pure returns (bytes memory encoded) {
-        return abi.encodePacked(InteractionType.unwrap(INTERACTION_PRESS_USED_SHARE_LINK), _articleId, _user);
+    function pressEncodeReferred(address _user) internal pure returns (bytes memory encoded) {
+        return abi.encodePacked(InteractionType.unwrap(INTERACTION_PRESS_REFERRED), _user);
     }
 }

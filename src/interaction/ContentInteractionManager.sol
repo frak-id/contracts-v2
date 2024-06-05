@@ -35,8 +35,6 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     error InteractionContractAlreadyDeployed();
 
-    error ContentDoesntExist();
-
     error CantHandleContentTypes();
 
     error NoInteractionContractFound();
@@ -57,6 +55,9 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     /// @dev Event emitted when an interaction contract is deployed
     event InteractionContractDeployed(uint256 indexed contentId, address interactionContract);
+
+    /// @dev Event emitted when an interaction contract is updated
+    event InteractionContractUpdated(uint256 indexed contentId);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -98,16 +99,18 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     /// @dev Deploy a new interaction contract for the given `_contentId`
     function deployInteractionContract(uint256 _contentId) external {
+        // Ensure the caller is allowed to perform the update
+        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
+        if (!isAllowed) revert Unauthorized();
+
         // Check if we already have an interaction contract for this content
         if (_storage().contentInteractions[_contentId] != address(0)) revert InteractionContractAlreadyDeployed();
 
         // Retreive the content types, if at 0 it mean that the content doesn't exist
         ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
-        if (contentTypes.isEmpty()) revert ContentDoesntExist();
 
         // Handle the press type of content
-        address interactionContract = _deployContractForContentTypes(_contentId, contentTypes);
-        if (interactionContract == address(0)) revert CantHandleContentTypes();
+        address interactionContract = _deployLogicContractForContentTypes(_contentId, contentTypes);
 
         // Retreive the owner of this content
         address contentOwner = _CONTENT_REGISTRY.ownerOf(_contentId);
@@ -128,7 +131,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Deploy the right interaction contract for the given content type
-    function _deployContractForContentTypes(uint256 _contentId, ContentTypes _contentTypes)
+    function _deployLogicContractForContentTypes(uint256 _contentId, ContentTypes _contentTypes)
         private
         returns (address interactionContract)
     {
@@ -136,8 +139,33 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         if (_contentTypes.isPressType()) {
             // Deploy the press interaction contract
             PressInteraction pressInteraction = new PressInteraction(_contentId, address(_REFERRAL_REGISTRY));
-            interactionContract = address(pressInteraction);
+            return address(pressInteraction);
         }
+
+        // If we can't handle the content type, revert
+        revert CantHandleContentTypes();
+    }
+
+    /// @dev Deploy a new interaction contract for the given `_contentId`
+    function updateInteractionContract(uint256 _contentId) external {
+        // Ensure the caller is allowed to perform the update
+        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
+        if (!isAllowed) revert Unauthorized();
+
+        // Fetch the current interaction contract
+        address interactionContract = getInteractionContract(_contentId);
+
+        // Retreive the content types, if at 0 it mean that the content doesn't exist
+        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
+
+        // Deploy the interaction contract
+        address logic = _deployLogicContractForContentTypes(_contentId, contentTypes);
+
+        // Update it
+        ContentInteraction(interactionContract).upgradeToAndCall(logic, "");
+
+        // Emit the creation event type
+        emit InteractionContractUpdated(_contentId);
     }
 
     /* -------------------------------------------------------------------------- */
