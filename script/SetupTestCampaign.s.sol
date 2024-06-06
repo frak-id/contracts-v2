@@ -5,11 +5,8 @@ import {Addresses, ContentIds, DeterminedAddress} from "./DeterminedAddress.sol"
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
-import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
-import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 

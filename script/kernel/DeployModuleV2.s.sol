@@ -6,6 +6,7 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
+import {ContentInteractionAction} from "src/kernel/v2/ContentInteractionAction.sol";
 import {InteractionSessionValidator} from "src/kernel/v2/InteractionSessionValidator.sol";
 import {MultiWebAuthNRecoveryAction} from "src/kernel/v2/MultiWebAuthNRecoveryAction.sol";
 import {MultiWebAuthNValidatorV2} from "src/kernel/v2/MultiWebAuthNValidator.sol";
@@ -14,10 +15,13 @@ contract DeployModuleV2 is Script, DeterminedAddress {
     address P256_WRAPPER_ADDRESS = 0x97A24c95E317c44c0694200dd0415dD6F556663D;
     address MULTI_WEBAUTHN_VALIDATOR_ADDRESS = 0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808;
     address MULTI_WEBAUTHN_VALIDATOR_RECOVERY_ADDRESS = 0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9;
-    address INTERACTION_SESSSION_VALIDATOR_ADDRESS = 0xEcc0b6F1Bd630c17C35F266BaAA1f96AD89D9FBa;
+
+    address INTERACTION_SESSSION_VALIDATOR_ADDRESS = 0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50;
+    address CONTENT_INTERACTION_ACTION_ADDRESS = 0x28D88B3B725B571F967CD4fFC9DbFDdA9Abe54a6;
 
     function run() public {
         deploy();
+        deployInteractions();
     }
 
     function deploy() internal {
@@ -50,23 +54,41 @@ contract DeployModuleV2 is Script, DeterminedAddress {
             multiWebAuthNRecovery = MultiWebAuthNRecoveryAction(MULTI_WEBAUTHN_VALIDATOR_RECOVERY_ADDRESS);
         }
 
-        // Deploy the interaction session validator if not already deployed
-        InteractionSessionValidator interactionValidator;
-        if (INTERACTION_SESSSION_VALIDATOR_ADDRESS.code.length == 0) {
-            console.log("Deploying InteractionSessionValidator");
-            interactionValidator = new InteractionSessionValidator{salt: 0}(
-                ContentInteractionManager(_getAddresses().contentInteractionManager)
-            );
-        } else {
-            interactionValidator = InteractionSessionValidator(INTERACTION_SESSSION_VALIDATOR_ADDRESS);
-        }
-
         // Log every deployed address
         console.log("Chain: %s", block.chainid);
         console.log(" - P256VerifierWrapper: %s", address(p256verifierWrapper));
         console.log(" - MultiWebAuthNValidator: %s", address(multiWebAuthNSigner));
         console.log(" - MultiWebAuthNRecoveryAction: %s", address(multiWebAuthNRecovery));
+
+        vm.stopBroadcast();
+    }
+
+    function deployInteractions() internal {
+        vm.startBroadcast();
+        // Deploy the interaction session validator if not already deployed
+        InteractionSessionValidator interactionValidator;
+        if (INTERACTION_SESSSION_VALIDATOR_ADDRESS.code.length == 0) {
+            console.log("Deploying InteractionSessionValidator");
+            interactionValidator = new InteractionSessionValidator{salt: 0}();
+        } else {
+            interactionValidator = InteractionSessionValidator(INTERACTION_SESSSION_VALIDATOR_ADDRESS);
+        }
+
+        // Deploy the content interaction action if not already deployed
+        ContentInteractionAction contentInteractionAction;
+        if (CONTENT_INTERACTION_ACTION_ADDRESS.code.length == 0) {
+            console.log("Deploying ContentInteractionAction");
+            contentInteractionAction = new ContentInteractionAction{salt: 0}(
+                ContentInteractionManager(_getAddresses().contentInteractionManager)
+            );
+        } else {
+            contentInteractionAction = ContentInteractionAction(CONTENT_INTERACTION_ACTION_ADDRESS);
+        }
+
+        // Log every deployed address
+        console.log("Chain: %s", block.chainid);
         console.log(" - InteractionSessionValidator: %s", address(interactionValidator));
+        console.log(" - ContentInteractionAction: %s", address(contentInteractionAction));
 
         vm.stopBroadcast();
     }

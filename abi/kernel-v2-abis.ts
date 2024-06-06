@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// InteractionSessionValidator
+// ContentInteractionAction
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const interactionSessionValidatorAbi = [
+export const contentInteractionActionAbi = [
   {
     type: 'constructor',
     inputs: [
@@ -14,6 +14,48 @@ export const interactionSessionValidatorAbi = [
     ],
     stateMutability: 'nonpayable',
   },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: '_interaction',
+        internalType: 'struct Interaction',
+        type: 'tuple',
+        components: [
+          { name: 'contentId', internalType: 'uint256', type: 'uint256' },
+          { name: 'data', internalType: 'bytes', type: 'bytes' },
+        ],
+      },
+    ],
+    name: 'sendInteraction',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: '_interactions',
+        internalType: 'struct Interaction[]',
+        type: 'tuple[]',
+        components: [
+          { name: 'contentId', internalType: 'uint256', type: 'uint256' },
+          { name: 'data', internalType: 'bytes', type: 'bytes' },
+        ],
+      },
+    ],
+    name: 'sendInteractions',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'error', inputs: [], name: 'InteractionFailed' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// InteractionSessionValidator
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const interactionSessionValidatorAbi = [
   {
     type: 'function',
     inputs: [{ name: '', internalType: 'bytes', type: 'bytes' }],
