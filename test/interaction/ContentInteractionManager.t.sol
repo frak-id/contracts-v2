@@ -9,8 +9,9 @@ import {LibClone} from "solady/utils/LibClone.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
+import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
@@ -20,6 +21,7 @@ contract ContentInteractionManagerTest is Test {
 
     ContentRegistry private contentRegistry;
     ReferralRegistry private referralRegistry;
+    InteractionFacetsFactory private facetFactory;
 
     uint256 private contentIdDapp;
     uint256 private contentIdPress;
@@ -31,10 +33,12 @@ contract ContentInteractionManagerTest is Test {
         contentRegistry = new ContentRegistry(owner);
         referralRegistry = new ReferralRegistry(owner);
 
+        facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
+
         address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
-        contentInteractionManager.init(owner);
+        contentInteractionManager.init(owner, facetFactory);
 
         // Grant the right roles to the content interaction manager
         vm.prank(owner);
@@ -43,7 +47,7 @@ contract ContentInteractionManagerTest is Test {
         vm.startPrank(owner);
         contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain");
         contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
-        contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(bytes32(uint256(1 << 99))), "name", "unknown-domain");
+        contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(uint256(1 << 99)), "name", "unknown-domain");
         contentRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
     }
@@ -66,7 +70,7 @@ contract ContentInteractionManagerTest is Test {
     function test_deployInteractionContract_InteractionContractAlreadyDeployed() public {
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
-        assertNotEq(contentInteractionManager.getInteractionContract(contentIdPress), address(0));
+        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdPress)), address(0));
 
         vm.prank(operator);
         vm.expectRevert(ContentInteractionManager.InteractionContractAlreadyDeployed.selector);
@@ -79,12 +83,7 @@ contract ContentInteractionManagerTest is Test {
         contentInteractionManager.deployInteractionContract(contentIdPress);
 
         // Assert it's deployed
-        assertNotEq(contentInteractionManager.getInteractionContract(contentIdPress), address(0));
-
-        // Ensure the deployed contract match the interaction contract
-        ContentInteraction interactionContract =
-            ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
-        assertEq(ContentTypes.unwrap(interactionContract.getContentType()), ContentTypes.unwrap(CONTENT_TYPE_PRESS));
+        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdPress)), address(0));
     }
 
     function test_getInteractionContract() public {
@@ -93,7 +92,7 @@ contract ContentInteractionManagerTest is Test {
 
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
-        address deployedAddress = contentInteractionManager.getInteractionContract(contentIdPress);
+        address deployedAddress = address(contentInteractionManager.getInteractionContract(contentIdPress));
         assertNotEq(deployedAddress, address(0));
     }
 
@@ -136,8 +135,8 @@ contract ContentInteractionManagerTest is Test {
         // Deploy interaction
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
-        ContentInteraction interactionContract =
-            ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
+        ContentInteractionDiamond interactionContract =
+            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
 
         // Test op with interaction
         vm.prank(operator);
@@ -156,7 +155,7 @@ contract ContentInteractionManagerTest is Test {
         assertEq(address(interactionContract.getCampaigns()[2]), address(campaign3));
 
         // Test can't repush an existing campaign
-        vm.expectRevert(ContentInteraction.CampaignAlreadyPresent.selector);
+        vm.expectRevert(ContentInteractionDiamond.CampaignAlreadyPresent.selector);
         vm.prank(operator);
         contentInteractionManager.attachCampaign(contentIdPress, campaign1);
 
@@ -173,8 +172,8 @@ contract ContentInteractionManagerTest is Test {
         // Deploy interaction and add campaign
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
-        ContentInteraction interactionContract =
-            ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
+        ContentInteractionDiamond interactionContract =
+            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
         vm.prank(operator);
         contentInteractionManager.attachCampaign(contentIdPress, campaign1);
 
@@ -212,8 +211,8 @@ contract ContentInteractionManagerTest is Test {
         // Deploy interaction and add campaign
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
-        ContentInteraction interactionContract =
-            ContentInteraction(contentInteractionManager.getInteractionContract(contentIdPress));
+        ContentInteractionDiamond interactionContract =
+            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
         vm.startPrank(operator);
         contentInteractionManager.attachCampaign(contentIdPress, campaign1);
         contentInteractionManager.attachCampaign(contentIdPress, campaign2);
@@ -267,12 +266,12 @@ contract ContentInteractionManagerTest is Test {
 
     function test_reinit() public {
         vm.expectRevert();
-        contentInteractionManager.init(address(1));
+        contentInteractionManager.init(address(1), facetFactory);
 
         // Ensure we can't init raw instance
         ContentInteractionManager rawImplem = new ContentInteractionManager(contentRegistry, referralRegistry);
         vm.expectRevert();
-        rawImplem.init(owner);
+        rawImplem.init(owner, facetFactory);
     }
 
     function test_upgrade() public {

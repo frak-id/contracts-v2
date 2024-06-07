@@ -3,28 +3,36 @@ pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ContentTypes} from "../constants/ContentTypes.sol";
+import {InteractionType} from "../constants/InteractionType.sol";
 import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
+import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
+import {ContentInteractionStorageLib} from "./lib/ContentInteractionStorageLib.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
-import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 
-/// @title ContentInteraction
+/// @title ContentInteractionDiamond
 /// @author @KONFeature
-/// @notice Interface for a content platform
+/// @notice Interface for a top level content interaction contract
 /// @dev This interface is meant to be implemented by a contract that represents a content platform
+/// @dev It's act a bit like the diamond operator, having multiple logic contract per content type.
 /// @custom:security-contact contact@frak.id
-abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, Initializable {
+contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles, EIP712, Initializable {
     /// @dev error throwned when the signer of an interaction is invalid
     error WrongInteractionSigner();
     /// @dev error throwned when a campaign is already present
     error CampaignAlreadyPresent();
+    /// @dev Error when a content type is unhandled
+    error UnandledContentType();
+    /// @dev Error when we failed to handle an interaction
+    error InteractionHandlingFailed();
 
     /// @dev EIP-712 typehash used to validate the given transaction
-    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)");
+    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH = keccak256(
+        "ValidateInteraction(uint256 contentId,bytes4 action,bytes32 interactionData,address user,uint256 nonce)"
+    );
 
     /// @dev The base content referral tree: `keccak256("ContentReferralTree")`
     bytes32 private constant _BASE_CONTENT_TREE = 0x3d16196f272c96153eabc4eb746e08ae541cf36535edb959ed80f5e5169b6787;
@@ -39,37 +47,20 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev bytes32(uint256(keccak256('frak.content.interaction')) - 1)
-    bytes32 private constant _CONTENT_INTERACTION_STORAGE_SLOT =
-        0xd966519fe3fe853ea9b03acd8a0422a17006c68dbe1d8fa2b9127b9e8e22eac4;
-
-    struct ContentInteractionStorage {
-        /// @dev Nonce for the validation of the interaction
-        mapping(bytes32 nonceKey => uint256 nonce) nonces;
-        /// @dev Array of all the current active campaigns
-        InteractionCampaign[] campaigns;
-    }
-
-    function _contentInteractionStorage() private pure returns (ContentInteractionStorage storage storagePtr) {
-        assembly {
-            storagePtr.slot := _CONTENT_INTERACTION_STORAGE_SLOT
-        }
-    }
-
-    constructor(uint256 _contentId, address _referralRegistry) {
+    constructor(
+        uint256 _contentId,
+        ReferralRegistry _referralRegistry,
+        address _interactionMananger,
+        address _interactionManangerOwner,
+        address _contentOwner
+    ) {
         // Set immutable variable (since embeded inside the bytecode)
         _CONTENT_ID = _contentId;
-        _REFERRAL_REGISTRY = ReferralRegistry(_referralRegistry);
+        _REFERRAL_REGISTRY = _referralRegistry;
 
         // Disable init on deployed raw instance
         _disableInitializers();
-    }
 
-    /// @dev Init our contract with the right owner
-    function init(address _interactionMananger, address _interactionManangerOwner, address _contentOwner)
-        external
-        initializer
-    {
         // Global owner is the same as the interaction manager owner
         _initializeOwner(_interactionManangerOwner);
         _setRoles(_interactionManangerOwner, UPGRADE_ROLE);
@@ -77,20 +68,81 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
         _setRoles(_interactionMananger, UPGRADE_ROLE | CAMPAIGN_MANAGER_ROLE);
         // The content owner can manage almost everything
         _setRoles(_contentOwner, INTERCATION_VALIDATOR_ROLE | UPGRADE_ROLE);
+
+        // Compute and store the referral tree
+        bytes32 tree;
+        assembly {
+            mstore(0, _BASE_CONTENT_TREE)
+            mstore(0x20, _contentId)
+            tree := keccak256(0, 0x40)
+        }
+        _contentInteractionStorage().referralTree = tree;
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                              Referral related                              */
+    /*                             Facets managements                             */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Save on the registry level that `_user` has been referred by `_referrer`
-    function _saveReferrer(address _user, address _referrer) internal {
-        _REFERRAL_REGISTRY.saveReferrer(getReferralTree(), _user, _referrer);
+    /// @dev Set the facets for the given content types
+    function setFacets(IInteractionFacet[] calldata facets) external onlyRoles(UPGRADE_ROLE) {
+        for (uint256 i = 0; i < facets.length; i++) {
+            _setFacet(facets[i]);
+        }
     }
 
-    /// @dev Check on the registry if the `_user` has already a referrer
-    function _isUserAlreadyReferred(address _user) internal view returns (bool) {
-        return _REFERRAL_REGISTRY.getReferrer(getReferralTree(), _user) != address(0);
+    /// @dev Set the facets for the given content types
+    function _setFacet(IInteractionFacet _facet) private {
+        uint8 denominator = _facet.contentTypeDenominator();
+        _contentInteractionStorage().facets[uint256(denominator)] = _facet;
+    }
+
+    /// @dev Delete all the facets matching the given content types
+    function deleteFacets(ContentTypes _contentTypes) external onlyRoles(UPGRADE_ROLE) {
+        uint8[] memory denominators = _contentTypes.unwrapToDenominators();
+        for (uint256 i = 0; i < denominators.length; i++) {
+            _contentInteractionStorage().facets[uint256(denominators[i])] = IInteractionFacet(address(0));
+        }
+    }
+
+    /// @dev Get the facet for the given content type
+    function getFacet(uint8 _denominator) external view returns (IInteractionFacet) {
+        return _contentInteractionStorage().facets[uint256(_denominator)];
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                           Interaction entry point                          */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Handle an interaction
+    function handleInteraction(
+        uint8 contentType,
+        InteractionType _action,
+        bytes calldata _interactionData,
+        bytes calldata _signature
+    ) external {
+        // Get the faucet matching the content type
+        IInteractionFacet faucet = _contentInteractionStorage().facets[uint256(contentType)];
+
+        // If we don't have a faucet, we revert
+        if (faucet == IInteractionFacet(address(0))) {
+            revert UnandledContentType();
+        }
+
+        // Validate the interaction
+        _validateInteraction(_action, keccak256(_interactionData), msg.sender, _signature);
+
+        // Transmit the interaction to the faucet
+        (bool success, bytes memory outputData) = address(faucet).delegatecall(
+            abi.encodeWithSelector(IInteractionFacet.receiveInteraction.selector, _action, _interactionData)
+        );
+        if (!success) {
+            revert InteractionHandlingFailed();
+        }
+
+        // Send the interaction to the campaigns if we got some (at lesat 32 bytes since it should contain the action with it)
+        if (outputData.length > 31) {
+            _sendInteractionToCampaign(outputData);
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -109,11 +161,16 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     }
 
     /// @dev Check if the provided interaction is valid
-    function _validateInteraction(bytes32 _interactionData, address _user, bytes calldata _signature) internal {
+    function _validateInteraction(
+        InteractionType _action,
+        bytes32 _interactionData,
+        address _user,
+        bytes calldata _signature
+    ) internal {
         // Get the key for our nonce
         bytes32 nonceKey;
         assembly {
-            mstore(0, _interactionData)
+            mstore(0, _action)
             mstore(0x20, _user)
             nonceKey := keccak256(0, 0x40)
         }
@@ -124,6 +181,7 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
                 abi.encode(
                     _VALIDATE_INTERACTION_TYPEHASH,
                     _CONTENT_ID,
+                    _action,
                     _interactionData,
                     _user,
                     _contentInteractionStorage().nonces[nonceKey]++
@@ -142,10 +200,10 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     }
 
     /// @dev Get the current user nonce for the given interaction
-    function getNonceForInteraction(bytes32 _interactionData, address _user) external view returns (uint256) {
+    function getNonceForInteraction(InteractionType _action, address _user) external view returns (uint256) {
         bytes32 nonceKey;
         assembly {
-            mstore(0, _interactionData)
+            mstore(0, _action)
             mstore(0x20, _user)
             nonceKey := keccak256(0, 0x40)
         }
@@ -157,9 +215,6 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     /*                            Some metadata reader                            */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Get the type for the current content
-    function getContentType() public pure virtual returns (ContentTypes);
-
     /// @dev Get the id for the current content
     function getContentId() public view returns (uint256) {
         return _CONTENT_ID;
@@ -168,16 +223,8 @@ abstract contract ContentInteraction is OwnableRoles, EIP712, UUPSUpgradeable, I
     /// @dev Get the referral tree for the current content
     /// @dev keccak256("ContentReferralTree", contentId)
     function getReferralTree() public view returns (bytes32 tree) {
-        uint256 cId = _CONTENT_ID;
-        assembly {
-            mstore(0, _BASE_CONTENT_TREE)
-            mstore(0x20, cId)
-            tree := keccak256(0, 0x40)
-        }
+        return _referralTree();
     }
-
-    /// @dev Upgrade check
-    function _authorizeUpgrade(address newImplementation) internal override onlyRoles(UPGRADE_ROLE) {}
 
     /* -------------------------------------------------------------------------- */
     /*                           Campaign related logics                          */

@@ -5,7 +5,7 @@ import {ContentIds, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
-import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
+import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 
 contract SetupTestContents is Script, DeterminedAddress {
@@ -28,9 +28,7 @@ contract SetupTestContents is Script, DeterminedAddress {
 
     /// @dev Mint a content with the given name and domain
     function _grantValidatorRole(ContentInteractionManager _contentInteractionManager, uint256 _contentId) internal {
-        address interactionContract = _contentInteractionManager.getInteractionContract(_contentId);
-        ContentInteraction(interactionContract).grantRoles(
-            0x8747C17970464fFF597bd5a580A72fCDA224B0A1, INTERCATION_VALIDATOR_ROLE
-        );
+        ContentInteractionDiamond interactionContract = _contentInteractionManager.getInteractionContract(_contentId);
+        interactionContract.grantRoles(0x8747C17970464fFF597bd5a580A72fCDA224B0A1, INTERCATION_VALIDATOR_ROLE);
     }
 }

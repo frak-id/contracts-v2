@@ -8,6 +8,7 @@ import {LibClone} from "solady/utils/LibClone.sol";
 import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {CommunityToken} from "src/tokens/CommunityToken.sol";
@@ -39,6 +40,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - ContentRegistry: %s", addresses.contentRegistry);
         console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
         console.log(" - ContentInteractionManager: %s", addresses.contentInteractionManager);
+        console.log(" - InteractionFacetFactory: %s", addresses.facetFactory);
         console.log(" - PaywallToken: %s", addresses.paywallToken);
         console.log(" - Paywall: %s", addresses.paywall);
         console.log(" - CommunityToken: %s", addresses.communityToken);
@@ -60,6 +62,15 @@ contract Deploy is Script, DeterminedAddress {
             addresses.referralRegistry = address(referralRegistry);
         }
 
+        // Deploy the facet factory
+        if (addresses.facetFactory.code.length == 0 || forceDeploy) {
+            console.log("Deploying InteractionFacetsFactory");
+            InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{salt: 0}(
+                ReferralRegistry(addresses.referralRegistry), ContentRegistry(addresses.contentRegistry)
+            );
+            addresses.facetFactory = address(facetFactory);
+        }
+
         // Deploy the interaction manager if needed
         if (addresses.contentInteractionManager.code.length == 0 || forceDeploy) {
             console.log("Deploying ContentInteractionManager under erc1967 proxy");
@@ -71,7 +82,7 @@ contract Deploy is Script, DeterminedAddress {
             );
             // Deploy and register proxy
             address proxy = LibClone.deployDeterministicERC1967(implem, 0);
-            ContentInteractionManager(proxy).init(msg.sender);
+            ContentInteractionManager(proxy).init(msg.sender, InteractionFacetsFactory(addresses.facetFactory));
             addresses.contentInteractionManager = proxy;
 
             // Granr it the role to grant tree access on the referral registry

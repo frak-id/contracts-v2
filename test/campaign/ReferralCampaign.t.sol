@@ -8,8 +8,9 @@ import {Ownable} from "solady/auth/Ownable.sol";
 import {CAMPAIGN_EVENT_EMITTER_ROLE} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
+
+import {InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {InteractionEncoderLib} from "src/interaction/lib/InteractionEncoderLib.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
@@ -82,7 +83,7 @@ contract ReferralCampaignTest is Test {
 
     function test_supportContentType() public view {
         assertEq(referralCampaign.supportContentType(CONTENT_TYPE_DAPP), false);
-        assertEq(referralCampaign.supportContentType(ContentTypes.wrap(bytes32(uint256(1 << 9)))), false);
+        assertEq(referralCampaign.supportContentType(ContentTypes.wrap(uint256(1 << 9))), false);
         assertEq(referralCampaign.supportContentType(CONTENT_TYPE_PRESS), true);
     }
 
@@ -169,7 +170,7 @@ contract ReferralCampaignTest is Test {
     }
 
     function test_handleInteraction_sharedArticleUsed() public withReferralChain withAllowedEmitter {
-        bytes memory interactionData = InteractionEncoderLib.pressEncodeReferred(alice);
+        bytes memory interactionData = InteractionTypeLib.packInteractionForCampaign(PressInteractions.REFERRED, alice);
 
         // Ensure call won't fail with fcked up data
         vm.prank(emitter);
@@ -191,7 +192,7 @@ contract ReferralCampaignTest is Test {
     }
 
     function test_disallowMe() public withReferralChain withAllowedEmitter {
-        bytes memory interactionData = InteractionEncoderLib.pressEncodeReferred(alice);
+        bytes memory interactionData = InteractionTypeLib.packInteractionForCampaign(PressInteractions.REFERRED, alice);
 
         vm.prank(emitter);
         referralCampaign.disallowMe();

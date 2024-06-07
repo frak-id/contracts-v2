@@ -5,6 +5,7 @@ struct Addresses {
     // Core
     address contentRegistry;
     address referralRegistry;
+    address facetFactory;
     address contentInteractionManager;
     // Gating
     address paywallToken;
@@ -29,6 +30,7 @@ contract DeterminedAddress {
         return Addresses({
             contentRegistry: 0x5be7ae9f47dfe007CecA06b299e7CdAcD0A5C40e,
             referralRegistry: 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43,
+            facetFactory: 0x35F3e191523C8701aD315551dCbDcC5708efD7ec,
             contentInteractionManager: 0xfB31dA57Aa2BDb0220d8e189E0a08b0cc55Ee186,
             paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,
             paywall: 0x6a958DfCc9f00d00DE8Bf756D3d8A567368fdDD5,

@@ -2,15 +2,15 @@
 pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
-import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
+import {ContentTypes} from "../constants/ContentTypes.sol";
 import {UPGRADE_ROLE} from "../constants/Roles.sol";
-import {ContentInteraction} from "../interaction/ContentInteraction.sol";
-import {PressInteraction} from "../interaction/PressInteraction.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
+import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
+import {InteractionFacetsFactory} from "./InteractionFacetsFactory.sol";
+import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 
 /// @title ContentInteractionManager
@@ -53,7 +53,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     event CampaignsDetached(uint256 contentId, InteractionCampaign[] campaigns);
 
     /// @dev Event emitted when an interaction contract is deployed
-    event InteractionContractDeployed(uint256 indexed contentId, address interactionContract);
+    event InteractionContractDeployed(uint256 indexed contentId, ContentInteractionDiamond interactionContract);
 
     /// @dev Event emitted when an interaction contract is updated
     event InteractionContractUpdated(uint256 indexed contentId);
@@ -68,7 +68,9 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     struct InteractionManagerStorage {
         /// @dev Mapping of content id to the content interaction contract
-        mapping(uint256 _contentId => address) contentInteractions;
+        mapping(uint256 _contentId => ContentInteractionDiamond) contentInteractions;
+        /// @dev The facets factory we will be using
+        InteractionFacetsFactory facetsFactory;
     }
 
     function _storage() private pure returns (InteractionManagerStorage storage storagePtr) {
@@ -87,9 +89,17 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Init our contract with the right owner
-    function init(address _owner) external initializer {
+    function init(address _owner, InteractionFacetsFactory _facetsFactory) external initializer {
         _initializeOwner(_owner);
         _setRoles(_owner, UPGRADE_ROLE);
+
+        // Set the facets factory
+        _storage().facetsFactory = _facetsFactory;
+    }
+
+    /// @dev Update the facets factory
+    function updateFacetsFactory(InteractionFacetsFactory _facetsFactory) external onlyRoles(UPGRADE_ROLE) {
+        _storage().facetsFactory = _facetsFactory;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -103,46 +113,32 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         if (!isAllowed) revert Unauthorized();
 
         // Check if we already have an interaction contract for this content
-        if (_storage().contentInteractions[_contentId] != address(0)) revert InteractionContractAlreadyDeployed();
-
-        // Retreive the content types, if at 0 it mean that the content doesn't exist
-        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
-
-        // Handle the press type of content
-        address interactionContract = _deployLogicContractForContentTypes(_contentId, contentTypes);
+        if (_storage().contentInteractions[_contentId] != ContentInteractionDiamond(address(0))) {
+            revert InteractionContractAlreadyDeployed();
+        }
 
         // Retreive the owner of this content
         address contentOwner = _CONTENT_REGISTRY.ownerOf(_contentId);
 
-        // Deploy the proxy arround the contract and init it
-        address proxy = LibClone.deployERC1967(interactionContract);
-        ContentInteraction(proxy).init(address(this), owner(), contentOwner);
+        // Deploy the interaction contract
+        ContentInteractionDiamond diamond =
+            new ContentInteractionDiamond(_contentId, _REFERRAL_REGISTRY, address(this), owner(), contentOwner);
 
         // Grant the allowance manager role to the referral registry
-        bytes32 referralTree = ContentInteraction(proxy).getReferralTree();
-        _REFERRAL_REGISTRY.grantAccessToTree(referralTree, proxy);
+        bytes32 referralTree = diamond.getReferralTree();
+        _REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(diamond));
+
+        // Retreive the content types
+        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
+
+        // Set all the facets
+        _updateAllFacets(contentTypes, diamond);
 
         // Emit the creation event type
-        emit InteractionContractDeployed(_contentId, proxy);
+        emit InteractionContractDeployed(_contentId, diamond);
 
         // Save the interaction contract
-        _storage().contentInteractions[_contentId] = proxy;
-    }
-
-    /// @dev Deploy the right interaction contract for the given content type
-    function _deployLogicContractForContentTypes(uint256 _contentId, ContentTypes _contentTypes)
-        private
-        returns (address interactionContract)
-    {
-        // Handle the press type of content
-        if (_contentTypes.isPressType()) {
-            // Deploy the press interaction contract
-            PressInteraction pressInteraction = new PressInteraction(_contentId, address(_REFERRAL_REGISTRY));
-            return address(pressInteraction);
-        }
-
-        // If we can't handle the content type, revert
-        revert CantHandleContentTypes();
+        _storage().contentInteractions[_contentId] = diamond;
     }
 
     /// @dev Deploy a new interaction contract for the given `_contentId`
@@ -151,20 +147,29 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
         if (!isAllowed) revert Unauthorized();
 
-        // Fetch the current interaction contract
-        address interactionContract = getInteractionContract(_contentId);
-
-        // Retreive the content types, if at 0 it mean that the content doesn't exist
+        // Retreive the content types
         ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
 
-        // Deploy the interaction contract
-        address logic = _deployLogicContractForContentTypes(_contentId, contentTypes);
-
-        // Update it
-        ContentInteraction(interactionContract).upgradeToAndCall(logic, "");
+        // Fetch the current interaction contract
+        ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
+        _updateAllFacets(contentTypes, interactionContract);
 
         // Emit the creation event type
         emit InteractionContractUpdated(_contentId);
+    }
+
+    /// @dev Update all the facets of the given interaction contract
+    function _updateAllFacets(ContentTypes _contentTypes, ContentInteractionDiamond _interactionContract) private {
+        // Get the list of all the facets we will attach to the contract
+        IInteractionFacet[] memory facets = _storage().facetsFactory.getFacets(_contentTypes);
+
+        // If we have no facet logics, revert
+        if (facets.length == 0) {
+            revert CantHandleContentTypes();
+        }
+
+        // Send them to the interaction contract
+        _interactionContract.setFacets(facets);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -178,13 +183,13 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         }
 
         // Retreive the interaction contract
-        address interactionContract = getInteractionContract(_contentId);
+        ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
         // Attach the campaign to the interaction contract
-        ContentInteraction(interactionContract).attachCampaign(_campaign);
+        interactionContract.attachCampaign(_campaign);
 
         // Tell the campaign that this interaction is allowed to push events
-        _campaign.allowInteractionContract(interactionContract);
+        _campaign.allowInteractionContract(address(interactionContract));
 
         emit CampaignAttached(_contentId, address(_campaign));
     }
@@ -195,10 +200,10 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         }
 
         // Retreive the interaction contract
-        address interactionContract = getInteractionContract(_contentId);
+        ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
         // Loop over the campaigns and detach them
-        ContentInteraction(interactionContract).detachCampaigns(_campaigns);
+        interactionContract.detachCampaigns(_campaigns);
 
         // Tell the campaign that this interaction is allowed to push events
         emit CampaignsDetached(_contentId, _campaigns);
@@ -209,10 +214,14 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Retreive the interaction contract for the given content id
-    function getInteractionContract(uint256 _contentId) public view returns (address interactionContract) {
+    function getInteractionContract(uint256 _contentId)
+        public
+        view
+        returns (ContentInteractionDiamond interactionContract)
+    {
         // Retreive the interaction contract
         interactionContract = _storage().contentInteractions[_contentId];
-        if (interactionContract == address(0)) revert NoInteractionContractFound();
+        if (interactionContract == ContentInteractionDiamond(address(0))) revert NoInteractionContractFound();
     }
 
     /// @dev Emit the wallet linked event (only used for indexing purpose)

@@ -102,10 +102,10 @@ contract ContentRegistryTest is Test {
         assertEq(metadata.domain, "domain");
 
         vm.prank(minter);
-        contentRegistry.updateMetadata(id, ContentTypes.wrap(bytes32(uint256(13))), "new-name");
+        contentRegistry.updateMetadata(id, ContentTypes.wrap(uint256(13)), "new-name");
 
         metadata = contentRegistry.getMetadata(id);
-        assertEq(ContentTypes.unwrap(metadata.contentTypes), bytes32(uint256(13)));
+        assertEq(ContentTypes.unwrap(metadata.contentTypes), uint256(13));
         assertEq(metadata.name, "new-name");
         assertEq(metadata.domain, "domain");
 

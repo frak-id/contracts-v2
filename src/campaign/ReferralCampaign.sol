@@ -2,13 +2,11 @@
 pragma solidity 0.8.23;
 
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
-import {INTERACTION_PRESS_REFERRED, InteractionType} from "../constants/InteractionType.sol";
-
+import {InteractionType, InteractionTypeLib, PressInteractions} from "../constants/InteractionType.sol";
 import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {CAMPAIGN_EVENT_EMITTER_ROLE, CAMPAIGN_MANAGER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
-import {InteractionDecoderLib} from "./lib/InteractionDecoderLib.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
@@ -18,7 +16,8 @@ import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 /// @custom:security-contact contact@frak.id
 contract ReferralCampaign is InteractionCampaign, PushPullModule {
     using SafeTransferLib for address;
-    using InteractionDecoderLib for bytes;
+    using InteractionTypeLib for bytes;
+    using PressInteractions for bytes;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
@@ -146,11 +145,16 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         }
 
         // Extract the data
-        (InteractionType interactionType, bytes calldata interactionData) = _data.decodeInteraction();
+        (InteractionType interactionType, address user,) = _data.deocdePackedInteraction();
+        bytes4 selector = InteractionType.unwrap(PressInteractions.REFERRED);
+        assembly {
+            log2(0, 0, 0x10, interactionType)
+            log2(0, 0, 0x10, selector)
+            log2(0, 0, 0x11, user)
+        }
 
         // If the interaction is a usage of a share link, handle it
-        if (interactionType == INTERACTION_PRESS_REFERRED) {
-            address user = interactionData.pressDecodeUseShareLink();
+        if (interactionType == PressInteractions.REFERRED) {
             _performTokenDistribution(user, _INITIAL_REFERRER_REWARD);
         }
     }

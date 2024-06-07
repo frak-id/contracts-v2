@@ -5,7 +5,7 @@ import {Addresses, ContentIds, DeterminedAddress} from "./DeterminedAddress.sol"
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
+import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
@@ -25,12 +25,15 @@ contract SetupTestCampaign is Script, DeterminedAddress {
         vm.startBroadcast();
 
         // Get our referral trees
-        bytes32 leMondeTree =
-            ContentInteraction(contentInteractionManager.getInteractionContract(contentIds.cLeMonde)).getReferralTree();
-        bytes32 lequipeTree =
-            ContentInteraction(contentInteractionManager.getInteractionContract(contentIds.cLequipe)).getReferralTree();
-        bytes32 wiredTree =
-            ContentInteraction(contentInteractionManager.getInteractionContract(contentIds.cWired)).getReferralTree();
+        bytes32 leMondeTree = ContentInteractionDiamond(
+            contentInteractionManager.getInteractionContract(contentIds.cLeMonde)
+        ).getReferralTree();
+        bytes32 lequipeTree = ContentInteractionDiamond(
+            contentInteractionManager.getInteractionContract(contentIds.cLequipe)
+        ).getReferralTree();
+        bytes32 wiredTree = ContentInteractionDiamond(
+            contentInteractionManager.getInteractionContract(contentIds.cWired)
+        ).getReferralTree();
 
         // Create each campaigns
         ReferralCampaign leMondeCampaign = _deployCampaign(leMondeTree, addresses);

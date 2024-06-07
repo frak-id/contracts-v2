@@ -6,9 +6,12 @@ import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
 import {INTERCATION_VALIDATOR_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {ContentInteraction} from "src/interaction/ContentInteraction.sol";
+import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+
+import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
@@ -22,11 +25,12 @@ abstract contract InteractionTest is Test {
     ContentRegistry internal contentRegistry = new ContentRegistry(owner);
     ReferralRegistry internal referralRegistry = new ReferralRegistry(owner);
     ContentInteractionManager internal contentInteractionManager;
+    InteractionFacetsFactory internal facetFactory;
 
     uint256 internal validatorPrivKey;
     address internal validator;
 
-    ContentInteraction internal contentInteraction;
+    ContentInteractionDiamond internal contentInteraction;
 
     /// @dev A few mocked campaign
     MockCampaign internal campaign1;
@@ -34,15 +38,17 @@ abstract contract InteractionTest is Test {
     MockCampaign internal campaign3;
     MockCampaign internal campaign4;
 
-    function _initInteractionTest() internal returns (address interactionContract) {
+    function _initInteractionTest() internal {
         // Create our validator ECDSA
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
+
+        facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
 
         // Create our content interaction
         address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
-        contentInteractionManager.init(owner);
+        contentInteractionManager.init(owner, facetFactory);
 
         // Grant the right roles to the content interaction manager
         vm.prank(owner);
@@ -51,12 +57,12 @@ abstract contract InteractionTest is Test {
         // Deploy the interaction contract
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentId);
-        interactionContract = contentInteractionManager.getInteractionContract(contentId);
-        contentInteraction = ContentInteraction(interactionContract);
+        contentInteraction = contentInteractionManager.getInteractionContract(contentId);
+        vm.label(address(contentInteraction), "ContentInteractionDiamond");
 
         // Grant the validator roles
         vm.prank(owner);
-        ContentInteraction(interactionContract).grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
+        contentInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
 
         // Craft each cmapaign
         campaign1 = new MockCampaign(owner, address(contentInteractionManager));
@@ -66,21 +72,23 @@ abstract contract InteractionTest is Test {
     }
 
     // Validation type hash
-    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)");
+    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH = keccak256(
+        "ValidateInteraction(uint256 contentId,bytes4 action,bytes32 interactionData,address user,uint256 nonce)"
+    );
 
     /// @dev Generate an interaction signature for the given interaction data
-    function _getInteractionSignature(bytes32 _interactionData, address _user)
+    function _getInteractionSignature(InteractionType _action, bytes memory _interactionData, address _user)
         internal
         view
         returns (bytes memory signature)
     {
-        uint256 nonce = contentInteraction.getNonceForInteraction(_interactionData, _user);
+        uint256 nonce = contentInteraction.getNonceForInteraction(_action, _user);
         bytes32 domainSeparator = contentInteraction.getDomainSeparator();
 
         // Build the digest
-        bytes32 dataHash =
-            keccak256(abi.encode(_VALIDATE_INTERACTION_TYPEHASH, contentId, _interactionData, _user, nonce));
+        bytes32 dataHash = keccak256(
+            abi.encode(_VALIDATE_INTERACTION_TYPEHASH, contentId, _action, keccak256(_interactionData), _user, nonce)
+        );
         bytes32 fullHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, dataHash));
 
         // Sign the full hash
@@ -98,25 +106,12 @@ abstract contract InteractionTest is Test {
     /*                  Asbtract function to generate a few tests                 */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Get a new instance
-    function getNewInstance() internal virtual returns (address);
-
     /// @dev Perform some event with interaction
     function performSingleInteraction() internal virtual;
 
     /* -------------------------------------------------------------------------- */
     /*                             Some generic tests                             */
     /* -------------------------------------------------------------------------- */
-
-    function test_upgrade() public {
-        address newImplem = getNewInstance();
-
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.upgradeToAndCall(newImplem, "");
-
-        vm.prank(owner);
-        contentInteractionManager.upgradeToAndCall(newImplem, "");
-    }
 
     function test_singleCampaign() public withSingleCampaign {
         performSingleInteraction();
