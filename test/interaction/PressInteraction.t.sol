@@ -5,7 +5,7 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-import {CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
+import {CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_PRESS, DENOMINATOR_DAPP} from "src/constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
@@ -44,9 +44,19 @@ contract PressInteractionTest is InteractionTest {
         contentInteraction.handleInteraction(packedInteraction, signature);
     }
 
+    function getOutOfFaucetScopeInteraction() internal override returns(bytes memory, bytes memory) {
+        return _prepareInteraction(DENOMINATOR_DAPP, PressInteractions.OPEN_ARTICLE, _openArticleData(0), alice);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                             Press related tests                            */
     /* -------------------------------------------------------------------------- */
+
+    function test_construct() public {
+        // Can be built
+        PressInteractionFacet tFaucet = new PressInteractionFacet(referralRegistry);
+        assertEq(tFaucet.contentTypeDenominator(), DENOMINATOR_PRESS);
+    }
 
     function test_description() public view {
         // TODO: More specific test?
@@ -61,6 +71,15 @@ contract PressInteractionTest is InteractionTest {
     function test_domainSeparator() public view {
         // TODO: More specific test?
         assertNotEq(contentInteraction.getDomainSeparator(), bytes32(0));
+    }
+
+    function test_UnknownInteraction() public {
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_PRESS, InteractionType.wrap(bytes4(0)), _readArticleData(0), alice);
+
+        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -137,6 +156,68 @@ contract PressInteractionTest is InteractionTest {
         // Call the open article method
         vm.prank(_user);
         contentInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                Test referred                               */
+    /* -------------------------------------------------------------------------- */
+
+    function test_referred_simple() public {
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(bob), alice);
+
+        // Setup the event check
+        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        emit PressInteractionFacet.UserReferred(alice,bob);
+        // Call the open referral method
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+
+        assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
+    }
+
+    function test_referred_simple(address _user, address _referrer) public {
+        vm.assume(_user != address(0) && _referrer != address(0));
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(_referrer), _user);
+
+        // Setup the event check
+        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        emit PressInteractionFacet.UserReferred(_user,_referrer);
+        // Call the open referral method
+        vm.prank(_user);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+
+        assertEq(referralRegistry.getReferrer(referralTree, _user), _referrer);
+    }
+
+    function test_referred_doNothing() public {
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(address(0)), alice);
+
+        // Call the referral method
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+
+        assertEq(referralRegistry.getReferrer(referralTree, alice), address(0));
+    }
+
+    function test_referred_alreadyHasReferrer() public {
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(bob), alice);
+
+        // Call the referral method
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+        assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
+
+        (packedInteraction, signature) =
+            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(charlie), alice);
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+
+        // Ensure it hasn't changed
+        assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
     }
 
     /* -------------------------------------------------------------------------- */

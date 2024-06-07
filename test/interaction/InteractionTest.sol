@@ -32,6 +32,8 @@ abstract contract InteractionTest is Test {
 
     ContentInteractionDiamond internal contentInteraction;
 
+    bytes32 internal referralTree;
+
     /// @dev A few mocked campaign
     MockCampaign internal campaign1;
     MockCampaign internal campaign2;
@@ -59,7 +61,9 @@ abstract contract InteractionTest is Test {
         contentInteractionManager.deployInteractionContract(contentId);
         contentInteraction = contentInteractionManager.getInteractionContract(contentId);
         vm.label(address(contentInteraction), "ContentInteractionDiamond");
-
+        
+        referralTree = contentInteraction.getReferralTree();
+        
         // Grant the validator roles
         vm.prank(owner);
         contentInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
@@ -130,9 +134,20 @@ abstract contract InteractionTest is Test {
     /// @dev Perform some event with interaction
     function performSingleInteraction() internal virtual;
 
+    /// @dev Perform an interaction out of the faucet scope
+    function getOutOfFaucetScopeInteraction() internal virtual returns(bytes memory, bytes memory);
+
     /* -------------------------------------------------------------------------- */
     /*                             Some generic tests                             */
     /* -------------------------------------------------------------------------- */
+
+    function test_UnandledContentType() public {
+        (bytes memory packedInteraction, bytes memory signature) = getOutOfFaucetScopeInteraction();
+
+        // Call the operation
+        vm.expectRevert(ContentInteractionDiamond.UnandledContentType.selector);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+    }
 
     function test_singleCampaign() public withSingleCampaign {
         performSingleInteraction();
