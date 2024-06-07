@@ -58,6 +58,9 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /// @dev Event emitted when an interaction contract is updated
     event InteractionContractUpdated(uint256 indexed contentId);
 
+    /// @dev Event emitted when an interaction contract is deleted
+    event InteractionContractDeleted(uint256 indexed contentId);
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -117,22 +120,22 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
             revert InteractionContractAlreadyDeployed();
         }
 
-        // Retreive the owner of this content
-        address contentOwner = _CONTENT_REGISTRY.ownerOf(_contentId);
-
         // Deploy the interaction contract
-        ContentInteractionDiamond diamond =
-            new ContentInteractionDiamond(_contentId, _REFERRAL_REGISTRY, address(this), owner(), contentOwner);
+        (bool success, bytes memory data) = address(_storage().facetsFactory).delegatecall(
+            abi.encodeWithSelector(
+                InteractionFacetsFactory.createContentInteractionDiamond.selector, _contentId, owner()
+            )
+        );
+        if (!success) {
+            revert(string(data));
+        }
+
+        // Get the deployed interaction contract
+        ContentInteractionDiamond diamond = abi.decode(data, (ContentInteractionDiamond));
 
         // Grant the allowance manager role to the referral registry
         bytes32 referralTree = diamond.getReferralTree();
         _REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(diamond));
-
-        // Retreive the content types
-        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
-
-        // Set all the facets
-        _updateAllFacets(contentTypes, diamond);
 
         // Emit the creation event type
         emit InteractionContractDeployed(_contentId, diamond);
@@ -147,29 +150,47 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
         if (!isAllowed) revert Unauthorized();
 
-        // Retreive the content types
-        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
-
         // Fetch the current interaction contract
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
-        _updateAllFacets(contentTypes, interactionContract);
+
+        // Get the list of all the facets we will attach to the contract
+        IInteractionFacet[] memory facets =
+            _storage().facetsFactory.getFacets(_CONTENT_REGISTRY.getContentTypes(_contentId));
+
+        // Send them to the interaction contract
+        interactionContract.setFacets(facets);
 
         // Emit the creation event type
         emit InteractionContractUpdated(_contentId);
     }
 
-    /// @dev Update all the facets of the given interaction contract
-    function _updateAllFacets(ContentTypes _contentTypes, ContentInteractionDiamond _interactionContract) private {
-        // Get the list of all the facets we will attach to the contract
-        IInteractionFacet[] memory facets = _storage().facetsFactory.getFacets(_contentTypes);
+    /// @dev Delete the interaction contract for the given `_contentId`
+    function deleteInteractionContract(uint256 _contentId) external {
+        // Ensure the caller is allowed to perform the update
+        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
+        if (!isAllowed) revert Unauthorized();
 
-        // If we have no facet logics, revert
-        if (facets.length == 0) {
-            revert CantHandleContentTypes();
-        }
+        // Fetch the current interaction contract
+        ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
-        // Send them to the interaction contract
-        _interactionContract.setFacets(facets);
+        // Retreive the content types
+        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
+
+        // Delete the facets
+        interactionContract.deleteFacets(contentTypes);
+
+        // Get the campaigns and delete them
+        InteractionCampaign[] memory campaigns = interactionContract.getCampaigns();
+        interactionContract.detachCampaigns(campaigns);
+
+        // Revoke the allowance manager role to the referral registry
+        bytes32 referralTree = interactionContract.getReferralTree();
+        _REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(0)); // Grant the access to nobody
+
+        emit InteractionContractDeleted(_contentId);
+
+        // Delete the interaction contract
+        delete _storage().contentInteractions[_contentId];
     }
 
     /* -------------------------------------------------------------------------- */
@@ -227,6 +248,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /// @dev Emit the wallet linked event (only used for indexing purpose)
     function walletLinked(address _newWallet) external {
         emit WalletLinked(msg.sender, _newWallet);
+        // todo: propagate the event to each referral trees
     }
 
     /// @dev Upgrade check

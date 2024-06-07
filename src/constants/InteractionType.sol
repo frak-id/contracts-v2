@@ -24,10 +24,7 @@ library InteractionTypeLib {
     function unpackForManager(bytes calldata _data)
         internal
         pure
-        returns (
-            uint8 contentTypeDenominator,
-            bytes calldata facetData
-        )
+        returns (uint8 contentTypeDenominator, bytes calldata facetData)
     {
         unchecked {
             if (_data.length < 5) {

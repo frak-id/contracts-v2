@@ -150,7 +150,7 @@ export const interactionCampaignAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentType', internalType: 'ContentTypes', type: 'bytes32' },
+      { name: '_contentType', internalType: 'ContentTypes', type: 'uint256' },
     ],
     name: 'supportContentType',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
@@ -472,7 +472,7 @@ export const referralCampaignAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentType', internalType: 'ContentTypes', type: 'bytes32' },
+      { name: '_contentType', internalType: 'ContentTypes', type: 'uint256' },
     ],
     name: 'supportContentType',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],

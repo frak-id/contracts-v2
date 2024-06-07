@@ -7,7 +7,7 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
-import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
+import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
@@ -25,6 +25,7 @@ contract ContentInteractionManagerTest is Test {
 
     uint256 private contentIdDapp;
     uint256 private contentIdPress;
+    uint256 private contentIdMulti;
     uint256 private contentIdUnknown;
 
     ContentInteractionManager private contentInteractionManager;
@@ -47,6 +48,7 @@ contract ContentInteractionManagerTest is Test {
         vm.startPrank(owner);
         contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain");
         contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
+        contentIdMulti = contentRegistry.mint(CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS, "name", "multi-domain");
         contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(uint256(1 << 99)), "name", "unknown-domain");
         contentRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
@@ -84,6 +86,11 @@ contract ContentInteractionManagerTest is Test {
 
         // Assert it's deployed
         assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdPress)), address(0));
+
+        // Deploy the interaction contract for a content with multiple types
+        vm.prank(operator);
+        contentInteractionManager.deployInteractionContract(contentIdMulti);
+        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdMulti)), address(0));
     }
 
     function test_getInteractionContract() public {
@@ -112,6 +119,43 @@ contract ContentInteractionManagerTest is Test {
         contentInteractionManager.deployInteractionContract(contentIdPress);
         vm.prank(operator);
         contentInteractionManager.updateInteractionContract(contentIdPress);
+    }
+
+    function test_deleteInteractionContract() public {
+        vm.prank(operator);
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+
+        ContentInteractionDiamond interactionContract =
+            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
+        bytes32 tree = interactionContract.getReferralTree();
+        assertTrue(referralRegistry.isAllowedOnTree(tree, address(interactionContract)));
+
+        vm.prank(operator);
+        contentInteractionManager.deleteInteractionContract(contentIdPress);
+
+        assertFalse(referralRegistry.isAllowedOnTree(tree, address(interactionContract)));
+        assertEq(address(interactionContract.getFacet(DENOMINATOR_PRESS)), address(0));
+
+        vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
+        ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
+    }
+
+    function test_deleteInteractionContract_Unauthorized() public {
+        vm.prank(operator);
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.deleteInteractionContract(contentIdPress);
+    }
+
+    function test_updateFacetsFactory_Unauthorized() public {
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.updateFacetsFactory(facetFactory);
+    }
+
+    function test_updateFacetsFactory() public {
+        vm.prank(owner);
+        contentInteractionManager.updateFacetsFactory(facetFactory);
     }
 
     /* -------------------------------------------------------------------------- */

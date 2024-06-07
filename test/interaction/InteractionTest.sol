@@ -61,9 +61,9 @@ abstract contract InteractionTest is Test {
         contentInteractionManager.deployInteractionContract(contentId);
         contentInteraction = contentInteractionManager.getInteractionContract(contentId);
         vm.label(address(contentInteraction), "ContentInteractionDiamond");
-        
+
         referralTree = contentInteraction.getReferralTree();
-        
+
         // Grant the validator roles
         vm.prank(owner);
         contentInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
@@ -76,9 +76,8 @@ abstract contract InteractionTest is Test {
     }
 
     // Validation type hash
-    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH = keccak256(
-        "ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)"
-    );
+    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
+        keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)");
 
     /// @dev Generate an interaction signature for the given interaction data
     function _getInteractionSignature(bytes memory _interactionData, address _user)
@@ -90,9 +89,8 @@ abstract contract InteractionTest is Test {
         bytes32 domainSeparator = contentInteraction.getDomainSeparator();
 
         // Build the digest
-        bytes32 dataHash = keccak256(
-            abi.encode(_VALIDATE_INTERACTION_TYPEHASH, contentId, keccak256(_interactionData), _user, nonce)
-        );
+        bytes32 dataHash =
+            keccak256(abi.encode(_VALIDATE_INTERACTION_TYPEHASH, contentId, keccak256(_interactionData), _user, nonce));
         bytes32 fullHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, dataHash));
 
         // Sign the full hash
@@ -134,15 +132,15 @@ abstract contract InteractionTest is Test {
     /// @dev Perform some event with interaction
     function performSingleInteraction() internal virtual;
 
-    /// @dev Perform an interaction out of the faucet scope
-    function getOutOfFaucetScopeInteraction() internal virtual returns(bytes memory, bytes memory);
+    /// @dev Perform an interaction out of the facet scope
+    function getOutOfFacetScopeInteraction() internal virtual returns (bytes memory, bytes memory);
 
     /* -------------------------------------------------------------------------- */
     /*                             Some generic tests                             */
     /* -------------------------------------------------------------------------- */
 
     function test_UnandledContentType() public {
-        (bytes memory packedInteraction, bytes memory signature) = getOutOfFaucetScopeInteraction();
+        (bytes memory packedInteraction, bytes memory signature) = getOutOfFacetScopeInteraction();
 
         // Call the operation
         vm.expectRevert(ContentInteractionDiamond.UnandledContentType.selector);

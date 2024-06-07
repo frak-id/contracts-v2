@@ -52,7 +52,7 @@ export const contentRegistryAbi = [
     type: 'function',
     inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
     name: 'getContentTypes',
-    outputs: [{ name: '', internalType: 'ContentTypes', type: 'bytes32' }],
+    outputs: [{ name: '', internalType: 'ContentTypes', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
@@ -68,7 +68,7 @@ export const contentRegistryAbi = [
           {
             name: 'contentTypes',
             internalType: 'ContentTypes',
-            type: 'bytes32',
+            type: 'uint256',
           },
           { name: 'name', internalType: 'string', type: 'string' },
           { name: 'domain', internalType: 'string', type: 'string' },
@@ -137,7 +137,7 @@ export const contentRegistryAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentTypes', internalType: 'ContentTypes', type: 'bytes32' },
+      { name: '_contentTypes', internalType: 'ContentTypes', type: 'uint256' },
       { name: '_name', internalType: 'string', type: 'string' },
       { name: '_domain', internalType: 'string', type: 'string' },
     ],
@@ -289,7 +289,7 @@ export const contentRegistryAbi = [
     type: 'function',
     inputs: [
       { name: '_contentId', internalType: 'uint256', type: 'uint256' },
-      { name: '_contentTypes', internalType: 'ContentTypes', type: 'bytes32' },
+      { name: '_contentTypes', internalType: 'ContentTypes', type: 'uint256' },
       { name: '_name', internalType: 'string', type: 'string' },
     ],
     name: 'updateMetadata',

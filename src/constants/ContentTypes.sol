@@ -4,6 +4,13 @@ pragma solidity 0.8.23;
 /// @dev Global type for a bytes32 olding multiple content types
 type ContentTypes is uint256;
 
+using {contentTypesOr as |} for ContentTypes global;
+
+/// @dev Simple wrapper to pack / unpack content types
+function contentTypesOr(ContentTypes self, ContentTypes other) pure returns (ContentTypes result) {
+    return ContentTypes.wrap(ContentTypes.unwrap(self) | ContentTypes.unwrap(other));
+}
+
 using ContentTypesLib for ContentTypes global;
 
 /// @dev Set of helper functions for content types

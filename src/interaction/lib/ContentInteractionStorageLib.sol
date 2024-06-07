@@ -6,7 +6,7 @@ import {IInteractionFacet} from "../facets/IInteractionFacet.sol";
 
 /// @title ContentInteractionStorageLib
 /// @author @KONFeature
-/// @notice Helper to access the global storage for every content interaction faucet
+/// @notice Helper to access the global storage for every content interaction facets
 /// @custom:security-contact contact@frak.id
 abstract contract ContentInteractionStorageLib {
     /* -------------------------------------------------------------------------- */

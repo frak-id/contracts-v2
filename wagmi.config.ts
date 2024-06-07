@@ -25,8 +25,8 @@ export default defineConfig(
         {
             out: "abi/frak-interaction-abis.ts",
             plugins: foundryPlugin([
-                'ContentInteraction.json',
-                'PressInteraction.json',
+                'ContentInteractionDiamond.json',
+                'PressInteractionFacet.json',
                 'ContentInteractionManager.json',
             ]),
         },

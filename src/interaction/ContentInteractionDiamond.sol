@@ -32,9 +32,8 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     error InteractionHandlingFailed();
 
     /// @dev EIP-712 typehash used to validate the given transaction
-    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH = keccak256(
-        "ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)"
-    );
+    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
+        keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)");
 
     /// @dev The base content referral tree: `keccak256("ContentReferralTree")`
     bytes32 private constant _BASE_CONTENT_TREE = 0x3d16196f272c96153eabc4eb746e08ae541cf36535edb959ed80f5e5169b6787;
@@ -118,24 +117,21 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /// @dev Handle an interaction
     function handleInteraction(bytes calldata _interaction, bytes calldata _signature) external {
         // Unpack the interaction
-        (
-            uint8 _contentTypeDenominator,
-            bytes calldata _facetData
-        ) = _interaction.unpackForManager();
+        (uint8 _contentTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
-        // Get the faucet matching the content type
-        IInteractionFacet faucet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
+        // Get the facet matching the content type
+        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
 
-        // If we don't have a faucet, we revert
-        if (faucet == IInteractionFacet(address(0))) {
+        // If we don't have a facet, we revert
+        if (facet == IInteractionFacet(address(0))) {
             revert UnandledContentType();
         }
 
         // Validate the interaction
         _validateInteraction(keccak256(_facetData), msg.sender, _signature);
 
-        // Transmit the interaction to the faucet
-        (bool success, bytes memory outputData) = address(faucet).delegatecall(_facetData);
+        // Transmit the interaction to the facet
+        (bool success, bytes memory outputData) = address(facet).delegatecall(_facetData);
         if (!success) {
             revert InteractionHandlingFailed();
         }
@@ -162,11 +158,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Check if the provided interaction is valid
-    function _validateInteraction(
-        bytes32 _interactionData,
-        address _user,
-        bytes calldata _signature
-    ) internal {
+    function _validateInteraction(bytes32 _interactionData, address _user, bytes calldata _signature) internal {
         // Get the key for our nonce
         bytes32 nonceKey;
         assembly {

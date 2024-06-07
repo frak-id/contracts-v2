@@ -5,7 +5,7 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-import {CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_PRESS, DENOMINATOR_DAPP} from "src/constants/ContentTypes.sol";
+import {CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_DAPP, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
@@ -16,7 +16,7 @@ contract PressInteractionTest is InteractionTest {
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
 
-    PressInteractionFacet private rawFaucet;
+    PressInteractionFacet private rawFacet;
 
     function setUp() public {
         // TODO: Setup with a more granular approach
@@ -28,8 +28,8 @@ contract PressInteractionTest is InteractionTest {
         // Deploy the press interaction contract
         _initInteractionTest();
 
-        // Extract the press faucet
-        rawFaucet = PressInteractionFacet(address(contentInteraction.getFacet(DENOMINATOR_PRESS)));
+        // Extract the press facet
+        rawFacet = PressInteractionFacet(address(contentInteraction.getFacet(DENOMINATOR_PRESS)));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -44,7 +44,7 @@ contract PressInteractionTest is InteractionTest {
         contentInteraction.handleInteraction(packedInteraction, signature);
     }
 
-    function getOutOfFaucetScopeInteraction() internal override returns(bytes memory, bytes memory) {
+    function getOutOfFacetScopeInteraction() internal override returns (bytes memory, bytes memory) {
         return _prepareInteraction(DENOMINATOR_DAPP, PressInteractions.OPEN_ARTICLE, _openArticleData(0), alice);
     }
 
@@ -54,8 +54,8 @@ contract PressInteractionTest is InteractionTest {
 
     function test_construct() public {
         // Can be built
-        PressInteractionFacet tFaucet = new PressInteractionFacet(referralRegistry);
-        assertEq(tFaucet.contentTypeDenominator(), DENOMINATOR_PRESS);
+        PressInteractionFacet tFacet = new PressInteractionFacet(referralRegistry);
+        assertEq(tFacet.contentTypeDenominator(), DENOMINATOR_PRESS);
     }
 
     function test_description() public view {
@@ -168,7 +168,7 @@ contract PressInteractionTest is InteractionTest {
 
         // Setup the event check
         vm.expectEmit(true, false, false, true, address(contentInteraction));
-        emit PressInteractionFacet.UserReferred(alice,bob);
+        emit PressInteractionFacet.UserReferred(alice, bob);
         // Call the open referral method
         vm.prank(alice);
         contentInteraction.handleInteraction(packedInteraction, signature);
@@ -183,7 +183,7 @@ contract PressInteractionTest is InteractionTest {
 
         // Setup the event check
         vm.expectEmit(true, false, false, true, address(contentInteraction));
-        emit PressInteractionFacet.UserReferred(_user,_referrer);
+        emit PressInteractionFacet.UserReferred(_user, _referrer);
         // Call the open referral method
         vm.prank(_user);
         contentInteraction.handleInteraction(packedInteraction, signature);
