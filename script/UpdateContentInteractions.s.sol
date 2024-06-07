@@ -12,6 +12,7 @@ import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
 
+/// todo: Should be refacto to update the faucet factory, set it on the contentInteractionManager, and then call the update function
 contract UpdateContentInteractions is Script, DeterminedAddress {
     function run() public {
         updateManager();
