@@ -147,11 +147,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         // Extract the data
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
         bytes4 selector = InteractionType.unwrap(PressInteractions.REFERRED);
-        assembly {
-            log2(0, 0, 0x10, interactionType)
-            log2(0, 0, 0x10, selector)
-            log2(0, 0, 0x11, user)
-        }
 
         // If the interaction is a usage of a share link, handle it
         if (interactionType == PressInteractions.REFERRED) {

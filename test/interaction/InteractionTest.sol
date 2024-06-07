@@ -104,14 +104,6 @@ abstract contract InteractionTest is Test {
         signature = abi.encodePacked(r, s);
     }
 
-    function _packInteraction(uint8 contentTypeDenominator, InteractionType action, bytes memory interactionData)
-        internal
-        pure
-        returns (bytes memory data)
-    {
-        data = abi.encodePacked(contentTypeDenominator, action, interactionData);
-    }
-
     function _prepareInteraction(
         uint8 contentTypeDenominator,
         InteractionType action,

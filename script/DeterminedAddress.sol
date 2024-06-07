@@ -21,15 +21,14 @@ struct ContentIds {
     uint256 cFrak;
 }
 
+struct DeploymentBlocks {
+    uint256 arbSepolia;
+}
+
 /// @dev simple contract storing our predetermined address
 contract DeterminedAddress {
     // Config
     address internal airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
-
-    /*
-    Deployments blocks (could be usefull for fork testing):
-    - arb sepolia: 52222107
-     */
 
     function _getAddresses() internal pure returns (Addresses memory) {
         return Addresses({
@@ -50,5 +49,9 @@ contract DeterminedAddress {
             cWired: 61412812549033025435811962204424170589965658763482764336017940556663446417829,
             cFrak: 20376791661718660580662410765070640284736320707848823176694931891585259913409
         });
+    }
+
+    function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {
+        return DeploymentBlocks({arbSepolia: 52222107});
     }
 }
