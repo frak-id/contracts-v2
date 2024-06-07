@@ -145,7 +145,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         }
 
         // Extract the data
-        (InteractionType interactionType, address user,) = _data.deocdePackedInteraction();
+        (InteractionType interactionType, address user,) = _data.unpackForCampaign();
         bytes4 selector = InteractionType.unwrap(PressInteractions.REFERRED);
         assembly {
             log2(0, 0, 0x10, interactionType)

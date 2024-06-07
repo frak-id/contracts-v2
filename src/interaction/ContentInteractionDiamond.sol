@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ContentTypes} from "../constants/ContentTypes.sol";
-import {InteractionType} from "../constants/InteractionType.sol";
+import {InteractionType, InteractionTypeLib} from "../constants/InteractionType.sol";
 import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
@@ -20,6 +20,8 @@ import {Initializable} from "solady/utils/Initializable.sol";
 /// @dev It's act a bit like the diamond operator, having multiple logic contract per content type.
 /// @custom:security-contact contact@frak.id
 contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles, EIP712, Initializable {
+    using InteractionTypeLib for bytes;
+
     /// @dev error throwned when the signer of an interaction is invalid
     error WrongInteractionSigner();
     /// @dev error throwned when a campaign is already present
@@ -31,7 +33,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH = keccak256(
-        "ValidateInteraction(uint256 contentId,bytes4 action,bytes32 interactionData,address user,uint256 nonce)"
+        "ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)"
     );
 
     /// @dev The base content referral tree: `keccak256("ContentReferralTree")`
@@ -114,14 +116,15 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /* -------------------------------------------------------------------------- */
 
     /// @dev Handle an interaction
-    function handleInteraction(
-        uint8 contentType,
-        InteractionType _action,
-        bytes calldata _interactionData,
-        bytes calldata _signature
-    ) external {
+    function handleInteraction(bytes calldata _interaction, bytes calldata _signature) external {
+        // Unpack the interaction
+        (
+            uint8 _contentTypeDenominator,
+            bytes calldata _facetData
+        ) = _interaction.unpackForManager();
+
         // Get the faucet matching the content type
-        IInteractionFacet faucet = _contentInteractionStorage().facets[uint256(contentType)];
+        IInteractionFacet faucet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
 
         // If we don't have a faucet, we revert
         if (faucet == IInteractionFacet(address(0))) {
@@ -129,18 +132,16 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         }
 
         // Validate the interaction
-        _validateInteraction(_action, keccak256(_interactionData), msg.sender, _signature);
+        _validateInteraction(keccak256(_facetData), msg.sender, _signature);
 
         // Transmit the interaction to the faucet
-        (bool success, bytes memory outputData) = address(faucet).delegatecall(
-            abi.encodeWithSelector(IInteractionFacet.receiveInteraction.selector, _action, _interactionData)
-        );
+        (bool success, bytes memory outputData) = address(faucet).delegatecall(_facetData);
         if (!success) {
             revert InteractionHandlingFailed();
         }
 
-        // Send the interaction to the campaigns if we got some (at lesat 32 bytes since it should contain the action with it)
-        if (outputData.length > 31) {
+        // Send the interaction to the campaigns if we got some (at least 24 bytes since it should contain the action + user with it)
+        if (outputData.length > 23) {
             _sendInteractionToCampaign(outputData);
         }
     }
@@ -162,7 +163,6 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
 
     /// @dev Check if the provided interaction is valid
     function _validateInteraction(
-        InteractionType _action,
         bytes32 _interactionData,
         address _user,
         bytes calldata _signature
@@ -170,7 +170,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         // Get the key for our nonce
         bytes32 nonceKey;
         assembly {
-            mstore(0, _action)
+            mstore(0, _interactionData)
             mstore(0x20, _user)
             nonceKey := keccak256(0, 0x40)
         }
@@ -181,7 +181,6 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
                 abi.encode(
                     _VALIDATE_INTERACTION_TYPEHASH,
                     _CONTENT_ID,
-                    _action,
                     _interactionData,
                     _user,
                     _contentInteractionStorage().nonces[nonceKey]++
@@ -200,10 +199,10 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Get the current user nonce for the given interaction
-    function getNonceForInteraction(InteractionType _action, address _user) external view returns (uint256) {
+    function getNonceForInteraction(bytes32 _interactionData, address _user) external view returns (uint256) {
         bytes32 nonceKey;
         assembly {
-            mstore(0, _action)
+            mstore(0, _interactionData)
             mstore(0x20, _user)
             nonceKey := keccak256(0, 0x40)
         }

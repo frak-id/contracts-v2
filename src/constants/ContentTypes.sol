@@ -26,23 +26,25 @@ library ContentTypesLib {
 
     /// @dev Unwrap the list of cotnent types to each denominators
     function unwrapToDenominators(ContentTypes self) internal pure returns (uint8[] memory denominators) {
-        // Initial array to 256, the maximum amount of content types
-        denominators = new uint8[](256);
-        uint256 unwrapped = ContentTypes.unwrap(self);
-        uint256 index = 0;
+        unchecked {
+            // Initial array to 256, the maximum amount of content types
+            denominators = new uint8[](256);
+            uint256 unwrapped = ContentTypes.unwrap(self);
+            uint256 index = 0;
 
-        // Iterate over each possible bit of the array
-        for (uint256 i = 0; i < 256; i++) {
-            // If the bit is set, we add the type to the array
-            if (unwrapped & (1 << i) != 0) {
-                denominators[index] = uint8(i);
-                index++;
+            // Iterate over each possible bit of the array
+            for (uint256 i = 0; i < 256; i++) {
+                // If the bit is set, we add the type to the array
+                if (unwrapped & (1 << i) != 0) {
+                    denominators[index] = uint8(i);
+                    index++;
+                }
             }
-        }
 
-        // Resize our array
-        assembly {
-            mstore(denominators, index)
+            // Resize our array
+            assembly {
+                mstore(denominators, index)
+            }
         }
     }
 }

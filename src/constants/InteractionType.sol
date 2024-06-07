@@ -16,24 +16,76 @@ function interactionEq(InteractionType self, InteractionType other) pure returns
 
 /// @dev Set of helper functions for content types
 library InteractionTypeLib {
+    /* -------------------------------------------------------------------------- */
+    /*                         Global packing / unpacking                         */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Unpack an interaction from the manager
+    function unpackForManager(bytes calldata _data)
+        internal
+        pure
+        returns (
+            uint8 contentTypeDenominator,
+            bytes calldata facetData
+        )
+    {
+        unchecked {
+            if (_data.length < 5) {
+                facetData = _data;
+                return (contentTypeDenominator, facetData);
+            }
+
+            contentTypeDenominator = uint8(_data[0]);
+            // Facet data contain everything after the content type denominator
+            facetData = _data[1:];
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                       Interaction packing / unpacking                      */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Unpack an interaction for a facet
+    function unpackForFacet(bytes calldata _data)
+        internal
+        pure
+        returns (InteractionType interactionType, bytes calldata data)
+    {
+        unchecked {
+            if (_data.length < 4) {
+                data = _data;
+                return (interactionType, data);
+            }
+
+            interactionType = InteractionType.wrap(bytes4(_data[0:4]));
+            data = _data[4:];
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                        Campaign packing / unpacking                        */
+    /* -------------------------------------------------------------------------- */
+
     /// @dev Decode a packed interaction
-    function deocdePackedInteraction(bytes calldata _data)
+    function unpackForCampaign(bytes calldata _data)
         internal
         pure
         returns (InteractionType interactionType, address user, bytes calldata remaining)
     {
-        if (_data.length < 24) {
-            remaining = _data;
-            return (interactionType, user, remaining);
-        }
+        unchecked {
+            if (_data.length < 24) {
+                remaining = _data;
+                return (interactionType, user, remaining);
+            }
 
-        interactionType = InteractionType.wrap(bytes4(_data[0:4]));
-        user = address(uint160(bytes20(_data[4:24])));
-        remaining = _data[24:];
+            interactionType = InteractionType.wrap(bytes4(_data[0:4]));
+            user = address(uint160(bytes20(_data[4:24])));
+            remaining = _data[24:];
+        }
     }
 
     /// @dev Pack an interaction to be sent to a campaign
-    function packInteractionForCampaign(InteractionType _interactionType, address user, bytes calldata _data)
+    function packForCampaign(InteractionType _interactionType, address user, bytes calldata _data)
         internal
         pure
         returns (bytes memory packedInteraction)
@@ -42,7 +94,7 @@ library InteractionTypeLib {
     }
 
     /// @dev Pack an interaction to be sent to a campaign
-    function packInteractionForCampaign(InteractionType _interactionType, address user)
+    function packForCampaign(InteractionType _interactionType, address user)
         internal
         pure
         returns (bytes memory packedInteraction)

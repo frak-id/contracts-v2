@@ -73,21 +73,21 @@ abstract contract InteractionTest is Test {
 
     // Validation type hash
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH = keccak256(
-        "ValidateInteraction(uint256 contentId,bytes4 action,bytes32 interactionData,address user,uint256 nonce)"
+        "ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)"
     );
 
     /// @dev Generate an interaction signature for the given interaction data
-    function _getInteractionSignature(InteractionType _action, bytes memory _interactionData, address _user)
+    function _getInteractionSignature(bytes memory _interactionData, address _user)
         internal
         view
         returns (bytes memory signature)
     {
-        uint256 nonce = contentInteraction.getNonceForInteraction(_action, _user);
+        uint256 nonce = contentInteraction.getNonceForInteraction(keccak256(_interactionData), _user);
         bytes32 domainSeparator = contentInteraction.getDomainSeparator();
 
         // Build the digest
         bytes32 dataHash = keccak256(
-            abi.encode(_VALIDATE_INTERACTION_TYPEHASH, contentId, _action, keccak256(_interactionData), _user, nonce)
+            abi.encode(_VALIDATE_INTERACTION_TYPEHASH, contentId, keccak256(_interactionData), _user, nonce)
         );
         bytes32 fullHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, dataHash));
 
@@ -100,6 +100,27 @@ abstract contract InteractionTest is Test {
 
         // Compact the signature into a single byte
         signature = abi.encodePacked(r, s);
+    }
+
+    function _packInteraction(uint8 contentTypeDenominator, InteractionType action, bytes memory interactionData)
+        internal
+        pure
+        returns (bytes memory data)
+    {
+        data = abi.encodePacked(contentTypeDenominator, action, interactionData);
+    }
+
+    function _prepareInteraction(
+        uint8 contentTypeDenominator,
+        InteractionType action,
+        bytes memory interactionData,
+        address user
+    ) internal returns (bytes memory data, bytes memory signature) {
+        vm.pauseGasMetering();
+        bytes memory facetData = abi.encodePacked(action, interactionData);
+        data = abi.encodePacked(contentTypeDenominator, facetData);
+        signature = _getInteractionSignature(facetData, user);
+        vm.resumeGasMetering();
     }
 
     /* -------------------------------------------------------------------------- */

@@ -8,7 +8,6 @@ import {Ownable} from "solady/auth/Ownable.sol";
 import {CAMPAIGN_EVENT_EMITTER_ROLE} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
-
 import {InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
@@ -170,7 +169,7 @@ contract ReferralCampaignTest is Test {
     }
 
     function test_handleInteraction_sharedArticleUsed() public withReferralChain withAllowedEmitter {
-        bytes memory interactionData = InteractionTypeLib.packInteractionForCampaign(PressInteractions.REFERRED, alice);
+        bytes memory interactionData = InteractionTypeLib.packForCampaign(PressInteractions.REFERRED, alice);
 
         // Ensure call won't fail with fcked up data
         vm.prank(emitter);
@@ -192,7 +191,7 @@ contract ReferralCampaignTest is Test {
     }
 
     function test_disallowMe() public withReferralChain withAllowedEmitter {
-        bytes memory interactionData = InteractionTypeLib.packInteractionForCampaign(PressInteractions.REFERRED, alice);
+        bytes memory interactionData = InteractionTypeLib.packForCampaign(PressInteractions.REFERRED, alice);
 
         vm.prank(emitter);
         referralCampaign.disallowMe();

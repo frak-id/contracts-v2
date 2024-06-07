@@ -13,6 +13,8 @@ import {IInteractionFacet} from "./IInteractionFacet.sol";
 /// @notice Contract managing a press content platform user interaction
 /// @custom:security-contact contact@frak.id
 contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFacet {
+    using InteractionTypeLib for bytes;
+
     error UnknownInteraction();
 
     /* -------------------------------------------------------------------------- */
@@ -36,11 +38,10 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
     }
 
     /// @dev High level interaction router
-    function receiveInteraction(InteractionType _action, bytes calldata _interactionData)
-        public
-        override
-        returns (bytes memory)
-    {
+    fallback(bytes calldata _data) external returns (bytes memory) {
+        // Parse the interaction
+        (InteractionType _action, bytes calldata _interactionData) = _data.unpackForFacet();
+
         if (_action == PressInteractions.OPEN_ARTICLE) {
             return _handleOpenArticle(_interactionData);
         } else if (_action == PressInteractions.READ_ARTICLE) {
@@ -79,7 +80,7 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
             // todo: _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeOpenArticle(_articleId, _user));
         }
         // Just resend the data
-        return InteractionTypeLib.packInteractionForCampaign(PressInteractions.OPEN_ARTICLE, msg.sender, _data);
+        return PressInteractions.OPEN_ARTICLE.packForCampaign(msg.sender, _data);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -105,7 +106,7 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
             // todo: _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeReadArticle(_articleId, _user));
         }
         // Just resend the data
-        return InteractionTypeLib.packInteractionForCampaign(PressInteractions.READ_ARTICLE, msg.sender, _data);
+        return PressInteractions.READ_ARTICLE.packForCampaign(msg.sender, _data);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -148,7 +149,7 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
             // todo: _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeReferred(_user));
         }
         // Just resend the data
-        return InteractionTypeLib.packInteractionForCampaign(PressInteractions.REFERRED, msg.sender, _data);
+        return PressInteractions.REFERRED.packForCampaign(msg.sender, _data);
     }
 
     /* -------------------------------------------------------------------------- */
