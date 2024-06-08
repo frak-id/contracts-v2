@@ -82,14 +82,44 @@ abstract contract PushPullModule is ReentrancyGuard {
         emit RewardAdded(_user, _token, _amount);
     }
 
+    struct Reward {
+        address user;
+        uint256 amount;
+    }
+
+    /// @notice Add multiple rewards for the given `_user` with the given `_amount`
+    function _pushRewards(address _token, Reward[] memory _rewards) internal nonReentrant {
+        // Get the given storage for the token
+        PushPullStoragePerToken storage tokenStorage = _pushPullStorage().tokens[_token];
+
+        // Get our control var
+        uint256 newTotalPending = tokenStorage.totalPending;
+        uint256 currentBalance = _token.balanceOf(address(this));
+
+        // Iterate over each rewards
+        for (uint256 i = 0; i < _rewards.length; i++) {
+            Reward memory reward = _rewards[i];
+
+            // Compute the new pending total amount
+            newTotalPending += _rewards[i].amount;
+            if (newTotalPending > currentBalance) {
+                revert NotEnoughToken();
+            }
+
+            // Set the reward for the user
+            tokenStorage.pendingAmount[reward.user] += reward.amount;
+
+            // Emit the event
+            emit RewardAdded(reward.user, _token, reward.amount);
+        }
+
+        // Update the total pending amount
+        tokenStorage.totalPending = newTotalPending;
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                            Claim amount methods                            */
     /* -------------------------------------------------------------------------- */
-
-    /// @notice Claim the pending amount for the given `msg.sender`
-    function pullReward(address _token) public {
-        pullReward(msg.sender, _token);
-    }
 
     /// @notice Claim the pending amount for the given `_user`
     function pullReward(address _user, address _token) public nonReentrant {
@@ -111,11 +141,6 @@ abstract contract PushPullModule is ReentrancyGuard {
 
         // Emit the event
         emit RewardClaimed(_user, _token, pendingAmount);
-    }
-
-    /// @notice Claim the pending amount on every `_tokens` for the given `msg.sender`
-    function pullRewards(address[] calldata _tokens) public {
-        pullRewards(msg.sender, _tokens);
     }
 
     /// @notice Claim the pending amount on every `_tokens` for the given `_user`

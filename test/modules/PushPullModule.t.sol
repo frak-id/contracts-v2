@@ -68,6 +68,33 @@ contract PushPullModuleTest is Test {
         assertEq(1, pushPullModule.getTotalPending(address(token2)));
     }
 
+    function test_addRewards() public {
+        token1.mint(address(pushPullModule), 100 ether);
+
+        PushPullModule.Reward[] memory rewards = new PushPullModule.Reward[](2);
+
+        rewards[0] = PushPullModule.Reward(alice, 50 ether);
+        rewards[1] = PushPullModule.Reward(bob, 50 ether);
+
+        pushPullModule.addRewards(address(token1), rewards);
+
+        assertEq(50 ether, pushPullModule.getPendingAmount(alice, address(token1)));
+        assertEq(50 ether, pushPullModule.getPendingAmount(bob, address(token1)));
+        assertEq(100 ether, pushPullModule.getTotalPending(address(token1)));
+    }
+
+    function test_addRewards_NotEnoughToken() public {
+        token1.mint(address(pushPullModule), 100 ether);
+
+        PushPullModule.Reward[] memory rewards = new PushPullModule.Reward[](2);
+
+        rewards[0] = PushPullModule.Reward(alice, 50 ether);
+        rewards[1] = PushPullModule.Reward(bob, 51 ether);
+
+        vm.expectRevert(PushPullModule.NotEnoughToken.selector);
+        pushPullModule.addRewards(address(token1), rewards);
+    }
+
     function test_fuzz_addReward(address user, uint256 amount) public {
         vm.assume(amount < 5_000_000 ether);
         token1.mint(address(pushPullModule), amount);
@@ -83,8 +110,7 @@ contract PushPullModuleTest is Test {
         pushPullModule.addReward(alice, address(token1), 50 ether);
         pushPullModule.addReward(bob, address(token1), 50 ether);
 
-        vm.prank(alice);
-        pushPullModule.pullReward(address(token1));
+        pushPullModule.pullReward(alice, address(token1));
 
         assertEq(0, pushPullModule.getPendingAmount(alice, address(token1)));
         assertEq(50 ether, token1.balanceOf(alice));
@@ -108,12 +134,7 @@ contract PushPullModuleTest is Test {
 
         pushPullModule.addReward(user, address(token1), amount);
 
-        if (amount % 2 == 0) {
-            vm.prank(user);
-            pushPullModule.pullReward(address(token1));
-        } else {
-            pushPullModule.pullReward(user, address(token1));
-        }
+        pushPullModule.pullReward(user, address(token1));
 
         assertEq(0, pushPullModule.getPendingAmount(user, address(token1)));
         assertEq(amount, token1.balanceOf(user));
@@ -136,8 +157,7 @@ contract PushPullModuleTest is Test {
         tokens[1] = address(token2);
         tokens[2] = address(token3);
 
-        vm.prank(alice);
-        pushPullModule.pullRewards(tokens);
+        pushPullModule.pullRewards(alice, tokens);
 
         assertEq(0, pushPullModule.getPendingAmount(alice, address(token1)));
         assertEq(0, pushPullModule.getPendingAmount(alice, address(token2)));
@@ -174,12 +194,7 @@ contract PushPullModuleTest is Test {
         tokens[1] = address(token2);
         tokens[2] = address(token3);
 
-        if (amount % 2 == 0) {
-            vm.prank(user);
-            pushPullModule.pullRewards(tokens);
-        } else {
-            pushPullModule.pullRewards(user, tokens);
-        }
+        pushPullModule.pullRewards(user, tokens);
 
         assertEq(0, pushPullModule.getPendingAmount(user, address(token1)));
         assertEq(0, pushPullModule.getPendingAmount(user, address(token2)));
@@ -197,5 +212,9 @@ contract PushPullModuleTest is Test {
 contract MockPushPull is PushPullModule {
     function addReward(address user, address token, uint256 amount) public {
         _pushReward(user, token, amount);
+    }
+
+    function addRewards(address token, Reward[] memory rewards) public {
+        _pushRewards(token, rewards);
     }
 }

@@ -24,7 +24,7 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
-    address private charlie = makeAddr("bob");
+    address private charlie = makeAddr("charlie");
 
     function setUp() public {
         // Create our forks

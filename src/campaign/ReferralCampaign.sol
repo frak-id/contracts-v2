@@ -146,7 +146,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
         // Extract the data
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
-        bytes4 selector = InteractionType.unwrap(PressInteractions.REFERRED);
 
         // If the interaction is a usage of a share link, handle it
         if (interactionType == PressInteractions.REFERRED) {
@@ -168,15 +167,33 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         address[] memory referrers =
             _REFERRAL_REGISTRY.getCappedReferrers(_REFERRAL_TREE, _user, _REFERRAL_EXPLORATION_LEVEL);
 
+        // Early exit if no referrers
+        if (referrers.length == 0) {
+            return;
+        }
+
+        // Build our reward array
+        Reward[] memory rewards = new Reward[](referrers.length);
         uint256 totalDistributed;
         uint256 currentReward = _amount;
-        for (uint256 i = 0; i < referrers.length; i++) {
-            // Distribute the reward
-            _pushReward(referrers[i], _TOKEN, currentReward);
 
-            // Update total distributed + current reward
-            totalDistributed += currentReward;
-            currentReward = (currentReward * _PER_LEVEL_PERCENTAGE) / 10_000;
+        unchecked {
+            for (uint256 i = 0; i < referrers.length; i++) {
+                // Build the reward
+                rewards[i] = Reward(referrers[i], currentReward);
+
+                // Update total distributed + current reward
+                totalDistributed += currentReward;
+                currentReward = (currentReward * _PER_LEVEL_PERCENTAGE) / 10_000;
+            }
+        }
+
+        // If all good, distribute the reward
+        _pushRewards(_TOKEN, rewards);
+
+        // If we have no cap, exit
+        if (_DAILY_DISTRIBUTION_CAP == 0) {
+            return;
         }
 
         // Check with the cap
@@ -185,6 +202,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         // If we reached a new timeframe, reset the cap
         if (block.timestamp > campaignStorage.capStartTimestamp + 1 days) {
             emit DailyDistrubutionCapReset(campaignStorage.capStartTimestamp, campaignStorage.capDistributedAmount);
+
             campaignStorage.capStartTimestamp = uint48(block.timestamp);
             campaignStorage.capDistributedAmount = uint208(totalDistributed);
         } else {
