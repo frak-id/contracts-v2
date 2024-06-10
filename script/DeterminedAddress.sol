@@ -51,6 +51,15 @@ contract DeterminedAddress {
         });
     }
 
+    function _getContentIdsArr() internal pure returns (uint256[] memory arr) {
+        ContentIds memory contentIds = _getContentIds();
+        arr = new uint256[](4);
+        arr[0] = contentIds.cLeMonde;
+        arr[1] = contentIds.cLequipe;
+        arr[2] = contentIds.cWired;
+        arr[3] = contentIds.cFrak;
+    }
+
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {
         return DeploymentBlocks({arbSepolia: 52222107});
     }
