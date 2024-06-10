@@ -17,6 +17,13 @@ abstract contract ContentInteractionStorageLib {
     bytes32 private constant _CONTENT_INTERACTION_STORAGE_SLOT =
         0xd966519fe3fe853ea9b03acd8a0422a17006c68dbe1d8fa2b9127b9e8e22eac4;
 
+    struct FacetStorage {
+        /// @dev Does it verify the signature on it's own?
+        bool handleSignatureCheck;
+        /// @dev The facet address
+        IInteractionFacet facet;
+    }
+
     struct ContentInteractionStorage {
         /// @dev The referral tree for this content
         bytes32 referralTree;
@@ -25,7 +32,7 @@ abstract contract ContentInteractionStorageLib {
         /// @dev Array of all the current active campaigns
         InteractionCampaign[] campaigns;
         /// @dev Array of our logic "facets"
-        mapping(uint256 contentType => IInteractionFacet facet) facets;
+        mapping(uint256 contentType => FacetStorage facet) facets;
     }
 
     function _contentInteractionStorage() internal pure returns (ContentInteractionStorage storage storagePtr) {

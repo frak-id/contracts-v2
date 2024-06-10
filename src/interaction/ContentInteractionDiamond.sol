@@ -94,20 +94,21 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /// @dev Set the facets for the given content types
     function _setFacet(IInteractionFacet _facet) private {
         uint8 denominator = _facet.contentTypeDenominator();
-        _contentInteractionStorage().facets[uint256(denominator)] = _facet;
+        bool handleSignature = _facet.handleSignature();
+        _contentInteractionStorage().facets[uint256(denominator)] = FacetStorage(handleSignature, _facet);
     }
 
     /// @dev Delete all the facets matching the given content types
     function deleteFacets(ContentTypes _contentTypes) external onlyRoles(UPGRADE_ROLE) {
         uint8[] memory denominators = _contentTypes.unwrapToDenominators();
         for (uint256 i = 0; i < denominators.length; i++) {
-            _contentInteractionStorage().facets[uint256(denominators[i])] = IInteractionFacet(address(0));
+            delete _contentInteractionStorage().facets[uint256(denominators[i])];
         }
     }
 
     /// @dev Get the facet for the given content type
     function getFacet(uint8 _denominator) external view returns (IInteractionFacet) {
-        return _contentInteractionStorage().facets[uint256(_denominator)];
+        return _contentInteractionStorage().facets[uint256(_denominator)].facet;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -120,7 +121,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         (uint8 _contentTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
         // Get the facet matching the content type
-        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
+        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)].facet;
 
         // If we don't have a facet, we revert
         if (facet == IInteractionFacet(address(0))) {

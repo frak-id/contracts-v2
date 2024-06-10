@@ -58,6 +58,11 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
         return DENOMINATOR_PRESS;
     }
 
+    /// @dev Get the handled content type of this facet
+    function handleSignature() public pure override returns (bool) {
+        return false;
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                          Open interaction methods                          */
     /* -------------------------------------------------------------------------- */
