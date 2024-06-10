@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Base64} from "solady/utils/Base64.sol";
 import {WebAuthNSignatureLib} from "../types/WebAuthNSignatureLib.sol";
+import {Base64} from "solady/utils/Base64.sol";
 
 /// @title WebAuthnVerifier
 /// @author KONFeature

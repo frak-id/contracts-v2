@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {IValidator, IHook} from "kernel/interfaces/IERC7579Modules.sol";
+import {MultiWebAuthNSignatureLib} from "../types/MultiWebAuthNSignatureLib.sol";
+import {WebAuthNSignatureLib} from "../types/WebAuthNSignatureLib.sol";
+import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
+import {IHook, IValidator} from "kernel/interfaces/IERC7579Modules.sol";
 import {PackedUserOperation} from "kernel/interfaces/PackedUserOperation.sol";
 import {
-    SIG_VALIDATION_SUCCESS_UINT,
-    SIG_VALIDATION_FAILED_UINT,
-    ERC1271_MAGICVALUE,
     ERC1271_INVALID,
+    ERC1271_MAGICVALUE,
+    MODULE_TYPE_HOOK,
     MODULE_TYPE_VALIDATOR,
-    MODULE_TYPE_HOOK
+    SIG_VALIDATION_FAILED_UINT,
+    SIG_VALIDATION_SUCCESS_UINT
 } from "kernel/types/Constants.sol";
-import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
-import {WebAuthNSignatureLib} from "../types/WebAuthNSignatureLib.sol";
-import {MultiWebAuthNSignatureLib} from "../types/MultiWebAuthNSignatureLib.sol";
 
 struct WebAuthNPubKey {
     /// @dev The `x` coord of the secp256r1 public key used to sign the user operation.

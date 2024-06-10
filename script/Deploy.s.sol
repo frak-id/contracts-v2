@@ -1,130 +1,133 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-
-import {ContentRegistry, Metadata} from "src/tokens/ContentRegistry.sol";
-import {PaywallToken} from "src/tokens/PaywallToken.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
+import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
+import {Paywall} from "src/gating/Paywall.sol";
+import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
+import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {CommunityToken} from "src/tokens/CommunityToken.sol";
-import {Paywall} from "src/Paywall.sol";
-import {NexusDiscoverCampaign} from "src/campaign/NexusDiscoverCampaign.sol";
-import {ReferralToken} from "src/tokens/ReferralToken.sol";
-import {MINTER_ROLES, CAMPAIGN_MANAGER_ROLES} from "src/constants/Roles.sol";
+import {PaywallToken} from "src/tokens/PaywallToken.sol";
 
-contract Deploy is Script {
-    // Config
-    address airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
-    address owner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
-
-    // Pre computed address
-    address TOKEN_ADDRESS = 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2;
-    address CONTENT_REGISTRY_ADDRESS = 0xD4BCd67b1C62aB27FC04FBd49f3142413aBFC753;
-    address PAYWALL_ADDRESS = 0x9218521020EF26924B77188f4ddE0d0f7C405f21;
-
-    address COMMUNITY_TOKEN_ADDRESS = 0xf98BA1b2fc7C55A01Efa6C8872Bcee85c6eC54e7;
-
-    address REFERRAL_TOKEN_ADDRESS = 0x1Eca7AA9ABF2e53E773B4523B6Dc103002d22e7D;
-    address NEXUS_DISCOVER_CAMPAIGN_ADDRESS = 0x8a37d1B3a17559F2BC4e6613834b1F13d0A623aC;
+contract Deploy is Script, DeterminedAddress {
+    bool internal forceDeploy = vm.envOr("FORCE_DEPLOY", false);
+    string internal communityBaseUrl = vm.envString("COMMUNITY_TOKEN_BASE_URL_DEPLOY");
 
     function run() public {
-        console.log("Deploying to chain: %s", block.chainid);
-        _deployCore();
-        _deployCommunity();
-        _deployCampaign();
+        console.log("Starting deployment");
+        console.log(" - Chain: %s", block.chainid);
+        console.log(" - Sender: %s", msg.sender);
+        console.log(" - Force deploy: %s", forceDeploy);
+        console.log(" - Community base url: %s", communityBaseUrl);
+        console.log();
+
+        // The pre computed contract addresses
+        Addresses memory addresses = _getAddresses();
+
+        addresses = _deployCore(addresses);
+        addresses = _deployPaywall(addresses);
+        addresses = _deployCommunity(addresses);
+
+        // Log every deployed address
+        console.log();
+        console.log("Deployed all contracts");
+        console.log("Addresses:");
+        console.log(" - ContentRegistry: %s", addresses.contentRegistry);
+        console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
+        console.log(" - ContentInteractionManager: %s", addresses.contentInteractionManager);
+        console.log(" - InteractionFacetFactory: %s", addresses.facetFactory);
+        console.log(" - PaywallToken: %s", addresses.paywallToken);
+        console.log(" - Paywall: %s", addresses.paywall);
+        console.log(" - CommunityToken: %s", addresses.communityToken);
     }
 
     /// @dev Deploy core ecosystem stuff (ContentRegistry, Community token)
-    function _deployCore() internal {
+    function _deployCore(Addresses memory addresses) internal returns (Addresses memory) {
+        vm.startBroadcast();
+
+        // Deploy the registries
+        if (addresses.contentRegistry.code.length == 0 || forceDeploy) {
+            console.log("Deploying ContentRegistry");
+            ContentRegistry contentRegistry = new ContentRegistry{salt: 0}(msg.sender);
+            addresses.contentRegistry = address(contentRegistry);
+        }
+        if (addresses.referralRegistry.code.length == 0 || forceDeploy) {
+            console.log("Deploying ReferralRegistry");
+            ReferralRegistry referralRegistry = new ReferralRegistry{salt: 0}(msg.sender);
+            addresses.referralRegistry = address(referralRegistry);
+        }
+
+        // Deploy the facet factory
+        if (addresses.facetFactory.code.length == 0 || forceDeploy) {
+            console.log("Deploying InteractionFacetsFactory");
+            InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{salt: 0}(
+                ReferralRegistry(addresses.referralRegistry), ContentRegistry(addresses.contentRegistry)
+            );
+            addresses.facetFactory = address(facetFactory);
+        }
+
+        // Deploy the interaction manager if needed
+        if (addresses.contentInteractionManager.code.length == 0 || forceDeploy) {
+            console.log("Deploying ContentInteractionManager under erc1967 proxy");
+            // Dpeloy implem
+            address implem = address(
+                new ContentInteractionManager{salt: 0}(
+                    ContentRegistry(addresses.contentRegistry), ReferralRegistry(addresses.referralRegistry)
+                )
+            );
+            // Deploy and register proxy
+            address proxy = LibClone.deployDeterministicERC1967(implem, 0);
+            ContentInteractionManager(proxy).init(msg.sender, InteractionFacetsFactory(addresses.facetFactory));
+            addresses.contentInteractionManager = proxy;
+
+            // Granr it the role to grant tree access on the referral registry
+            ReferralRegistry(addresses.referralRegistry).grantRoles(proxy, REFERRAL_ALLOWANCE_MANAGER_ROLE);
+        }
+
+        vm.stopBroadcast();
+        return addresses;
+    }
+
+    function _deployPaywall(Addresses memory addresses) internal returns (Addresses memory) {
         vm.startBroadcast();
 
         // Deploy the paywall token if not already deployed
-        PaywallToken pFrk;
-        if (TOKEN_ADDRESS.code.length == 0) {
+        if (addresses.paywallToken.code.length == 0 || forceDeploy) {
             console.log("Deploying PaywallToken");
-            pFrk = new PaywallToken{salt: 0}(owner);
-            pFrk.grantRoles(airdropper, MINTER_ROLES);
-        } else {
-            pFrk = PaywallToken(TOKEN_ADDRESS);
+            PaywallToken pFrk = new PaywallToken{salt: 0}(msg.sender);
+            pFrk.grantRoles(airdropper, MINTER_ROLE);
+            addresses.paywallToken = address(pFrk);
         }
 
-        // Deploy the paywall token if not already deployed
-        ContentRegistry contentRegistry;
-        if (CONTENT_REGISTRY_ADDRESS.code.length == 0) {
-            console.log("Deploying ContentRegistry");
-            contentRegistry = new ContentRegistry{salt: 0}(owner);
-        } else {
-            contentRegistry = ContentRegistry(CONTENT_REGISTRY_ADDRESS);
-        }
-
-        // Deploy the paywall token if not already deployed
-        Paywall paywall;
-        if (PAYWALL_ADDRESS.code.length == 0) {
+        // Deploy paywall if needed
+        if (addresses.paywall.code.length == 0 || forceDeploy) {
             console.log("Deploying Paywall");
-            paywall = new Paywall{salt: 0}(address(pFrk), address(contentRegistry));
-        } else {
-            paywall = Paywall(PAYWALL_ADDRESS);
+            Paywall paywall = new Paywall{salt: 0}(addresses.paywallToken, addresses.contentRegistry);
+            addresses.paywall = address(paywall);
         }
-
-        // Log every deployed address
-        console.log("Core addresses:");
-        console.log(" - PaywallToken: %s", address(pFrk));
-        console.log(" - ContentRegistry: %s", address(contentRegistry));
-        console.log(" - Paywall: %s", address(paywall));
 
         vm.stopBroadcast();
+        return addresses;
     }
 
     /// @dev Deploy the community related stuff
-    function _deployCommunity() internal {
+    function _deployCommunity(Addresses memory addresses) internal returns (Addresses memory) {
         vm.startBroadcast();
 
         // Deploy the community token factory
-        CommunityToken communityToken;
-        if (COMMUNITY_TOKEN_ADDRESS.code.length == 0) {
+        if (addresses.communityToken.code.length == 0 || forceDeploy) {
             console.log("Deploying Community token");
-            communityToken = new CommunityToken{salt: 0}(ContentRegistry(CONTENT_REGISTRY_ADDRESS));
-        } else {
-            communityToken = CommunityToken(COMMUNITY_TOKEN_ADDRESS);
+            CommunityToken communityToken =
+                new CommunityToken{salt: 0}(ContentRegistry(addresses.contentRegistry), communityBaseUrl);
+            addresses.communityToken = address(communityToken);
         }
-
-        console.log("Community addresses:");
-        console.log(" - Community token: %s", address(communityToken));
 
         vm.stopBroadcast();
-    }
-
-    /// @dev Deploy the campaign related stuff
-    function _deployCampaign() internal {
-        vm.startBroadcast();
-
-        // Deploy the referral token
-        ReferralToken referralToken;
-        if (REFERRAL_TOKEN_ADDRESS.code.length == 0) {
-            console.log("Deploying Referral token");
-            referralToken = new ReferralToken{salt: 0}(owner);
-            referralToken.grantRoles(airdropper, MINTER_ROLES);
-        } else {
-            referralToken = ReferralToken(REFERRAL_TOKEN_ADDRESS);
-        }
-
-        // Deploy the discover campaign
-        NexusDiscoverCampaign discoverCampaign;
-        if (NEXUS_DISCOVER_CAMPAIGN_ADDRESS.code.length == 0) {
-            console.log("Deploying Discover campaign");
-            discoverCampaign = new NexusDiscoverCampaign{salt: 0}(address(referralToken), owner);
-            discoverCampaign.grantRoles(airdropper, CAMPAIGN_MANAGER_ROLES);
-        } else {
-            discoverCampaign = NexusDiscoverCampaign(NEXUS_DISCOVER_CAMPAIGN_ADDRESS);
-        }
-
-        // Perform an airdrop of 50K rFrk to the discover campaign
-        referralToken.mint(address(discoverCampaign), 50_000 ether);
-
-        console.log("Campaign addresses:");
-        console.log(" - Referral token: %s", address(referralToken));
-        console.log(" - Discover campaign: %s", address(discoverCampaign));
-
-        vm.stopBroadcast();
+        return addresses;
     }
 }
