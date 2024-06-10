@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {CONTENT_TYPE_PRESS, DENOMINATOR_PRESS} from "../../constants/ContentTypes.sol";
+import {DENOMINATOR_PRESS} from "../../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "../../constants/InteractionType.sol";
 import {CAMPAIGN_MANAGER_ROLE} from "../../constants/Roles.sol";
 import {ReferralRegistry} from "../../registry/ReferralRegistry.sol";
@@ -14,8 +14,6 @@ import {IInteractionFacet} from "./IInteractionFacet.sol";
 /// @custom:security-contact contact@frak.id
 contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFacet {
     using InteractionTypeLib for bytes;
-
-    error UnknownInteraction();
 
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
@@ -58,7 +56,6 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
         return DENOMINATOR_PRESS;
     }
 
-    /// @dev Get the handled content type of this facet
     function handleSignature() public pure override returns (bool) {
         return false;
     }
@@ -80,10 +77,7 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
         }
 
         // Emit the open event and send the interaction to the campaign if needed
-        {
-            emit ArticleOpened(data.articleId, msg.sender);
-            // todo: _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeOpenArticle(_articleId, _user));
-        }
+        emit ArticleOpened(data.articleId, msg.sender);
         // Just resend the data
         return PressInteractions.OPEN_ARTICLE.packForCampaign(msg.sender, _data);
     }
@@ -106,10 +100,7 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
         }
 
         // Emit the read event and send the interaction to the campaign if needed
-        {
-            emit ArticleRead(data.articleId, msg.sender);
-            // todo: _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeReadArticle(_articleId, _user));
-        }
+        emit ArticleRead(data.articleId, msg.sender);
         // Just resend the data
         return PressInteractions.READ_ARTICLE.packForCampaign(msg.sender, _data);
     }
@@ -142,17 +133,13 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
 
         // Check if the user can have a referrer on this platform
         if (_isUserAlreadyReferred(tree, user)) {
-            // todo: maybe some retention campagn there? And so an interface with returning user?
             return "";
         }
 
         // Save the info inside the right referral tree
         _saveReferrer(tree, user, referrer);
         // Emit the share link used event
-        {
-            emit UserReferred(user, referrer);
-            // todo: _sendInteractionToCampaign(InteractionEncoderLib.pressEncodeReferred(_user));
-        }
+        emit UserReferred(user, referrer);
         // Just resend the data
         return PressInteractions.REFERRED.packForCampaign(msg.sender, _data);
     }

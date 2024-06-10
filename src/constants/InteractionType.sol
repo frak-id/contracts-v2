@@ -126,3 +126,8 @@ library PressInteractions {
         }
     }
 }
+
+library DappStorageInteractions {
+    /// @dev `bytes4(keccak256("frak.dapp_storage.interaction.update"))`
+    InteractionType constant UPDATE = InteractionType.wrap(0xad24ebee);
+}

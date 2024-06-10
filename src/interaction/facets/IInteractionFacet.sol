@@ -8,6 +8,8 @@ import {InteractionType} from "../../constants/InteractionType.sol";
 /// @notice Interface required for each interaction facet
 /// @custom:security-contact contact@frak.id
 interface IInteractionFacet {
+    error UnknownInteraction();
+
     /// @dev Get the handled content type of this facet
     function contentTypeDenominator() external pure returns (uint8);
 

@@ -60,12 +60,14 @@ library ContentTypesLib {
 /*                        The content types denominator                       */
 /* -------------------------------------------------------------------------- */
 
-uint8 constant DENOMINATOR_DAPP = 1;
 uint8 constant DENOMINATOR_PRESS = 2;
+uint8 constant DENOMINATOR_DAPP = 10;
+uint8 constant DENOMINATOR_DAPP_STORAGE = 11;
 
 /* -------------------------------------------------------------------------- */
 /*                          All of our content types                          */
 /* -------------------------------------------------------------------------- */
 
-ContentTypes constant CONTENT_TYPE_DAPP = ContentTypes.wrap(uint256(1 << DENOMINATOR_DAPP));
 ContentTypes constant CONTENT_TYPE_PRESS = ContentTypes.wrap(uint256(1 << DENOMINATOR_PRESS));
+ContentTypes constant CONTENT_TYPE_DAPP = ContentTypes.wrap(uint256(1 << DENOMINATOR_DAPP));
+ContentTypes constant CONTENT_TYPE_DAPP_STORAGE = ContentTypes.wrap(uint256(1 << DENOMINATOR_DAPP_STORAGE));
