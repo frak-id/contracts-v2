@@ -23,11 +23,6 @@ library MPT {
         bytes32 codeHash;
     }
 
-    struct StorageSlot {
-        uint256 position;
-        uint256 value;
-    }
-
     /// @dev Verify an account proof for the storage root
     /// @dev format [nonce,balance,storageRoot,codeHash]
     function verifyAccountStorage(address account, bytes32 root, uint256 storageRoot, bytes[] calldata proof)
@@ -45,6 +40,25 @@ library MPT {
         if (decoded[2].toUint() != storageRoot) return false;
 
         return true;
+    }
+
+    /// @dev Verify an account proof for the storage root
+    /// @dev format [nonce,balance,storageRoot,codeHash]
+    function getAccountStorageRoot(address account, bytes32 root, bytes[] calldata proof)
+        internal
+        pure
+        returns (bytes32 storageRoot)
+    {
+        uint256 key = uint256(keccak256(abi.encodePacked(account)));
+
+        bytes memory leaf = verifyLeaf(root, key, proof);
+
+        RLPReader.RLPItem[] memory decoded = leaf.toRlpItem().toList();
+
+        if (decoded.length != 4) revert InvalidAccount();
+
+        // return the storageRoot
+        return bytes32(decoded[2].toUint());
     }
 
     /// @dev Verify a storage proof, and return it's value

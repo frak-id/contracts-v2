@@ -56,10 +56,6 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
         return DENOMINATOR_PRESS;
     }
 
-    function handleSignature() public pure override returns (bool) {
-        return false;
-    }
-
     /* -------------------------------------------------------------------------- */
     /*                          Open interaction methods                          */
     /* -------------------------------------------------------------------------- */

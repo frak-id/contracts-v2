@@ -94,8 +94,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /// @dev Set the facets for the given content types
     function _setFacet(IInteractionFacet _facet) private {
         uint8 denominator = _facet.contentTypeDenominator();
-        bool handleSignature = _facet.handleSignature();
-        _contentInteractionStorage().facets[uint256(denominator)] = FacetStorage(handleSignature, _facet);
+        _contentInteractionStorage().facets[uint256(denominator)] = _facet;
     }
 
     /// @dev Delete all the facets matching the given content types
@@ -108,7 +107,24 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
 
     /// @dev Get the facet for the given content type
     function getFacet(uint8 _denominator) external view returns (IInteractionFacet) {
-        return _contentInteractionStorage().facets[uint256(_denominator)].facet;
+        return _contentInteractionStorage().facets[uint256(_denominator)];
+    }
+
+    /// @dev Handle an interaction
+    function delegateToFacet(uint8 _contentTypeDenominator, bytes calldata _call) external {
+        // Get the facet matching the content type
+        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
+
+        // If we don't have a facet, we revert
+        if (facet == IInteractionFacet(address(0))) {
+            revert UnandledContentType();
+        }
+
+        // Transmit the interaction to the facet
+        (bool success,) = address(facet).delegatecall(_call);
+        if (!success) {
+            revert InteractionHandlingFailed();
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -121,7 +137,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         (uint8 _contentTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
         // Get the facet matching the content type
-        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)].facet;
+        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
 
         // If we don't have a facet, we revert
         if (facet == IInteractionFacet(address(0))) {

@@ -12,7 +12,4 @@ interface IInteractionFacet {
 
     /// @dev Get the handled content type of this facet
     function contentTypeDenominator() external pure returns (uint8);
-
-    /// @dev Check if this interaction facet handle signature assertion on it's own
-    function handleSignature() external pure returns (bool);
 }
