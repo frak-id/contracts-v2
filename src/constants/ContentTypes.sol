@@ -27,6 +27,10 @@ library ContentTypesLib {
         return self.containType(CONTENT_TYPE_PRESS);
     }
 
+    function isDappStorageType(ContentTypes self) internal pure returns (bool isType) {
+        return self.containType(CONTENT_TYPE_DAPP_STORAGE);
+    }
+
     function containType(ContentTypes self, ContentTypes typeToCheck) internal pure returns (bool containsType) {
         return ContentTypes.unwrap(self) & ContentTypes.unwrap(typeToCheck) != 0;
     }

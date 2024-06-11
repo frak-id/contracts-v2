@@ -79,6 +79,7 @@ contract DappStorageFacet is ContentInteractionStorageLib, IInteractionFacet, Ow
         uint256 contractId;
         bytes32 stateRoot;
         uint256 storageSlot;
+        bytes32 storageStateRoot;
         bytes[] stateProof;
         bytes[] storageProof;
     }
@@ -97,9 +98,7 @@ contract DappStorageFacet is ContentInteractionStorageLib, IInteractionFacet, Ow
         // Verify the storage proof
         // todo: also assert storage slot mnatch a contract
         // todo: contract should be set by the owner
-        uint256 value = _verifyAndGetStorageProof(
-            contractAddr, data.stateRoot, data.storageSlot, data.stateProof, data.storageProof
-        );
+        uint256 value = _verifyAndGetStorageProof(data.storageStateRoot, data.storageSlot, data.storageProof);
 
         // Emit the event
         emit StorageUpdated(data.storageSlot, value);
@@ -114,16 +113,17 @@ contract DappStorageFacet is ContentInteractionStorageLib, IInteractionFacet, Ow
 
     /// @dev Verify the patricia merklee proof of a storage value, and return the founded value
     function _verifyAndGetStorageProof(
-        address _contract,
-        bytes32 _root,
+        // address _contract,
+        // bytes32 _root,
+        bytes32 _storageStateRoot,
         uint256 _storageSlot,
-        bytes[] calldata _stateProof,
+        // bytes[] calldata _stateProof,
         bytes[] calldata _storageProof
     ) internal pure returns (uint256 value) {
         // Verify the state proof, and extract the storage root from it
-        bytes32 storageRoot = MPT.getAccountStorageRoot(_contract, _root, _stateProof);
+        // bytes32 storageRoot = MPT.getAccountStorageRoot(_contract, _root, _stateProof);
         // Then, verify this storage root against the storage proof, and extract the value
-        return MPT.verifyAndGetStorageSlot(storageRoot, _storageSlot, _storageProof);
+        return MPT.verifyAndGetStorageSlot(_storageStateRoot, _storageSlot, _storageProof);
     }
 }
 
