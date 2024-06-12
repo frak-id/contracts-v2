@@ -7,7 +7,14 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
-import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
+import {
+    CONTENT_TYPE_DAPP,
+    CONTENT_TYPE_DAPP_STORAGE,
+    CONTENT_TYPE_PRESS,
+    ContentTypes,
+    DENOMINATOR_DAPP_STORAGE,
+    DENOMINATOR_PRESS
+} from "src/constants/ContentTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
@@ -48,7 +55,9 @@ contract ContentInteractionManagerTest is Test {
         vm.startPrank(owner);
         contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain");
         contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
-        contentIdMulti = contentRegistry.mint(CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS, "name", "multi-domain");
+        contentIdMulti = contentRegistry.mint(
+            CONTENT_TYPE_DAPP | CONTENT_TYPE_DAPP_STORAGE | CONTENT_TYPE_PRESS, "name", "multi-domain"
+        );
         contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(uint256(1 << 99)), "name", "unknown-domain");
         contentRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
@@ -90,7 +99,12 @@ contract ContentInteractionManagerTest is Test {
         // Deploy the interaction contract for a content with multiple types
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdMulti);
-        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdMulti)), address(0));
+        ContentInteractionDiamond interaction = contentInteractionManager.getInteractionContract(contentIdMulti);
+        assertNotEq(address(interaction), address(0));
+
+        // Get the facet, and ensure it's not 0 for each content denomination
+        assertNotEq(address(interaction.getFacet(DENOMINATOR_DAPP_STORAGE)), address(0));
+        assertNotEq(address(interaction.getFacet(DENOMINATOR_PRESS)), address(0));
     }
 
     function test_getInteractionContract() public {

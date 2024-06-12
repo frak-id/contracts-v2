@@ -113,17 +113,20 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /// @dev Handle an interaction
     function delegateToFacet(uint8 _contentTypeDenominator, bytes calldata _call) external {
         // Get the facet matching the content type
-        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
-
-        // If we don't have a facet, we revert
-        if (facet == IInteractionFacet(address(0))) {
-            revert UnandledContentType();
-        }
+        IInteractionFacet facet = _getFacetForDenominator(_contentTypeDenominator);
 
         // Transmit the interaction to the facet
         (bool success,) = address(facet).delegatecall(_call);
         if (!success) {
             revert InteractionHandlingFailed();
+        }
+    }
+
+    /// @dev Get the facet for the given content type
+    function _getFacetForDenominator(uint8 _denominator) internal view returns (IInteractionFacet facet) {
+        facet = _contentInteractionStorage().facets[uint256(_denominator)];
+        if (facet == IInteractionFacet(address(0))) {
+            revert UnandledContentType();
         }
     }
 
@@ -137,12 +140,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         (uint8 _contentTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
         // Get the facet matching the content type
-        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
-
-        // If we don't have a facet, we revert
-        if (facet == IInteractionFacet(address(0))) {
-            revert UnandledContentType();
-        }
+        IInteractionFacet facet = _getFacetForDenominator(_contentTypeDenominator);
 
         // Validate the interaction
         _validateInteraction(keccak256(_facetData), msg.sender, _signature);

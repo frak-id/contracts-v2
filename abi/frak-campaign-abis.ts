@@ -409,24 +409,10 @@ export const referralCampaignAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_token', internalType: 'address', type: 'address' }],
-    name: 'pullReward',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
     inputs: [
       { name: '_user', internalType: 'address', type: 'address' },
       { name: '_tokens', internalType: 'address[]', type: 'address[]' },
     ],
-    name: 'pullRewards',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: '_tokens', internalType: 'address[]', type: 'address[]' }],
     name: 'pullRewards',
     outputs: [],
     stateMutability: 'nonpayable',

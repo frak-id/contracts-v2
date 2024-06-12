@@ -130,4 +130,17 @@ library PressInteractions {
 library DappStorageInteractions {
     /// @dev `bytes4(keccak256("frak.dapp_storage.interaction.update"))`
     InteractionType constant UPDATE = InteractionType.wrap(0xad24ebee);
+
+    /// @dev `bytes4(keccak256("frak.dapp_storage.interaction.update_verified"))`
+    InteractionType constant UPDATE_VERIFIED = InteractionType.wrap(0x32812004);
+
+    /// @dev Pack a verified update interaction for a campaign
+    function packVerifiedUpdateForCampaign(
+        address _user,
+        address _smartContract,
+        uint256 _storageSlot,
+        uint256 _storageValue
+    ) internal pure returns (bytes memory packedInteraction) {
+        packedInteraction = abi.encodePacked(UPDATE_VERIFIED, _user, _smartContract, _storageSlot, _storageValue);
+    }
 }

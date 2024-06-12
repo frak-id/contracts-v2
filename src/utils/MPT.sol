@@ -15,14 +15,6 @@ library MPT {
     error InvalidProof(uint256 index);
     error InvalidAccount();
 
-    struct Account {
-        address accountAddress;
-        uint256 nonce;
-        uint256 balance;
-        bytes32 storageRoot;
-        bytes32 codeHash;
-    }
-
     /// @dev Verify an account proof for the storage root
     /// @dev format [nonce,balance,storageRoot,codeHash]
     function verifyAccountStorage(address account, bytes32 root, uint256 storageRoot, bytes[] calldata proof)
@@ -42,25 +34,6 @@ library MPT {
         return true;
     }
 
-    /// @dev Verify an account proof for the storage root
-    /// @dev format [nonce,balance,storageRoot,codeHash]
-    function getAccountStorageRoot(address account, bytes32 root, bytes[] calldata proof)
-        internal
-        pure
-        returns (bytes32 storageRoot)
-    {
-        uint256 key = uint256(keccak256(abi.encodePacked(account)));
-
-        bytes memory leaf = verifyLeaf(root, key, proof);
-
-        RLPReader.RLPItem[] memory decoded = leaf.toRlpItem().toList();
-
-        if (decoded.length != 4) revert InvalidAccount();
-
-        // return the storageRoot
-        return bytes32(decoded[2].toUint());
-    }
-
     /// @dev Verify a storage proof, and return it's value
     function verifyAndGetStorageSlot(bytes32 root, uint256 slot, bytes[] calldata proof)
         internal
@@ -69,7 +42,6 @@ library MPT {
     {
         uint256 key = uint256(keccak256(abi.encode(slot)));
         bytes memory leaf = verifyLeaf(root, key, proof);
-
         return leaf.toRlpItem().toUint();
     }
 

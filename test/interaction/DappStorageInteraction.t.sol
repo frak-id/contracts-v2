@@ -5,6 +5,8 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
+
+import {LibZip} from "solady/utils/LibZip.sol";
 import {
     CONTENT_TYPE_DAPP_STORAGE,
     ContentTypes,
@@ -26,7 +28,7 @@ contract DappStorageInteractionTest is InteractionTest {
     DappStorageFacet private rawFacet;
 
     // Id of the stylus contract
-    uint256 private stylusCcuContractId = 0;
+    uint256 private stylusCcuContractId = 13;
     address private stylusContract = 0x87f5F41f6535ec4e6BB8B303585f0a2a32DB708E;
 
     function setUp() public {
@@ -47,8 +49,14 @@ contract DappStorageInteractionTest is InteractionTest {
     /*                                Generic tests                               */
     /* -------------------------------------------------------------------------- */
 
-    function performSingleInteraction() internal override {
-        vm.skip(true);
+    function performSingleInteraction() internal override withStylusContext {
+        // Pack the interaction
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_DAPP_STORAGE, DappStorageInteractions.UPDATE, _stylusContractUpdateData(), alice
+        );
+        // Call the method
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function getOutOfFacetScopeInteraction() internal override returns (bytes memory, bytes memory) {
@@ -61,26 +69,36 @@ contract DappStorageInteractionTest is InteractionTest {
 
     /// @dev Simple test to check the success of a facet checkers
     function test_storageUpdate() public withStylusContext {
-        bytes memory encodedData = _stylusContractUpdateData();
         // Pack the interaction
-        (bytes memory packedInteraction, bytes memory signature) =
-            _prepareInteraction(DENOMINATOR_DAPP_STORAGE, DappStorageInteractions.UPDATE, encodedData, alice);
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_DAPP_STORAGE, DappStorageInteractions.UPDATE, _stylusContractUpdateData(), alice
+        );
         // Call the method
         vm.prank(alice);
         contentInteraction.handleInteraction(packedInteraction, signature);
     }
 
+    /// @dev Simple test to check the success of a facet checkers
+    function test_storageUpdate_UnknownContract() public {
+        // Pack the interaction
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_DAPP_STORAGE, DappStorageInteractions.UPDATE, _stylusContractUpdateData(), alice
+        );
+        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        // Call the method
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+    }
 
     /// @dev Directly test the MPT lib
     function test_direct_mpt() public {
-        // Rebuild our storage proof
         bytes[] memory storageProof = new bytes[](3);
         storageProof[0] =
             hex"f90151a03f6c1dcc9bf1e937acb30c66c23822b7c3a274aeac57b012baecd6aa01545d7da0a1532f2cf67d0ff7ad7e0be264d2d9975195102febaa8ff4f8a2aa9ac95e4d84a0a79dbb34108cd4a27a5119655fe18bd7e1d35990fd80a00caf3741598098722f8080a0e49730ed68aef37c197fdde6fe2315a563f5f9f916a198c3a72a56ffcea5904b80a0dce48ce760445d65b42083646157d674abc819406756c4712b3fd7dc07725eaea028c205d4d4af5d21292df882b79a1925ffd90f82d9a0b3628098b8527dc899448080a059bab11cf2ac0fa684a7ca11d7901e2a1de1dd256b092ce1eeb5c6c465789508a02bf09f32c09d2f12abad42b8c2d06c12a1e011f2c446ccd81c668a04d83dae91a079d27f1d16617a4c1f041e14a1732f6e57a3c86dd9832716a492506e59ad93e080a0140085077baa38f30b99cb3d2c9019d5d3b014fcf5881030a5a336627b36e91480";
         storageProof[1] =
             hex"f8518080808080808080a06675e493d32ffa12e12d8fa0a5a8dc8f915b7926a8bd11de90120aabeb46276f80a0ec20f814c9d1d37c349aab5256147e621967cd386aab5fa4d0ebfe4abbe97d03808080808080";
         storageProof[2] = hex"e2a020c54f14d0c24cc609cdbaa49b76fb9613b1e9b1aea7cfadfaaf8073e7a7919401";
-        
+
         bytes32 storageStateRoot = 0x79f94a9e0de4f107c4122a3cee2770282536f4241936e2b4dffa17261077214a;
         uint256 storageSlot = 0x483612feee598e08d8bf3aa226735aff45a76cf706b64b2b8952a30e01cbe484;
 
@@ -107,6 +125,7 @@ contract DappStorageInteractionTest is InteractionTest {
     }
 
     function _stylusContractUpdateData() internal returns (bytes memory) {
+        vm.pauseGasMetering();
         // Build the state proof
         bytes[] memory stateProof = new bytes[](4);
         stateProof[0] =
@@ -127,19 +146,13 @@ contract DappStorageInteractionTest is InteractionTest {
         storageProof[2] = hex"e2a020c54f14d0c24cc609cdbaa49b76fb9613b1e9b1aea7cfadfaaf8073e7a7919401";
 
         // Create the update data
-        DappStorageFacet.StorageUpdateData memory updateData = DappStorageFacet.StorageUpdateData({
-            contractId: stylusCcuContractId,
-            // toodo: Extract the block state root
-            stateRoot: keccak256("test"),
-            stateProof: stateProof,
-            // Storage related
-            storageSlot: 0x483612feee598e08d8bf3aa226735aff45a76cf706b64b2b8952a30e01cbe484,
-            storageStateRoot: 0x79f94a9e0de4f107c4122a3cee2770282536f4241936e2b4dffa17261077214a,
-            storageProof: storageProof
-        });
+        bytes32 storageStateRoot = 0x79f94a9e0de4f107c4122a3cee2770282536f4241936e2b4dffa17261077214a;
+        uint256 storageSlot = 0x483612feee598e08d8bf3aa226735aff45a76cf706b64b2b8952a30e01cbe484;
 
         // Return the encoded data
-        return abi.encode(updateData);
+        bytes memory encoded = abi.encode(stylusCcuContractId, storageStateRoot, storageSlot, storageProof);
+        vm.resumeGasMetering();
+        return encoded;
     }
 }
 

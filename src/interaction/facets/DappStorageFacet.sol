@@ -7,6 +7,7 @@ import {UPGRADE_ROLE} from "../../constants/Roles.sol";
 import {MPT} from "../../utils/MPT.sol";
 import {ContentInteractionStorageLib} from "../lib/ContentInteractionStorageLib.sol";
 import {IInteractionFacet} from "./IInteractionFacet.sol";
+import "forge-std/Console.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 
 /// @title DappStorageFacet
@@ -18,11 +19,17 @@ contract DappStorageFacet is ContentInteractionStorageLib, IInteractionFacet, Ow
     using InteractionTypeLib for bytes;
 
     /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
+
+    error UnknownContract();
+
+    /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event when a storage at `slot` is updated to `value` on another contract
-    event StorageUpdated(uint256 indexed slot, uint256 value);
+    event StorageUpdated(address indexed smartContract, uint256 indexed slot, uint256 value);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -77,10 +84,8 @@ contract DappStorageFacet is ContentInteractionStorageLib, IInteractionFacet, Ow
 
     struct StorageUpdateData {
         uint256 contractId;
-        bytes32 stateRoot;
-        uint256 storageSlot;
         bytes32 storageStateRoot;
-        bytes[] stateProof;
+        uint256 storageSlot;
         bytes[] storageProof;
     }
 
@@ -94,17 +99,19 @@ contract DappStorageFacet is ContentInteractionStorageLib, IInteractionFacet, Ow
 
         // Fetch the contract address
         address contractAddr = _facetStorage().contracts[data.contractId];
+        if (contractAddr == address(0)) {
+            revert("DappStorageFacet: contract not found");
+        }
 
+        // TODO: Should also verify the state proof
         // Verify the storage proof
-        // todo: also assert storage slot mnatch a contract
-        // todo: contract should be set by the owner
         uint256 value = _verifyAndGetStorageProof(data.storageStateRoot, data.storageSlot, data.storageProof);
 
         // Emit the event
-        emit StorageUpdated(data.storageSlot, value);
+        emit StorageUpdated(contractAddr, data.storageSlot, value);
 
         // todo: return the right stuff for a campaign
-        return "";
+        return DappStorageInteractions.packVerifiedUpdateForCampaign(msg.sender, contractAddr, data.storageSlot, value);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -112,16 +119,11 @@ contract DappStorageFacet is ContentInteractionStorageLib, IInteractionFacet, Ow
     /* -------------------------------------------------------------------------- */
 
     /// @dev Verify the patricia merklee proof of a storage value, and return the founded value
-    function _verifyAndGetStorageProof(
-        // address _contract,
-        // bytes32 _root,
-        bytes32 _storageStateRoot,
-        uint256 _storageSlot,
-        // bytes[] calldata _stateProof,
-        bytes[] calldata _storageProof
-    ) internal pure returns (uint256 value) {
-        // Verify the state proof, and extract the storage root from it
-        // bytes32 storageRoot = MPT.getAccountStorageRoot(_contract, _root, _stateProof);
+    function _verifyAndGetStorageProof(bytes32 _storageStateRoot, uint256 _storageSlot, bytes[] calldata _storageProof)
+        internal
+        pure
+        returns (uint256 value)
+    {
         // Then, verify this storage root against the storage proof, and extract the value
         return MPT.verifyAndGetStorageSlot(_storageStateRoot, _storageSlot, _storageProof);
     }
