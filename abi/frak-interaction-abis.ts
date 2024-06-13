@@ -274,6 +274,32 @@ export const contentInteractionDiamondAbi = [
     anonymous: false,
     inputs: [
       {
+        name: 'campaign',
+        internalType: 'contract InteractionCampaign',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'CampaignAttached',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'campaign',
+        internalType: 'contract InteractionCampaign',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'CampaignDetached',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
         name: 'version',
         internalType: 'uint64',
         type: 'uint64',
@@ -599,44 +625,6 @@ export const contentInteractionManagerAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'contentId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'campaign',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'CampaignAttached',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'contentId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'campaigns',
-        internalType: 'contract InteractionCampaign[]',
-        type: 'address[]',
-        indexed: false,
-      },
-    ],
-    name: 'CampaignsDetached',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
         name: 'version',
         internalType: 'uint64',
         type: 'uint64',
@@ -654,6 +642,12 @@ export const contentInteractionManagerAbi = [
         internalType: 'uint256',
         type: 'uint256',
         indexed: true,
+      },
+      {
+        name: 'interactionContract',
+        internalType: 'contract ContentInteractionDiamond',
+        type: 'address',
+        indexed: false,
       },
     ],
     name: 'InteractionContractDeleted',
@@ -685,7 +679,13 @@ export const contentInteractionManagerAbi = [
         name: 'contentId',
         internalType: 'uint256',
         type: 'uint256',
-        indexed: true,
+        indexed: false,
+      },
+      {
+        name: 'interactionContract',
+        internalType: 'contract ContentInteractionDiamond',
+        type: 'address',
+        indexed: false,
       },
     ],
     name: 'InteractionContractUpdated',

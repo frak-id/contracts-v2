@@ -40,7 +40,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - ContentRegistry: %s", addresses.contentRegistry);
         console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
         console.log(" - ContentInteractionManager: %s", addresses.contentInteractionManager);
-        console.log(" - InteractionFacetFactory: %s", addresses.facetFactory);
+        console.log(" - FacetFactory: %s", addresses.facetFactory);
         console.log(" - PaywallToken: %s", addresses.paywallToken);
         console.log(" - Paywall: %s", addresses.paywall);
         console.log(" - CommunityToken: %s", addresses.communityToken);

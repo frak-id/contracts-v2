@@ -22,6 +22,10 @@ import {Initializable} from "solady/utils/Initializable.sol";
 contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles, EIP712, Initializable {
     using InteractionTypeLib for bytes;
 
+    /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
+
     /// @dev error throwned when the signer of an interaction is invalid
     error WrongInteractionSigner();
     /// @dev error throwned when a campaign is already present
@@ -30,6 +34,20 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     error UnandledContentType();
     /// @dev Error when we failed to handle an interaction
     error InteractionHandlingFailed();
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Events                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Event when a campaign is attached to a content
+    event CampaignAttached(InteractionCampaign campaign);
+
+    /// @dev Event when a campaign is attached to a content
+    event CampaignDetached(InteractionCampaign campaign);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  Constants                                 */
+    /* -------------------------------------------------------------------------- */
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
@@ -261,6 +279,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         }
 
         // If all good, add it
+        emit CampaignAttached(_campaign);
         campaigns.push(_campaign);
     }
 
@@ -295,6 +314,8 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
             if (address(campaigns[i]) != address(_campaign)) {
                 continue;
             }
+            // Emit the campaign detachment
+            emit CampaignDetached(_campaign);
             // Remove the roles on the campagn
             campaigns[i].disallowMe();
             // If we found the campaign, we replace it by the last item of our campaigns

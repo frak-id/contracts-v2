@@ -39,6 +39,13 @@ export default defineConfig(
                 'ReferralCampaign.json',
             ]),
         },
+        // Frak campaign abi
+        {
+            out: "abi/stylus-abis.ts",
+            plugins: foundryPlugin([
+                'StylusFlattened.json',
+            ]),
+        },
         // Frak gating abis
         {
             out: "abi/frak-gating-abis.ts",

@@ -346,6 +346,52 @@ export const contentRegistryAbi = [
     anonymous: false,
     inputs: [
       {
+        name: 'contentId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'domain',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+      {
+        name: 'contentTypes',
+        internalType: 'ContentTypes',
+        type: 'uint256',
+        indexed: false,
+      },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+    ],
+    name: 'ContentMinted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'contentId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'contentTypes',
+        internalType: 'ContentTypes',
+        type: 'uint256',
+        indexed: false,
+      },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+    ],
+    name: 'ContentUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
         name: 'pendingOwner',
         internalType: 'address',
         type: 'address',

@@ -23,6 +23,16 @@ contract ContentRegistry is ERC721, OwnableRoles {
     error AlreadyExistingContent();
 
     /* -------------------------------------------------------------------------- */
+    /*                                   Events                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Event emitted when a content is minted
+    event ContentMinted(uint256 indexed contentId, string domain, ContentTypes contentTypes, string name);
+
+    /// @dev Event emitted when a content is updated
+    event ContentUpdated(uint256 indexed contentId, ContentTypes contentTypes, string name);
+
+    /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
@@ -84,6 +94,10 @@ contract ContentRegistry is ERC721, OwnableRoles {
         // Store the metadata and mint the content
         _getStorage()._metadata[id] = Metadata({contentTypes: _contentTypes, name: _name, domain: _domain});
 
+        // Emit the event
+        emit ContentMinted(id, _domain, _contentTypes, _name);
+
+        // And mint it
         _mint(msg.sender, id);
     }
 
@@ -116,6 +130,9 @@ contract ContentRegistry is ERC721, OwnableRoles {
         Metadata storage metadata = _getStorage()._metadata[_contentId];
         metadata.contentTypes = _contentTypes;
         metadata.name = _name;
+
+        // Emit the event
+        emit ContentUpdated(_contentId, _contentTypes, _name);
     }
 
     /* -------------------------------------------------------------------------- */

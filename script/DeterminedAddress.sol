@@ -32,13 +32,13 @@ contract DeterminedAddress {
 
     function _getAddresses() internal pure returns (Addresses memory) {
         return Addresses({
-            contentRegistry: 0xc02209e937dB50C80AA1A280f9172163D8aC6a38,
+            contentRegistry: 0xC110ecb55EbAa4Ea9eFC361C4bBB224A6664Ea45,
             referralRegistry: 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43,
-            contentInteractionManager: 0x71a54b7Edb803b0FB6c7A930794BcA13587Af21b,
-            facetFactory: 0xfb170A73383Ec2E15097d80b736FeDF21a8F1E01,
+            contentInteractionManager: 0x603674006fE11c38449C22bA56c40444C8e4CC5C,
+            facetFactory: 0x12DcC279ed8cb94F90be04a54b987cAF26DE541b,
             paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,
-            paywall: 0x99F44C46fb00b94f5Cff57cbbF3d57303469E884,
-            communityToken: 0x932145A69BaF498D7F87D06db2E6c7963BF86E85
+            paywall: 0x1d11207BD915D1f8A4393D20AB318a1a961CCE6F,
+            communityToken: 0x5E7759F47b5992DFB85Ef38dD48A9201aDF24b75
         });
     }
 
@@ -61,6 +61,6 @@ contract DeterminedAddress {
     }
 
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {
-        return DeploymentBlocks({arbSepolia: 52222107});
+        return DeploymentBlocks({arbSepolia: 54321880});
     }
 }
