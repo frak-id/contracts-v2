@@ -157,7 +157,7 @@ contract DappStorageInteractionTest is InteractionTest {
 }
 
 contract StorageProofTester {
-    function getProofValue(bytes32 root, uint256 storageSlot, bytes[] calldata proof) public returns (uint256) {
+    function getProofValue(bytes32 root, uint256 storageSlot, bytes[] calldata proof) public pure returns (uint256) {
         return MPT.verifyAndGetStorageSlot(root, storageSlot, proof);
     }
 }

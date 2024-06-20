@@ -43,13 +43,15 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 ```
 ├─src
 ├── campaign
-│   ├── lib/
 │   ├── InteractionCampaign.sol
 │   └── ReferralCampaign.sol
 ├── interaction
 │   ├── lib/
-│   ├── PressInteraction.sol
-│   ├── ContentInteraction.sol
+│   ├── facets
+│   │ ├── IInteractionFacet.sol
+│   │ └── PressInteractionFacet.sol
+│   ├── InteractionFacetsFactory.sol
+│   ├── ContentInteractionDiamond.sol
 │   └── ContentInteractionManager.sol
 ├── registry
 │   ├── ContentRegistry.sol
@@ -70,7 +72,7 @@ This directory houses contracts that function as registries for essential data w
 #### `ContentRegistry.sol`
 
 - Manages metadata associated with content within the Frak ecosystem.
-- Each content piece is represented by an ERC-721 token and is identified by a unique domain.
+- Each content piece is represented by a unique ERC-721 token and is identified by a unique domain.
 - Stores content metadata: name, domain, and supported content types.
 - Handles content registration, metadata updates, ownership transfers, and content discovery.
 
@@ -85,34 +87,41 @@ This directory houses contracts that function as registries for essential data w
 
 ### `interaction/`
 
-This directory contains contracts that facilitate interactions between users and content within the Frak ecosystem. 
+This directory manages user interactions with content and leverages a diamond pattern for extensibility.
 
 #### `ContentInteractionManager.sol`
 
-- Acts as a factory and registry for `ContentInteraction` contracts.
+- Central orchestrator for deploying, managing, and upgrading interaction logic within the Frak ecosystem.
 - **Responsibilities:**
-    - Deploys new interaction contracts for specific content types on demand.
-    - Maintains a mapping between content types and their corresponding interaction contracts.
-    - Allows retrieval of the appropriate interaction contract for a given content.
+    - Deploys and manages `ContentInteractionDiamond` contracts, one per piece of content.
+    - Associates `InteractionCampaign` contracts with content interactions.
+    - Coordinates with the `ContentRegistry` to determine the appropriate interaction facets based on content metadata.
+    - Authorizes interaction diamonds to manage referral relationships in the `ReferralRegistry`.
+    - Upgrades facet logic for interaction diamonds, providing flexibility and future-proofing the system. 
 
-#### `ContentInteraction.sol`
+#### `ContentInteractionDiamond.sol`
 
-- Abstract base contract that defines the interface for user interactions with content.
+- Implements the core logic of the diamond pattern, acting as a proxy that delegates function calls to specific facets.
 - **Key Features:**
-    - Provides an abstract framework for handling user interactions, allowing for customization in derived contracts.
-    - Associates each `ContentInteraction` contract with a specific content ID for accurate tracking.
-    - Includes logic for:
-        - Validating user interactions using EIP-712 signatures to prevent unauthorized actions.
-        - Managing referral relationships with the `ReferralRegistry`.
-        - Interacting with `InteractionCampaign` contracts to trigger reward distributions.
+    - Each `ContentInteractionDiamond` is associated with a single piece of content.
+    - It handles common tasks like:
+        - Validating user interactions using EIP-712 signatures for security.
+        - Managing interactions with the `ReferralRegistry` for referral tracking.
+        - Forwarding interaction data to attached `InteractionCampaign` contracts.
+    - It delegates the actual handling of content-specific interactions (e.g., opening an article, liking a video) to dedicated facet contracts.
+    - This diamond pattern allows for adding new content types and interaction logic without modifying the core `ContentInteractionDiamond` contract. 
 
-#### `PressInteraction.sol`
+### `interaction/facets/` 
 
-- A concrete implementation of the `ContentInteraction` contract specifically designed for press articles.
+This directory contains the facet contracts that implement specific interaction logic for different content types.
+
+#### `PressInteractionFacet.sol`
+
+- A facet contract specifically designed to handle user interactions with press content (e.g., articles).
 - **Functionality:**
-    - Tracks user interactions with press articles, such as article opens, reads, and share link creation.
-    - Emits events for each interaction type, providing a record of user engagement.
-    - Emit press related interaction for potential linked Campaign.
+    - Tracks user interactions like article opens (distinguishing direct opens and opens via shared links), article reads, share link creation, and share link usage.
+    - Emits detailed events for each interaction to provide an audit trail for off-chain systems.
+    - Can be extended to integrate with reward mechanisms and other campaign logic.
 
 ## Campaigns
 
