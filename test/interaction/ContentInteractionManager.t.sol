@@ -9,10 +9,9 @@ import {LibClone} from "solady/utils/LibClone.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {
     CONTENT_TYPE_DAPP,
-    CONTENT_TYPE_DAPP_STORAGE,
     CONTENT_TYPE_PRESS,
     ContentTypes,
-    DENOMINATOR_DAPP_STORAGE,
+    DENOMINATOR_DAPP,
     DENOMINATOR_PRESS
 } from "src/constants/ContentTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
@@ -55,9 +54,7 @@ contract ContentInteractionManagerTest is Test {
         vm.startPrank(owner);
         contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain");
         contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
-        contentIdMulti = contentRegistry.mint(
-            CONTENT_TYPE_DAPP | CONTENT_TYPE_DAPP_STORAGE | CONTENT_TYPE_PRESS, "name", "multi-domain"
-        );
+        contentIdMulti = contentRegistry.mint(CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS, "name", "multi-domain");
         contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(uint256(1 << 99)), "name", "unknown-domain");
         contentRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
@@ -69,10 +66,6 @@ contract ContentInteractionManagerTest is Test {
     }
 
     function test_deployInteractionContract_CantHandleContentTypes() public {
-        vm.prank(operator);
-        vm.expectRevert(ContentInteractionManager.CantHandleContentTypes.selector);
-        contentInteractionManager.deployInteractionContract(contentIdDapp);
-
         vm.prank(operator);
         vm.expectRevert(ContentInteractionManager.CantHandleContentTypes.selector);
         contentInteractionManager.deployInteractionContract(contentIdUnknown);
@@ -103,7 +96,7 @@ contract ContentInteractionManagerTest is Test {
         assertNotEq(address(interaction), address(0));
 
         // Get the facet, and ensure it's not 0 for each content denomination
-        assertNotEq(address(interaction.getFacet(DENOMINATOR_DAPP_STORAGE)), address(0));
+        assertNotEq(address(interaction.getFacet(DENOMINATOR_DAPP)), address(0));
         assertNotEq(address(interaction.getFacet(DENOMINATOR_PRESS)), address(0));
     }
 

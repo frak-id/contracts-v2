@@ -27,10 +27,6 @@ library ContentTypesLib {
         return self.containType(CONTENT_TYPE_PRESS);
     }
 
-    function isDappStorageType(ContentTypes self) internal pure returns (bool isType) {
-        return self.containType(CONTENT_TYPE_DAPP_STORAGE);
-    }
-
     function containType(ContentTypes self, ContentTypes typeToCheck) internal pure returns (bool containsType) {
         return ContentTypes.unwrap(self) & ContentTypes.unwrap(typeToCheck) != 0;
     }
@@ -65,8 +61,7 @@ library ContentTypesLib {
 /* -------------------------------------------------------------------------- */
 
 uint8 constant DENOMINATOR_PRESS = 2;
-uint8 constant DENOMINATOR_DAPP = 10;
-uint8 constant DENOMINATOR_DAPP_STORAGE = 11;
+uint8 constant DENOMINATOR_DAPP = 1;
 
 /* -------------------------------------------------------------------------- */
 /*                          All of our content types                          */
@@ -74,4 +69,3 @@ uint8 constant DENOMINATOR_DAPP_STORAGE = 11;
 
 ContentTypes constant CONTENT_TYPE_PRESS = ContentTypes.wrap(uint256(1 << DENOMINATOR_PRESS));
 ContentTypes constant CONTENT_TYPE_DAPP = ContentTypes.wrap(uint256(1 << DENOMINATOR_DAPP));
-ContentTypes constant CONTENT_TYPE_DAPP_STORAGE = ContentTypes.wrap(uint256(1 << DENOMINATOR_DAPP_STORAGE));

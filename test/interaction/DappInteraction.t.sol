@@ -7,25 +7,20 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 
 import {LibZip} from "solady/utils/LibZip.sol";
-import {
-    CONTENT_TYPE_DAPP_STORAGE,
-    ContentTypes,
-    DENOMINATOR_DAPP,
-    DENOMINATOR_DAPP_STORAGE
-} from "src/constants/ContentTypes.sol";
-import {DappStorageInteractions, InteractionType, InteractionTypeLib} from "src/constants/InteractionType.sol";
+import {CONTENT_TYPE_DAPP, ContentTypes, DENOMINATOR_DAPP} from "src/constants/ContentTypes.sol";
+import {DappInteractions, InteractionType, InteractionTypeLib} from "src/constants/InteractionType.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-import {DappStorageFacet} from "src/interaction/facets/DappStorageFacet.sol";
+import {DappFacet} from "src/interaction/facets/DappFacet.sol";
 import {PressInteractionFacet} from "src/interaction/facets/PressInteractionFacet.sol";
 import {MPT} from "src/utils/MPT.sol";
 
-contract DappStorageInteractionTest is InteractionTest {
+contract DappInteractionTest is InteractionTest {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
 
-    DappStorageFacet private rawFacet;
+    DappFacet private rawFacet;
 
     // Id of the stylus contract
     uint256 private stylusCcuContractId = 13;
@@ -34,7 +29,7 @@ contract DappStorageInteractionTest is InteractionTest {
     function setUp() public {
         // TODO: Setup with a more granular approach
         vm.prank(owner);
-        contentId = contentRegistry.mint(CONTENT_TYPE_DAPP_STORAGE, "name", "dapp-storage-domain");
+        contentId = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-storage-domain");
         vm.prank(owner);
         contentRegistry.setApprovalForAll(operator, true);
 
@@ -42,7 +37,7 @@ contract DappStorageInteractionTest is InteractionTest {
         _initInteractionTest();
 
         // Extract the press facet
-        rawFacet = DappStorageFacet(address(contentInteraction.getFacet(DENOMINATOR_DAPP_STORAGE)));
+        rawFacet = DappFacet(address(contentInteraction.getFacet(DENOMINATOR_DAPP)));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -52,7 +47,7 @@ contract DappStorageInteractionTest is InteractionTest {
     function performSingleInteraction() internal override withStylusContext {
         // Pack the interaction
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
-            DENOMINATOR_DAPP_STORAGE, DappStorageInteractions.UPDATE, _stylusContractUpdateData(), alice
+            DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
         );
         // Call the method
         vm.prank(alice);
@@ -60,7 +55,9 @@ contract DappStorageInteractionTest is InteractionTest {
     }
 
     function getOutOfFacetScopeInteraction() internal override returns (bytes memory, bytes memory) {
-        return _prepareInteraction(DENOMINATOR_DAPP, DappStorageInteractions.UPDATE, _stylusContractUpdateData(), alice);
+        return _prepareInteraction(
+            DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
+        );
     }
 
     /* -------------------------------------------------------------------------- */
@@ -71,7 +68,7 @@ contract DappStorageInteractionTest is InteractionTest {
     function test_storageUpdate() public withStylusContext {
         // Pack the interaction
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
-            DENOMINATOR_DAPP_STORAGE, DappStorageInteractions.UPDATE, _stylusContractUpdateData(), alice
+            DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
         );
         // Call the method
         vm.prank(alice);
@@ -82,7 +79,7 @@ contract DappStorageInteractionTest is InteractionTest {
     function test_storageUpdate_UnknownContract() public {
         // Pack the interaction
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
-            DENOMINATOR_DAPP_STORAGE, DappStorageInteractions.UPDATE, _stylusContractUpdateData(), alice
+            DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
         );
         vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
         // Call the method
@@ -117,10 +114,10 @@ contract DappStorageInteractionTest is InteractionTest {
     modifier withStylusContext() {
         // Encode the call to add the stylus contract as id 0
         bytes memory setData =
-            abi.encodeWithSelector(DappStorageFacet.setContentContract.selector, stylusCcuContractId, stylusContract);
+            abi.encodeWithSelector(DappFacet.setContentContract.selector, stylusContract, bytes4(0xdeadbeef));
         // Perform the call to register this content
         vm.prank(owner);
-        contentInteraction.delegateToFacet(DENOMINATOR_DAPP_STORAGE, setData);
+        contentInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
         _;
     }
 

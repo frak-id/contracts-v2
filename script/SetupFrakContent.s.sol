@@ -5,7 +5,7 @@ import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {CONTENT_TYPE_DAPP, CONTENT_TYPE_DAPP_STORAGE, ContentTypes} from "src/constants/ContentTypes.sol";
+import {CONTENT_TYPE_DAPP, ContentTypes} from "src/constants/ContentTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
@@ -36,7 +36,7 @@ contract SetupTestContents is Script, DeterminedAddress {
         vm.startBroadcast();
 
         // Mint the tests contents
-        uint256 cFrak = _mintContent(contentRegistry, CONTENT_TYPE_DAPP | CONTENT_TYPE_DAPP_STORAGE, "Frak", "frak.id");
+        uint256 cFrak = _mintContent(contentRegistry, CONTENT_TYPE_DAPP, "Frak", "frak.id");
 
         vm.stopBroadcast();
 

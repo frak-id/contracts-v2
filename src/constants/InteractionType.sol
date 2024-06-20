@@ -105,46 +105,6 @@ library InteractionTypeLib {
 /* -------------------------------------------------------------------------- */
 InteractionType constant INTERACTION_WALLET_LINK = InteractionType.wrap(bytes4(0x00000001));
 
-/* -------------------------------------------------------------------------- */
-/*                       Press related interaction type                       */
-/* -------------------------------------------------------------------------- */
-
-library PressInteractions {
-    /// @dev `bytes4(keccak256("frak.press.interaction.open_article"))`
-    InteractionType constant OPEN_ARTICLE = InteractionType.wrap(0xc0a24ffb);
-
-    /// @dev `bytes4(keccak256("frak.press.interaction.read_article"))`
-    InteractionType constant READ_ARTICLE = InteractionType.wrap(0xd5bd0fbe);
-
-    /// @dev `bytes4(keccak256("frak.press.interaction.referred"))`
-    InteractionType constant REFERRED = InteractionType.wrap(0x3d1508ad);
-
-    /// @dev Decode a referred interaction
-    function decodeReferred(bytes calldata _data) internal pure returns (address referrer) {
-        assembly {
-            referrer := shr(96, calldataload(_data.offset))
-        }
-    }
-}
-
-library DappStorageInteractions {
-    /// @dev `bytes4(keccak256("frak.dapp_storage.interaction.update"))`
-    InteractionType constant UPDATE = InteractionType.wrap(0xad24ebee);
-
-    /// @dev `bytes4(keccak256("frak.dapp_storage.interaction.update_verified"))`
-    InteractionType constant UPDATE_VERIFIED = InteractionType.wrap(0x32812004);
-
-    /// @dev Pack a verified update interaction for a campaign
-    function packVerifiedUpdateForCampaign(
-        address _user,
-        address _smartContract,
-        uint256 _storageSlot,
-        uint256 _storageValue
-    ) internal pure returns (bytes memory packedInteraction) {
-        packedInteraction = abi.encodePacked(UPDATE_VERIFIED, _user, _smartContract, _storageSlot, _storageValue);
-    }
-}
-
 library DappInteractions {
     /// @dev `bytes4(keccak256("frak.dapp.interaction.proof_verifiable_storage_update"))`
     InteractionType constant PROOF_VERIFIABLE_STORAGE_UPDATE = InteractionType.wrap(0x2ab2aeef);
@@ -164,5 +124,23 @@ library DappInteractions {
     ) internal pure returns (bytes memory packedInteraction) {
         packedInteraction =
             abi.encodePacked(STORAGE_UPDATE_CONFIRMED, _user, _smartContract, _storageSlotOrFnSelector, _storageValue);
+    }
+}
+
+library PressInteractions {
+    /// @dev `bytes4(keccak256("frak.press.interaction.open_article"))`
+    InteractionType constant OPEN_ARTICLE = InteractionType.wrap(0xc0a24ffb);
+
+    /// @dev `bytes4(keccak256("frak.press.interaction.read_article"))`
+    InteractionType constant READ_ARTICLE = InteractionType.wrap(0xd5bd0fbe);
+
+    /// @dev `bytes4(keccak256("frak.press.interaction.referred"))`
+    InteractionType constant REFERRED = InteractionType.wrap(0x3d1508ad);
+
+    /// @dev Decode a referred interaction
+    function decodeReferred(bytes calldata _data) internal pure returns (address referrer) {
+        assembly {
+            referrer := shr(96, calldataload(_data.offset))
+        }
     }
 }
