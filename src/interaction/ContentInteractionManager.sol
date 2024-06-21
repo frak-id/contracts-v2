@@ -46,20 +46,14 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     ///  Mostly use in case of initial nexus creation, when a burner wallet is linked to a new wallet
     event WalletLinked(address indexed prevWallet, address indexed newWallet);
 
-    /// @dev Event when a campaign is attached to a content
-    event CampaignAttached(uint256 contentId, address campaign);
-
-    /// @dev Event when a campaign is attached to a content
-    event CampaignsDetached(uint256 contentId, InteractionCampaign[] campaigns);
-
     /// @dev Event emitted when an interaction contract is deployed
     event InteractionContractDeployed(uint256 indexed contentId, ContentInteractionDiamond interactionContract);
 
     /// @dev Event emitted when an interaction contract is updated
-    event InteractionContractUpdated(uint256 indexed contentId);
+    event InteractionContractUpdated(uint256 contentId, ContentInteractionDiamond interactionContract);
 
     /// @dev Event emitted when an interaction contract is deleted
-    event InteractionContractDeleted(uint256 indexed contentId);
+    event InteractionContractDeleted(uint256 indexed contentId, ContentInteractionDiamond interactionContract);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -161,7 +155,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         interactionContract.setFacets(facets);
 
         // Emit the creation event type
-        emit InteractionContractUpdated(_contentId);
+        emit InteractionContractUpdated(_contentId, interactionContract);
     }
 
     /// @dev Delete the interaction contract for the given `_contentId`
@@ -187,7 +181,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         bytes32 referralTree = interactionContract.getReferralTree();
         _REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(0)); // Grant the access to nobody
 
-        emit InteractionContractDeleted(_contentId);
+        emit InteractionContractDeleted(_contentId, interactionContract);
 
         // Delete the interaction contract
         delete _storage().contentInteractions[_contentId];
@@ -211,8 +205,6 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
         // Tell the campaign that this interaction is allowed to push events
         _campaign.allowInteractionContract(address(interactionContract));
-
-        emit CampaignAttached(_contentId, address(_campaign));
     }
 
     function detachCampaigns(uint256 _contentId, InteractionCampaign[] calldata _campaigns) external {
@@ -225,9 +217,6 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
         // Loop over the campaigns and detach them
         interactionContract.detachCampaigns(_campaigns);
-
-        // Tell the campaign that this interaction is allowed to push events
-        emit CampaignsDetached(_contentId, _campaigns);
     }
 
     /* -------------------------------------------------------------------------- */

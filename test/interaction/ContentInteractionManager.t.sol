@@ -7,7 +7,13 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
-import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
+import {
+    CONTENT_TYPE_DAPP,
+    CONTENT_TYPE_PRESS,
+    ContentTypes,
+    DENOMINATOR_DAPP,
+    DENOMINATOR_PRESS
+} from "src/constants/ContentTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
@@ -62,10 +68,6 @@ contract ContentInteractionManagerTest is Test {
     function test_deployInteractionContract_CantHandleContentTypes() public {
         vm.prank(operator);
         vm.expectRevert(ContentInteractionManager.CantHandleContentTypes.selector);
-        contentInteractionManager.deployInteractionContract(contentIdDapp);
-
-        vm.prank(operator);
-        vm.expectRevert(ContentInteractionManager.CantHandleContentTypes.selector);
         contentInteractionManager.deployInteractionContract(contentIdUnknown);
     }
 
@@ -90,7 +92,12 @@ contract ContentInteractionManagerTest is Test {
         // Deploy the interaction contract for a content with multiple types
         vm.prank(operator);
         contentInteractionManager.deployInteractionContract(contentIdMulti);
-        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdMulti)), address(0));
+        ContentInteractionDiamond interaction = contentInteractionManager.getInteractionContract(contentIdMulti);
+        assertNotEq(address(interaction), address(0));
+
+        // Get the facet, and ensure it's not 0 for each content denomination
+        assertNotEq(address(interaction.getFacet(DENOMINATOR_DAPP)), address(0));
+        assertNotEq(address(interaction.getFacet(DENOMINATOR_PRESS)), address(0));
     }
 
     function test_getInteractionContract() public {

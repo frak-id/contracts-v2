@@ -25,9 +25,10 @@ export default defineConfig(
         {
             out: "abi/frak-interaction-abis.ts",
             plugins: foundryPlugin([
+                'ContentInteractionManager.json',
                 'ContentInteractionDiamond.json',
                 'PressInteractionFacet.json',
-                'ContentInteractionManager.json',
+                'DappInteractionFacet.json',
             ]),
         },
         // Frak campaign abi
@@ -36,6 +37,13 @@ export default defineConfig(
             plugins: foundryPlugin([
                 'InteractionCampaign.json',
                 'ReferralCampaign.json',
+            ]),
+        },
+        // Frak campaign abi
+        {
+            out: "abi/stylus-abis.ts",
+            plugins: foundryPlugin([
+                'StylusFlattened.json',
             ]),
         },
         // Frak gating abis

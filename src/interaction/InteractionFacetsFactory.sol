@@ -5,6 +5,7 @@ import {ContentTypes} from "../constants/ContentTypes.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
+import {DappInteractionFacet} from "./facets/DappInteractionFacet.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
 
@@ -21,6 +22,7 @@ contract InteractionFacetsFactory {
 
     /// @dev The press facet address
     IInteractionFacet private immutable _PRESS_FACET;
+    IInteractionFacet private immutable _DAPP_FACET;
 
     /// @dev Constructor, will deploy all the known facets
     constructor(ReferralRegistry _referralRegistry, ContentRegistry _contentRegistry) {
@@ -28,8 +30,9 @@ contract InteractionFacetsFactory {
         _REFERRAL_REGISTRY = _referralRegistry;
         _CONTENT_REGISTRY = _contentRegistry;
 
-        // Press facet
+        // Our facets
         _PRESS_FACET = new PressInteractionFacet(_referralRegistry);
+        _DAPP_FACET = new DappInteractionFacet();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -73,6 +76,10 @@ contract InteractionFacetsFactory {
         // Check if we have a press content type
         if (contentTypes.isPressType()) {
             facets[index] = _PRESS_FACET;
+            index++;
+        }
+        if (contentTypes.isDappType()) {
+            facets[index] = _DAPP_FACET;
             index++;
         }
 

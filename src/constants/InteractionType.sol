@@ -105,9 +105,27 @@ library InteractionTypeLib {
 /* -------------------------------------------------------------------------- */
 InteractionType constant INTERACTION_WALLET_LINK = InteractionType.wrap(bytes4(0x00000001));
 
-/* -------------------------------------------------------------------------- */
-/*                       Press related interaction type                       */
-/* -------------------------------------------------------------------------- */
+library DappInteractions {
+    /// @dev `bytes4(keccak256("frak.dapp.interaction.proof_verifiable_storage_update"))`
+    InteractionType constant PROOF_VERIFIABLE_STORAGE_UPDATE = InteractionType.wrap(0x2ab2aeef);
+
+    /// @dev `bytes4(keccak256("frak.dapp.interaction.callable_verifiable_storage_update"))`
+    InteractionType constant CALLABLE_VERIFIABLE_STORAGE_UPDATE = InteractionType.wrap(0xa07da986);
+
+    /// @dev `bytes4(keccak256("frak.dapp.interaction.storage_update_confirmed"))`
+    InteractionType constant STORAGE_UPDATE_CONFIRMED = InteractionType.wrap(0xb2e5ce88);
+
+    /// @dev Pack a verified update interaction for a campaign
+    function packVerifiedUpdateForCampaign(
+        address _user,
+        address _smartContract,
+        uint256 _storageSlotOrFnSelector,
+        uint256 _storageValue
+    ) internal pure returns (bytes memory packedInteraction) {
+        packedInteraction =
+            abi.encodePacked(STORAGE_UPDATE_CONFIRMED, _user, _smartContract, _storageSlotOrFnSelector, _storageValue);
+    }
+}
 
 library PressInteractions {
     /// @dev `bytes4(keccak256("frak.press.interaction.open_article"))`

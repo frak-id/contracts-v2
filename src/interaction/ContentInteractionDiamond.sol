@@ -22,6 +22,10 @@ import {Initializable} from "solady/utils/Initializable.sol";
 contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles, EIP712, Initializable {
     using InteractionTypeLib for bytes;
 
+    /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
+
     /// @dev error throwned when the signer of an interaction is invalid
     error WrongInteractionSigner();
     /// @dev error throwned when a campaign is already present
@@ -30,6 +34,20 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     error UnandledContentType();
     /// @dev Error when we failed to handle an interaction
     error InteractionHandlingFailed();
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Events                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Event when a campaign is attached to a content
+    event CampaignAttached(InteractionCampaign campaign);
+
+    /// @dev Event when a campaign is attached to a content
+    event CampaignDetached(InteractionCampaign campaign);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  Constants                                 */
+    /* -------------------------------------------------------------------------- */
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
@@ -101,13 +119,33 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     function deleteFacets(ContentTypes _contentTypes) external onlyRoles(UPGRADE_ROLE) {
         uint8[] memory denominators = _contentTypes.unwrapToDenominators();
         for (uint256 i = 0; i < denominators.length; i++) {
-            _contentInteractionStorage().facets[uint256(denominators[i])] = IInteractionFacet(address(0));
+            delete _contentInteractionStorage().facets[uint256(denominators[i])];
         }
     }
 
     /// @dev Get the facet for the given content type
     function getFacet(uint8 _denominator) external view returns (IInteractionFacet) {
         return _contentInteractionStorage().facets[uint256(_denominator)];
+    }
+
+    /// @dev Handle an interaction
+    function delegateToFacet(uint8 _contentTypeDenominator, bytes calldata _call) external {
+        // Get the facet matching the content type
+        IInteractionFacet facet = _getFacetForDenominator(_contentTypeDenominator);
+
+        // Transmit the interaction to the facet
+        (bool success,) = address(facet).delegatecall(_call);
+        if (!success) {
+            revert InteractionHandlingFailed();
+        }
+    }
+
+    /// @dev Get the facet for the given content type
+    function _getFacetForDenominator(uint8 _denominator) internal view returns (IInteractionFacet facet) {
+        facet = _contentInteractionStorage().facets[uint256(_denominator)];
+        if (facet == IInteractionFacet(address(0))) {
+            revert UnandledContentType();
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -120,12 +158,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         (uint8 _contentTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
         // Get the facet matching the content type
-        IInteractionFacet facet = _contentInteractionStorage().facets[uint256(_contentTypeDenominator)];
-
-        // If we don't have a facet, we revert
-        if (facet == IInteractionFacet(address(0))) {
-            revert UnandledContentType();
-        }
+        IInteractionFacet facet = _getFacetForDenominator(_contentTypeDenominator);
 
         // Validate the interaction
         _validateInteraction(keccak256(_facetData), msg.sender, _signature);
@@ -246,6 +279,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         }
 
         // If all good, add it
+        emit CampaignAttached(_campaign);
         campaigns.push(_campaign);
     }
 
@@ -280,6 +314,8 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
             if (address(campaigns[i]) != address(_campaign)) {
                 continue;
             }
+            // Emit the campaign detachment
+            emit CampaignDetached(_campaign);
             // Remove the roles on the campagn
             campaigns[i].disallowMe();
             // If we found the campaign, we replace it by the last item of our campaigns
