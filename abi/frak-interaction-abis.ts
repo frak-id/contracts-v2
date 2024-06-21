@@ -795,10 +795,10 @@ export const contentInteractionManagerAbi = [
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// DappStorageFacet
+// DappInteractionFacet
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const dappStorageFacetAbi = [
+export const dappInteractionFacetAbi = [
   { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
   { type: 'fallback', stateMutability: 'nonpayable' },
   {
@@ -823,6 +823,13 @@ export const dappStorageFacetAbi = [
     name: 'contentTypeDenominator',
     outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
     stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'id', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'deleteContentContract',
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -911,8 +918,8 @@ export const dappStorageFacetAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contractId', internalType: 'uint256', type: 'uint256' },
       { name: '_contractAddress', internalType: 'address', type: 'address' },
+      { name: '_storageCheckSelector', internalType: 'bytes4', type: 'bytes4' },
     ],
     name: 'setContentContract',
     outputs: [],
@@ -924,6 +931,53 @@ export const dappStorageFacetAbi = [
     name: 'transferOwnership',
     outputs: [],
     stateMutability: 'payable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'smartContract',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'value',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'CallableStorageUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'id', internalType: 'bytes4', type: 'bytes4', indexed: true },
+      {
+        name: 'contractAddress',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'fnSelector',
+        internalType: 'bytes4',
+        type: 'bytes4',
+        indexed: false,
+      },
+    ],
+    name: 'ContractRegistered',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'id', internalType: 'bytes4', type: 'bytes4', indexed: true },
+    ],
+    name: 'ContractUnRegistered',
   },
   {
     type: 'event',
@@ -974,6 +1028,31 @@ export const dappStorageFacetAbi = [
     type: 'event',
     anonymous: false,
     inputs: [
+      {
+        name: 'smartContract',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'slot',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'value',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ProofStorageUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
       { name: 'user', internalType: 'address', type: 'address', indexed: true },
       {
         name: 'roles',
@@ -984,27 +1063,9 @@ export const dappStorageFacetAbi = [
     ],
     name: 'RolesUpdated',
   },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'smartContract',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      { name: 'slot', internalType: 'uint256', type: 'uint256', indexed: true },
-      {
-        name: 'value',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'StorageUpdated',
-  },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'CallFailed' },
+  { type: 'error', inputs: [], name: 'CallVerificationFailed' },
   {
     type: 'error',
     inputs: [{ name: 'index', internalType: 'uint256', type: 'uint256' }],

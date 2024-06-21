@@ -28,7 +28,7 @@ export default defineConfig(
                 'ContentInteractionManager.json',
                 'ContentInteractionDiamond.json',
                 'PressInteractionFacet.json',
-                'DappStorageFacet.json',
+                'DappInteractionFacet.json',
             ]),
         },
         // Frak campaign abi
