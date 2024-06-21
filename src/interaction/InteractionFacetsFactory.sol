@@ -5,7 +5,7 @@ import {ContentTypes} from "../constants/ContentTypes.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
-import {DappFacet} from "./facets/DappFacet.sol";
+import {DappInteractionFacet} from "./facets/DappInteractionFacet.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
 
@@ -32,7 +32,7 @@ contract InteractionFacetsFactory {
 
         // Our facets
         _PRESS_FACET = new PressInteractionFacet(_referralRegistry);
-        _DAPP_FACET = new DappFacet();
+        _DAPP_FACET = new DappInteractionFacet();
     }
 
     /* -------------------------------------------------------------------------- */

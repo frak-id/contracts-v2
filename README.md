@@ -49,6 +49,7 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 │   ├── lib/
 │   ├── facets
 │   │ ├── IInteractionFacet.sol
+│   │ ├── DappInteractionFacet.sol
 │   │ └── PressInteractionFacet.sol
 │   ├── InteractionFacetsFactory.sol
 │   ├── ContentInteractionDiamond.sol

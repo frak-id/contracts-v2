@@ -5,13 +5,12 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-
 import {LibZip} from "solady/utils/LibZip.sol";
-import {CONTENT_TYPE_DAPP, ContentTypes, DENOMINATOR_DAPP} from "src/constants/ContentTypes.sol";
+import {CONTENT_TYPE_DAPP, ContentTypes, DENOMINATOR_DAPP, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
 import {DappInteractions, InteractionType, InteractionTypeLib} from "src/constants/InteractionType.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-import {DappFacet} from "src/interaction/facets/DappFacet.sol";
+import {DappInteractionFacet} from "src/interaction/facets/DappInteractionFacet.sol";
 import {PressInteractionFacet} from "src/interaction/facets/PressInteractionFacet.sol";
 import {MPT} from "src/utils/MPT.sol";
 
@@ -20,11 +19,19 @@ contract DappInteractionTest is InteractionTest {
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
 
-    DappFacet private rawFacet;
+    DappInteractionFacet private rawFacet;
+
+    MockStorageContract private mockStorage = new MockStorageContract();
 
     // Id of the stylus contract
-    uint256 private stylusCcuContractId = 13;
     address private stylusContract = 0x87f5F41f6535ec4e6BB8B303585f0a2a32DB708E;
+    bytes4 private stylusSelector = 0xdeadbeef;
+    bytes4 private stylusCcuContractId = bytes4(keccak256(abi.encodePacked(stylusContract, stylusSelector)));
+
+    bytes4 private mockContractId =
+        bytes4(keccak256(abi.encodePacked(address(mockStorage), MockStorageContract.getMockedForUser.selector)));
+    bytes4 private mockFailingContractId =
+        bytes4(keccak256(abi.encodePacked(address(mockStorage), MockStorageContract.getMockedFailing.selector)));
 
     function setUp() public {
         // TODO: Setup with a more granular approach
@@ -37,7 +44,7 @@ contract DappInteractionTest is InteractionTest {
         _initInteractionTest();
 
         // Extract the press facet
-        rawFacet = DappFacet(address(contentInteraction.getFacet(DENOMINATOR_DAPP)));
+        rawFacet = DappInteractionFacet(address(contentInteraction.getFacet(DENOMINATOR_DAPP)));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -56,12 +63,51 @@ contract DappInteractionTest is InteractionTest {
 
     function getOutOfFacetScopeInteraction() internal override returns (bytes memory, bytes memory) {
         return _prepareInteraction(
-            DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
+            DENOMINATOR_PRESS, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
         );
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                         Working interaction halding                        */
+    /*                           Storage update via call                          */
+    /* -------------------------------------------------------------------------- */
+
+    function test_storageCallUpdate() public withStylusContext {
+        // Pack the interaction
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_DAPP,
+            DappInteractions.CALLABLE_VERIFIABLE_STORAGE_UPDATE,
+            _mockContractUpdateData(alice, 12),
+            alice
+        );
+        // Call the method
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    function test_storageCallUpdate_CallVerificationFailed() public withStylusContext {
+        bytes memory data = abi.encode(mockContractId, uint256(12));
+        // Pack the interaction
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_DAPP, DappInteractions.CALLABLE_VERIFIABLE_STORAGE_UPDATE, data, alice);
+        // Call the method
+        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    function test_storageCallUpdate_CallFailed() public withStylusContext {
+        bytes memory data = abi.encode(mockFailingContractId, uint256(12));
+        // Pack the interaction
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_DAPP, DappInteractions.CALLABLE_VERIFIABLE_STORAGE_UPDATE, data, alice);
+        // Call the method
+        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                          Storage update via proof                          */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Simple test to check the success of a facet checkers
@@ -77,6 +123,23 @@ contract DappInteractionTest is InteractionTest {
 
     /// @dev Simple test to check the success of a facet checkers
     function test_storageUpdate_UnknownContract() public {
+        // Pack the interaction
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
+        );
+        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        // Call the method
+        vm.prank(alice);
+        contentInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    /// @dev Simple test to check the success of a facet checkers
+    function test_storageUpdate_deregister_UnknownContract() public withStylusContext {
+        // Derigister the stylus contract
+        bytes memory deleteData =
+            abi.encodeWithSelector(DappInteractionFacet.deleteContentContract.selector, stylusCcuContractId);
+        vm.prank(owner);
+        contentInteraction.delegateToFacet(DENOMINATOR_DAPP, deleteData);
         // Pack the interaction
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
             DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
@@ -114,8 +177,16 @@ contract DappInteractionTest is InteractionTest {
     modifier withStylusContext() {
         // Encode the call to add the stylus contract as id 0
         bytes memory setData =
-            abi.encodeWithSelector(DappFacet.setContentContract.selector, stylusContract, bytes4(0xdeadbeef));
+            abi.encodeWithSelector(DappInteractionFacet.setContentContract.selector, stylusContract, bytes4(0xdeadbeef));
         // Perform the call to register this content
+        vm.prank(owner);
+        contentInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
+        // Also add the mock storage stuff
+        setData = abi.encodeWithSelector(
+            DappInteractionFacet.setContentContract.selector,
+            address(mockStorage),
+            MockStorageContract.getMockedForUser.selector
+        );
         vm.prank(owner);
         contentInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
         _;
@@ -151,10 +222,35 @@ contract DappInteractionTest is InteractionTest {
         vm.resumeGasMetering();
         return encoded;
     }
+
+    function _mockContractUpdateData(address user, uint256 value) internal returns (bytes memory) {
+        vm.pauseGasMetering();
+        mockStorage.setStorage(user, value);
+        // Return the encoded data
+        bytes memory encoded = abi.encode(mockContractId, value);
+        vm.resumeGasMetering();
+        return encoded;
+    }
 }
 
 contract StorageProofTester {
     function getProofValue(bytes32 root, uint256 storageSlot, bytes[] calldata proof) public pure returns (uint256) {
         return MPT.verifyAndGetStorageSlot(root, storageSlot, proof);
+    }
+}
+
+contract MockStorageContract {
+    mapping(address user => uint256 value) private mocked;
+
+    function setStorage(address _user, uint256 _value) public {
+        mocked[_user] = _value;
+    }
+
+    function getMockedForUser(address _user) public view returns (uint256) {
+        return mocked[_user];
+    }
+
+    function getMockedFailing() public pure returns (uint256) {
+        revert("failing");
     }
 }

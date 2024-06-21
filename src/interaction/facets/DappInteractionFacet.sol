@@ -15,7 +15,7 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 /// @notice Contract managing a user interacting with a dapp
 /// @notice This is usefull wshen Dapps are built on other chains, and the interaction can be verified by storage modification (using a merklee patricia tree verification)
 /// @custom:security-contact contact@frak.id
-contract DappFacet is ContentInteractionStorageLib, IInteractionFacet, OwnableRoles {
+contract DappInteractionFacet is ContentInteractionStorageLib, IInteractionFacet, OwnableRoles {
     using InteractionTypeLib for bytes;
 
     /* -------------------------------------------------------------------------- */
@@ -29,6 +29,12 @@ contract DappFacet is ContentInteractionStorageLib, IInteractionFacet, OwnableRo
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
+
+    /// @dev Event emitted when a contract is registred
+    event ContractRegistered(bytes4 indexed id, address contractAddress, bytes4 fnSelector);
+
+    /// @dev Event emitted when a contract is un-registred
+    event ContractUnRegistered(bytes4 indexed id);
 
     /// @dev Event when a storage at `slot` is updated to `value` on another contract
     event ProofStorageUpdated(address indexed smartContract, uint256 slot, uint256 value);
@@ -90,8 +96,15 @@ contract DappFacet is ContentInteractionStorageLib, IInteractionFacet, OwnableRo
         external
         onlyRoles(UPGRADE_ROLE)
     {
-        bytes4 contractId = bytes4(keccak256(abi.encodePacked(_contractAddress)));
+        bytes4 contractId = bytes4(keccak256(abi.encodePacked(_contractAddress, _storageCheckSelector)));
         _facetStorage().contracts[contractId] = DappContractDefinition(_contractAddress, _storageCheckSelector);
+        emit ContractRegistered(contractId, _contractAddress, _storageCheckSelector);
+    }
+
+    /// @dev Set a content contract address, will be used for update check and comparaison
+    function deleteContentContract(bytes4 id) external onlyRoles(UPGRADE_ROLE) {
+        delete _facetStorage().contracts[id];
+        emit ContractUnRegistered(id);
     }
 
     /* -------------------------------------------------------------------------- */
