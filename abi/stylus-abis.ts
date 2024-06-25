@@ -8,7 +8,21 @@ export const stylusFlattenedAbi = [
     inputs: [],
     name: 'domainSeparator',
     outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
-    stateMutability: 'view',
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getTotalConsumption',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '', internalType: 'address', type: 'address' }],
+    name: 'getUserConsumption',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'pure',
   },
   {
     type: 'function',
