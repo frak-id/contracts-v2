@@ -35,7 +35,7 @@ abstract contract PushPullModule is ReentrancyGuard {
     /* -------------------------------------------------------------------------- */
 
     /// @dev The token that will be used for the rewards
-    address private immutable _TOKEN;
+    address internal immutable TOKEN;
 
     /// @dev bytes32(uint256(keccak256('frak.module.push-pull')) - 1)
     bytes32 private constant _PUSH_PULL_MODULE_STORAGE_SLOT =
@@ -55,7 +55,7 @@ abstract contract PushPullModule is ReentrancyGuard {
     }
 
     constructor(address _token) {
-        _TOKEN = _token;
+        TOKEN = _token;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -71,7 +71,7 @@ abstract contract PushPullModule is ReentrancyGuard {
         uint256 newTotalPending = tokenStorage.totalPending + _amount;
 
         // If greater than current balance, exit
-        if (newTotalPending > _TOKEN.balanceOf(address(this))) {
+        if (newTotalPending > TOKEN.balanceOf(address(this))) {
             revert NotEnoughToken();
         }
 
@@ -95,7 +95,7 @@ abstract contract PushPullModule is ReentrancyGuard {
 
         // Get our control var
         uint256 newTotalPending = tokenStorage.totalPending;
-        uint256 currentBalance = _TOKEN.balanceOf(address(this));
+        uint256 currentBalance = TOKEN.balanceOf(address(this));
 
         // Iterate over each rewards
         for (uint256 i = 0; i < _rewards.length; i++) {
@@ -138,7 +138,7 @@ abstract contract PushPullModule is ReentrancyGuard {
         tokenStorage.totalPending -= pendingAmount;
 
         // Transfer the pending amount
-        _TOKEN.safeTransfer(_user, pendingAmount);
+        TOKEN.safeTransfer(_user, pendingAmount);
 
         // Emit the event
         emit RewardClaimed(_user, pendingAmount);

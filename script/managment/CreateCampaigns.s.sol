@@ -47,13 +47,19 @@ contract CreateCampaigns is Script, DeterminedAddress {
     }
 
     function _deployCampaign(bytes32 tree, Addresses memory addresses) private returns (ReferralCampaign) {
+        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
+            token: addresses.paywallToken,
+            referralTree: tree,
+            initialReward: 10 ether,
+            userRewardPercent: 5_000, // 50%
+            distributionCapPeriod: 1 days,
+            distributionCap: 500 ether,
+            startDate: uint48(0),
+            endDate: uint48(0)
+        });
+
         return new ReferralCampaign{salt: tree}(
-            addresses.paywallToken, // token
-            5, // exploration level
-            2_000, // per level distribution (on 1/10_000), so here 20%
-            10 ether, // Initial referral reward
-            500 ether, // Daily distribution cap
-            tree, // referralTree
+            config,
             ReferralRegistry(addresses.referralRegistry), // referralRegistry
             msg.sender, // owner
             addresses.contentInteractionManager
