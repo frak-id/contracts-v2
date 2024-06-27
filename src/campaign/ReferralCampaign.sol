@@ -91,7 +91,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         ReferralRegistry _referralRegistry,
         address _owner,
         address _contentInterationManager
-    ) InteractionCampaign(_owner, _contentInterationManager) {
+    ) InteractionCampaign(_owner, _contentInterationManager) PushPullModule(_token) {
         if (_token == address(0)) {
             revert InvalidConfig();
         }
@@ -189,7 +189,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         }
 
         // If all good, distribute the reward
-        _pushRewards(_TOKEN, rewards);
+        _pushRewards(rewards);
 
         // If we have no cap, exit
         if (_DAILY_DISTRIBUTION_CAP == 0) {

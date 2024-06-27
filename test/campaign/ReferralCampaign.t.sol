@@ -106,24 +106,24 @@ contract ReferralCampaignTest is Test {
         vm.prank(owner);
         referralCampaign.distributeTokenToUserReferrers(alice, 10 ether);
 
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 10 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie, address(token)), 1 ether);
-        assertEq(referralCampaign.getPendingAmount(delta, address(token)), 100000000 gwei);
+        assertEq(referralCampaign.getPendingAmount(bob), 10 ether);
+        assertEq(referralCampaign.getPendingAmount(charlie), 1 ether);
+        assertEq(referralCampaign.getPendingAmount(delta), 100000000 gwei);
 
         // Distribute to bob
         vm.prank(owner);
         referralCampaign.distributeTokenToUserReferrers(bob, 10 ether);
 
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 10 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie, address(token)), 11 ether);
-        assertEq(referralCampaign.getPendingAmount(delta, address(token)), 1100000000 gwei);
+        assertEq(referralCampaign.getPendingAmount(bob), 10 ether);
+        assertEq(referralCampaign.getPendingAmount(charlie), 11 ether);
+        assertEq(referralCampaign.getPendingAmount(delta), 1100000000 gwei);
     }
 
     function test_tokenDistribution_DailyDistributionCapReached() public withReferralChain {
         // Distribute to alice 90 ether (knowing that hte cap is 100 ether, and we distribute 10% per level, so total at 99.9 ether)
         vm.prank(owner);
         referralCampaign.distributeTokenToUserReferrers(alice, 90 ether);
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 90 ether);
+        assertEq(referralCampaign.getPendingAmount(bob), 90 ether);
 
         // Case were we reach the end of the cap
         vm.expectRevert(ReferralCampaign.DailyDistributionCapReached.selector);
@@ -135,7 +135,7 @@ contract ReferralCampaignTest is Test {
         vm.warp(currentTimestamp + 1 days);
         vm.prank(owner);
         referralCampaign.distributeTokenToUserReferrers(alice, 90 ether);
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 180 ether);
+        assertEq(referralCampaign.getPendingAmount(bob), 180 ether);
     }
 
     function test_handleInteraction_doNothing() public withReferralChain withAllowedEmitter {
@@ -150,10 +150,10 @@ contract ReferralCampaignTest is Test {
         referralCampaign.handleInteraction(fckedUpData);
 
         // Ensure no reward was added
-        assertEq(referralCampaign.getPendingAmount(alice, address(token)), 0);
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 0);
-        assertEq(referralCampaign.getPendingAmount(charlie, address(token)), 0);
-        assertEq(referralCampaign.getPendingAmount(delta, address(token)), 0);
+        assertEq(referralCampaign.getPendingAmount(alice), 0);
+        assertEq(referralCampaign.getPendingAmount(bob), 0);
+        assertEq(referralCampaign.getPendingAmount(charlie), 0);
+        assertEq(referralCampaign.getPendingAmount(delta), 0);
 
         // Ensure it won't do anything if campaign stopped
         vm.prank(owner);
@@ -162,10 +162,10 @@ contract ReferralCampaignTest is Test {
         referralCampaign.handleInteraction(fckedUpData);
 
         // Ensure no reward was added
-        assertEq(referralCampaign.getPendingAmount(alice, address(token)), 0);
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 0);
-        assertEq(referralCampaign.getPendingAmount(charlie, address(token)), 0);
-        assertEq(referralCampaign.getPendingAmount(delta, address(token)), 0);
+        assertEq(referralCampaign.getPendingAmount(alice), 0);
+        assertEq(referralCampaign.getPendingAmount(bob), 0);
+        assertEq(referralCampaign.getPendingAmount(charlie), 0);
+        assertEq(referralCampaign.getPendingAmount(delta), 0);
     }
 
     function test_handleInteraction_sharedArticleUsed() public withReferralChain withAllowedEmitter {
@@ -175,9 +175,9 @@ contract ReferralCampaignTest is Test {
         vm.prank(emitter);
         referralCampaign.handleInteraction(interactionData);
 
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 10 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie, address(token)), 1 ether);
-        assertEq(referralCampaign.getPendingAmount(delta, address(token)), 100000000 gwei);
+        assertEq(referralCampaign.getPendingAmount(bob), 10 ether);
+        assertEq(referralCampaign.getPendingAmount(charlie), 1 ether);
+        assertEq(referralCampaign.getPendingAmount(delta), 100000000 gwei);
 
         // Ensure it won't do anything if campaign stopped
         vm.prank(owner);
@@ -185,9 +185,9 @@ contract ReferralCampaignTest is Test {
         vm.prank(emitter);
         referralCampaign.handleInteraction(interactionData);
 
-        assertEq(referralCampaign.getPendingAmount(bob, address(token)), 10 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie, address(token)), 1 ether);
-        assertEq(referralCampaign.getPendingAmount(delta, address(token)), 100000000 gwei);
+        assertEq(referralCampaign.getPendingAmount(bob), 10 ether);
+        assertEq(referralCampaign.getPendingAmount(charlie), 1 ether);
+        assertEq(referralCampaign.getPendingAmount(delta), 100000000 gwei);
     }
 
     function test_disallowMe() public withReferralChain withAllowedEmitter {
