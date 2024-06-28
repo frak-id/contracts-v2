@@ -257,13 +257,13 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /// @dev Send an inbteraction to all the concerned campaigns
     function _sendInteractionToCampaign(bytes memory _data) internal {
         InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
-        if (campaigns.length == 0) {
-            return;
-        }
+        uint256 length = campaigns.length;
 
         // Call the campaign using a try catch to avoid blocking the whole process if a campaign is locked
-        for (uint256 i = 0; i < campaigns.length; i++) {
-            try campaigns[i].handleInteraction(_data) {} catch {}
+        unchecked {
+            for (uint256 i = 0; i < length; i++) {
+                try campaigns[i].handleInteraction(_data) {} catch {}
+            }
         }
     }
 

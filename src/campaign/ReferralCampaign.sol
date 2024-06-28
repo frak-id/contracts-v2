@@ -209,67 +209,77 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
             return;
         }
 
-        // Build our reward array
-        Reward[] memory rewards = new Reward[](referrers.length + 2);
+        unchecked {
+            // Build our reward array
+            Reward[] memory rewards = new Reward[](referrers.length + 2);
+            uint256 remainingAmount = _amount;
 
-        uint256 remainingAmount = _amount;
+            // First reward is the frak accounting one
+            {
+                uint256 frkAmount = (_amount * FRAK_FEE) / PERCENT_BASE;
+                rewards[0] = Reward(FRAK_ACCOUNTING, frkAmount);
+                // Decrease the amount
+                remainingAmount -= frkAmount;
+            }
 
-        // First reward is the frak accounting one
-        {
-            uint256 frkAmount = (_amount * FRAK_FEE) / PERCENT_BASE;
-            rewards[0] = Reward(FRAK_ACCOUNTING, frkAmount);
-            // Decrease the amount
-            remainingAmount -= frkAmount;
+            // Second one is the user
+            {
+                uint256 userAmount = (remainingAmount * USER_PERCENT) / PERCENT_BASE;
+                rewards[1] = Reward(_user, userAmount);
+                // Decrease the amount
+                remainingAmount -= userAmount;
+            }
+
+            // Iterate over each referrers
+            for (uint256 i = 0; i < referrers.length; i++) {
+                // Build the reward
+                uint256 reward = (remainingAmount * DEPERDITION_PER_LEVEL) / PERCENT_BASE;
+                rewards[i + 2] = Reward(referrers[i], reward);
+                // Decrease the reward by the amount distributed
+                remainingAmount -= reward;
+            }
+
+            // If we got a reward remaining, the last referrer take it
+            if (remainingAmount > 0) {
+                Reward memory lastReward = rewards[rewards.length - 1];
+                rewards[rewards.length - 1] = Reward(lastReward.user, lastReward.amount + remainingAmount);
+            }
+
+            // Push all the rewards
+            _pushRewards(rewards);
+
+            // If we have no cap, exit
+            if (DISTRIBUTION_CAP == 0) {
+                return;
+            }
+
+            // Update the cap
+            _updateDistributionCap(_amount);
         }
+    }
 
-        // Second one is the user
-        {
-            uint256 userAmount = (remainingAmount * USER_PERCENT) / PERCENT_BASE;
-            rewards[1] = Reward(_user, userAmount);
-            // Decrease the amount
-            remainingAmount -= userAmount;
-        }
-
-        // Iterate over each referrers
-        for (uint256 i = 0; i < referrers.length; i++) {
-            // Build the reward
-            uint256 reward = (remainingAmount * DEPERDITION_PER_LEVEL) / PERCENT_BASE;
-            rewards[i + 2] = Reward(referrers[i], reward);
-            // Decrease the reward by the amount distributed
-            remainingAmount -= reward;
-        }
-
-        // If we got a reward remaining, the last referrer take it
-        if (remainingAmount > 0) {
-            Reward memory lastReward = rewards[rewards.length - 1];
-            rewards[rewards.length - 1] = Reward(lastReward.user, lastReward.amount + remainingAmount);
-        }
-
-        // Push all the rewards
-        _pushRewards(rewards);
-
-        // If we have no cap, exit
-        if (DISTRIBUTION_CAP == 0) {
-            return;
-        }
-
-        // If we reached a new timeframe, reset the cap
+    function _updateDistributionCap(uint256 _distributedAmount) private {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        if (block.timestamp > campaignStorage.capStartTimestamp + DISTRIBUTION_CAP_PERIOD) {
-            emit DistributionCapReset(campaignStorage.capStartTimestamp, campaignStorage.capDistributedAmount);
 
-            campaignStorage.capStartTimestamp = uint48(block.timestamp);
-            campaignStorage.capDistributedAmount = uint208(_amount);
-        } else {
+        unchecked {
+            // Update the total distributed amount
+            campaignStorage.totalDistributedAmount += _distributedAmount;
+
+            // Cap reset case
+            if (block.timestamp > campaignStorage.capStartTimestamp + DISTRIBUTION_CAP_PERIOD) {
+                emit DistributionCapReset(campaignStorage.capStartTimestamp, campaignStorage.capDistributedAmount);
+
+                campaignStorage.capStartTimestamp = uint48(block.timestamp);
+                campaignStorage.capDistributedAmount = uint208(_distributedAmount);
+
+                return;
+            }
             // Check if we can distribute the reward
-            if (campaignStorage.capDistributedAmount + _amount > DISTRIBUTION_CAP) {
+            if (campaignStorage.capDistributedAmount + _distributedAmount > DISTRIBUTION_CAP) {
                 revert DistributionCapReached();
             }
-            campaignStorage.capDistributedAmount += uint208(_amount);
+            campaignStorage.capDistributedAmount += uint208(_distributedAmount);
         }
-
-        // Update the total distributed amount
-        campaignStorage.totalDistributedAmount += _amount;
     }
 
     /* -------------------------------------------------------------------------- */

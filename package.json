@@ -11,7 +11,7 @@
     "generate": "wagmi generate"
   },
   "devDependencies": {
-    "@wagmi/cli": "^2.1.8"
+    "@wagmi/cli": "2.1.10"
   },
   "engines": {
     "node": "^18.16.0"

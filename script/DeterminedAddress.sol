@@ -37,8 +37,8 @@ contract DeterminedAddress {
             contentRegistry: 0xC110ecb55EbAa4Ea9eFC361C4bBB224A6664Ea45,
             referralRegistry: 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43,
             contentInteractionManager: 0xa403c6a547A1C84e714C34aE7E0baA24C13528FA,
-            facetFactory: 0x5F6F8a9C9fAE35f9df07172c0D04c85F7E20920f,
-            campaignFactory: 0x215d7f58405072ae49F948856b95df2EdA346204,
+            facetFactory: 0x27EFC7876a0C21239fA33eb62Ae55591D5204781,
+            campaignFactory: 0x2a662169d2639D8B0D573b057b2c963249Bb6587,
             paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,
             paywall: 0x1d11207BD915D1f8A4393D20AB318a1a961CCE6F,
             communityToken: 0x5E7759F47b5992DFB85Ef38dD48A9201aDF24b75
