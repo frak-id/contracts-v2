@@ -24,39 +24,52 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event when the daily distribution cap is reset
-    event DailyDistrubutionCapReset(uint48 previousTimestamp, uint256 distributedAmount);
+    event DistributionCapReset(uint48 previousTimestamp, uint256 distributedAmount);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
 
     error InvalidConfig();
-    error DailyDistributionCapReached();
+    error InactiveCampaign();
+    error DistributionCapReached();
 
     /* -------------------------------------------------------------------------- */
     /*                              Immutable config                              */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev The token to airdrop
-    address private immutable _TOKEN;
+    /// @dev Pourcentage base
+    uint256 private constant PERCENT_BASE = 10_000;
 
-    /// @dev The exploration level of the referral
-    uint256 private immutable _REFERRAL_EXPLORATION_LEVEL;
+    /// @dev The max exploration level of the referral tree
+    uint256 private constant MAX_EXPLORATION_LEVEL = 5;
 
-    /// @dev The percentage of token distributed per level (on 1/10_000 scale)
-    uint256 private immutable _PER_LEVEL_PERCENTAGE;
+    /// @dev The fixed frak fee rate
+    uint256 private constant FRAK_FEE = 2_000; // 20%
+
+    /// @dev The deperdition rate per level
+    uint256 private constant DEPERDITION_PER_LEVEL = 8_000; // 80%
+
+    /// @dev The percent for the user
+    uint256 private immutable USER_PERCENT;
 
     /// @dev The initial referrer reward
-    uint256 private immutable _INITIAL_REFERRER_REWARD;
+    uint256 private immutable BASE_REWARD;
 
-    /// @dev The daily distribution cap
-    uint256 private immutable _DAILY_DISTRIBUTION_CAP;
+    /// @dev The distribution cap
+    uint256 private immutable DISTRIBUTION_CAP;
+
+    /// @dev The distribution period
+    uint256 private immutable DISTRIBUTION_CAP_PERIOD;
 
     /// @dev The referral tree for the current content id
-    bytes32 private immutable _REFERRAL_TREE;
+    bytes32 private immutable REFERRAL_TREE;
+
+    /// @dev The accounting wallet of frak that will receive the rewards
+    address private immutable FRAK_CAMPAIGN;
 
     /// @dev The referral registry
-    ReferralRegistry private immutable _REFERRAL_REGISTRY;
+    ReferralRegistry private immutable REFERRAL_REGISTRY;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -73,6 +86,9 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         uint208 capDistributedAmount;
         /// @dev The total amount distributed
         uint256 totalDistributedAmount;
+        /// @dev Start and end data
+        uint48 startDate;
+        uint48 endDate;
     }
 
     function _referralCampaignStorage() private pure returns (ReferralCampaignStorage storage storagePtr) {
@@ -81,34 +97,50 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         }
     }
 
+    struct CampaignConfig {
+        // Required config
+        address token;
+        bytes32 referralTree;
+        uint256 initialReward;
+        // Percent of the reward for the end users
+        uint256 userRewardPercent; // (on a 1/10_000) scale
+        // Optional distribution cap infos
+        uint256 distributionCapPeriod; // in seconds, can be 3600 for an hour for exmaple
+        uint256 distributionCap;
+        // Optional data range for the config
+        uint48 startDate;
+        uint48 endDate;
+    }
+
     constructor(
-        address _token,
-        uint256 _explorationLevel,
-        uint256 _perLevelPercentage,
-        uint256 _initialReferrerReward,
-        uint256 _dailyDistributionCap,
-        bytes32 _referralTree,
+        CampaignConfig memory _config,
         ReferralRegistry _referralRegistry,
         address _owner,
+        address _frakCampaignWallet,
         address _contentInterationManager
-    ) InteractionCampaign(_owner, _contentInterationManager) {
-        if (_token == address(0)) {
+    ) InteractionCampaign(_owner, _contentInterationManager) PushPullModule(_config.token) {
+        if (_config.token == address(0)) {
             revert InvalidConfig();
         }
 
-        // If level > 50% invalid config
-        if (_perLevelPercentage > 5_000) {
-            revert InvalidConfig();
-        }
+        // Set every immutable arguments
+        REFERRAL_REGISTRY = _referralRegistry;
+        USER_PERCENT = _config.userRewardPercent;
+        BASE_REWARD = _config.initialReward;
+        REFERRAL_TREE = _config.referralTree;
+        FRAK_CAMPAIGN = _frakCampaignWallet;
 
-        // Set everything
-        _TOKEN = _token;
-        _REFERRAL_EXPLORATION_LEVEL = _explorationLevel;
-        _PER_LEVEL_PERCENTAGE = _perLevelPercentage;
-        _INITIAL_REFERRER_REWARD = _initialReferrerReward;
-        _DAILY_DISTRIBUTION_CAP = _dailyDistributionCap;
-        _REFERRAL_REGISTRY = _referralRegistry;
-        _REFERRAL_TREE = _referralTree;
+        DISTRIBUTION_CAP = _config.distributionCap;
+        DISTRIBUTION_CAP_PERIOD = _config.distributionCapPeriod;
+
+        // If we got a start date, set it in storage
+        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+        if (_config.startDate != 0) {
+            campaignStorage.startDate = _config.startDate;
+        }
+        if (_config.endDate != 0) {
+            campaignStorage.endDate = _config.endDate;
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -123,8 +155,16 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
     /// @dev Check if the campaign is active or not
     function isActive() public view override returns (bool) {
+        // Check if with start and end date
+        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+        if (campaignStorage.startDate != 0 && block.timestamp < campaignStorage.startDate) {
+            return false;
+        }
+        if (campaignStorage.endDate != 0 && block.timestamp > campaignStorage.endDate) {
+            return false;
+        }
         // Active only if we can distribute a few rewards
-        return _TOKEN.balanceOf(address(this)) > _INITIAL_REFERRER_REWARD * 2;
+        return TOKEN.balanceOf(address(this)) > BASE_REWARD * 2;
     }
 
     /// @dev Check if the given campaign support the `_contentType`
@@ -141,7 +181,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     function handleInteraction(bytes calldata _data) public override onlyRoles(CAMPAIGN_EVENT_EMITTER_ROLE) {
         // If the campaign isn't active, directly exit
         if (!isActive()) {
-            return;
+            revert InactiveCampaign();
         }
 
         // Extract the data
@@ -149,7 +189,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
         // If the interaction is a usage of a share link, handle it
         if (interactionType == PressInteractions.REFERRED) {
-            _performTokenDistribution(user, _INITIAL_REFERRER_REWARD);
+            _performTokenDistribution(user, BASE_REWARD);
         }
     }
 
@@ -164,57 +204,84 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev Perform a token distrubtion for all the referrers of `_user`, with the initial amount to `_amount`
     function _performTokenDistribution(address _user, uint256 _amount) internal {
         // Get all the referrers
-        address[] memory referrers =
-            _REFERRAL_REGISTRY.getCappedReferrers(_REFERRAL_TREE, _user, _REFERRAL_EXPLORATION_LEVEL);
+        address[] memory referrers = REFERRAL_REGISTRY.getCappedReferrers(REFERRAL_TREE, _user, MAX_EXPLORATION_LEVEL);
 
-        // Early exit if no referrers
+        // Early exit if no saved referrers (shouldn't be the case, be safety first)
         if (referrers.length == 0) {
             return;
         }
 
-        // Build our reward array
-        Reward[] memory rewards = new Reward[](referrers.length);
-        uint256 totalDistributed;
-        uint256 currentReward = _amount;
-
         unchecked {
+            // Build our reward array
+            Reward[] memory rewards = new Reward[](referrers.length + 2);
+            uint256 remainingAmount = _amount;
+
+            // First reward is the frak accounting one
+            {
+                uint256 frkAmount = (_amount * FRAK_FEE) / PERCENT_BASE;
+                rewards[0] = Reward(FRAK_CAMPAIGN, frkAmount);
+                // Decrease the amount
+                remainingAmount -= frkAmount;
+            }
+
+            // Second one is the user
+            {
+                uint256 userAmount = (remainingAmount * USER_PERCENT) / PERCENT_BASE;
+                rewards[1] = Reward(_user, userAmount);
+                // Decrease the amount
+                remainingAmount -= userAmount;
+            }
+
+            // Iterate over each referrers
             for (uint256 i = 0; i < referrers.length; i++) {
                 // Build the reward
-                rewards[i] = Reward(referrers[i], currentReward);
-
-                // Update total distributed + current reward
-                totalDistributed += currentReward;
-                currentReward = (currentReward * _PER_LEVEL_PERCENTAGE) / 10_000;
+                uint256 reward = (remainingAmount * DEPERDITION_PER_LEVEL) / PERCENT_BASE;
+                rewards[i + 2] = Reward(referrers[i], reward);
+                // Decrease the reward by the amount distributed
+                remainingAmount -= reward;
             }
+
+            // If we got a reward remaining, the last referrer take it
+            if (remainingAmount > 0) {
+                Reward memory lastReward = rewards[rewards.length - 1];
+                rewards[rewards.length - 1] = Reward(lastReward.user, lastReward.amount + remainingAmount);
+            }
+
+            // Push all the rewards
+            _pushRewards(rewards);
+
+            // If we have no cap, exit
+            if (DISTRIBUTION_CAP == 0) {
+                return;
+            }
+
+            // Update the cap
+            _updateDistributionCap(_amount);
         }
+    }
 
-        // If all good, distribute the reward
-        _pushRewards(_TOKEN, rewards);
-
-        // If we have no cap, exit
-        if (_DAILY_DISTRIBUTION_CAP == 0) {
-            return;
-        }
-
-        // Check with the cap
+    function _updateDistributionCap(uint256 _distributedAmount) private {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
 
-        // If we reached a new timeframe, reset the cap
-        if (block.timestamp > campaignStorage.capStartTimestamp + 1 days) {
-            emit DailyDistrubutionCapReset(campaignStorage.capStartTimestamp, campaignStorage.capDistributedAmount);
+        unchecked {
+            // Update the total distributed amount
+            campaignStorage.totalDistributedAmount += _distributedAmount;
 
-            campaignStorage.capStartTimestamp = uint48(block.timestamp);
-            campaignStorage.capDistributedAmount = uint208(totalDistributed);
-        } else {
-            // Check if we can distribute the reward
-            if (campaignStorage.capDistributedAmount + totalDistributed > _DAILY_DISTRIBUTION_CAP) {
-                revert DailyDistributionCapReached();
+            // Cap reset case
+            if (block.timestamp > campaignStorage.capStartTimestamp + DISTRIBUTION_CAP_PERIOD) {
+                emit DistributionCapReset(campaignStorage.capStartTimestamp, campaignStorage.capDistributedAmount);
+
+                campaignStorage.capStartTimestamp = uint48(block.timestamp);
+                campaignStorage.capDistributedAmount = uint208(_distributedAmount);
+
+                return;
             }
-            campaignStorage.capDistributedAmount += uint208(totalDistributed);
+            // Check if we can distribute the reward
+            if (campaignStorage.capDistributedAmount + _distributedAmount > DISTRIBUTION_CAP) {
+                revert DistributionCapReached();
+            }
+            campaignStorage.capDistributedAmount += uint208(_distributedAmount);
         }
-
-        // Update the total distributed amount
-        campaignStorage.totalDistributedAmount += totalDistributed;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -222,6 +289,16 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     function withdraw() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
-        _TOKEN.safeTransfer(msg.sender, _TOKEN.balanceOf(address(this)));
+        TOKEN.safeTransfer(msg.sender, TOKEN.balanceOf(address(this)));
+    }
+
+    function setActivationDate(uint48 startDate, uint48 endDate)
+        external
+        nonReentrant
+        onlyRoles(CAMPAIGN_MANAGER_ROLE)
+    {
+        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+        campaignStorage.startDate = startDate;
+        campaignStorage.endDate = endDate;
     }
 }

@@ -28,7 +28,8 @@ contract SetupTestContents is Script, DeterminedAddress {
             ContentInteractionManager(addresses.contentInteractionManager);
 
         // Mint the contents
-        uint256 frakContentId = _mintFrakContent(contentRegistry);
+        //uint256 frakContentId = _mintFrakContent(contentRegistry);
+        uint256 frakContentId = _getContentIds().cFrakDapp;
 
         // Setup the interactions
         _setupInteractions(contentInteractionManager, frakContentId);
@@ -48,8 +49,6 @@ contract SetupTestContents is Script, DeterminedAddress {
 
         console.log("Content id:");
         console.log(" - Frak: %s", cFrak);
-        // 79779516358427208576129661848423776934526633566649852115422670859041784133448
-        // 0xb0619b27c165cb8eb016dbfdcdbebed113641649d139147c3130c58eec9ef748
 
         return cFrak;
     }

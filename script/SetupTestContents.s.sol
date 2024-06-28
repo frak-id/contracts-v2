@@ -13,7 +13,7 @@ import {ContentInteractionManager} from "src/interaction/ContentInteractionManag
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {CommunityToken} from "src/tokens/CommunityToken.sol";
-import {PaywallToken} from "src/tokens/PaywallToken.sol";
+import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract SetupTestContents is Script, DeterminedAddress {
     address internal interactionValidator = 0x8747C17970464fFF597bd5a580A72fCDA224B0A1;
@@ -26,13 +26,14 @@ contract SetupTestContents is Script, DeterminedAddress {
             ContentInteractionManager(addresses.contentInteractionManager);
 
         // Mint the contents
-        uint256[] memory contentIds = _mintContents(contentRegistry);
+        // uint256[] memory contentIds = _mintContents(contentRegistry);
+        uint256[] memory contentIds = _getContentIdsArr();
 
         // Setup the paywall
-        _setupPaywall(paywall, contentIds);
+        // _setupPaywall(paywall, contentIds);
 
         // Setup the community tokens
-        _setupCommunityTokens(CommunityToken(addresses.communityToken), contentIds);
+        // _setupCommunityTokens(CommunityToken(addresses.communityToken), contentIds);
 
         // Setup the interactions
         _setupInteractions(contentInteractionManager, contentIds);
@@ -117,6 +118,8 @@ contract SetupTestContents is Script, DeterminedAddress {
         interactionContract.grantRoles(interactionValidator, INTERCATION_VALIDATOR_ROLE);
     }
 
+    bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = bytes4(keccak256("frak.campaign.referral"));
+
     /// @dev Setup the paywall for the given contents
     function _setupCampaigns(
         ContentInteractionManager _interactionManager,
@@ -125,30 +128,37 @@ contract SetupTestContents is Script, DeterminedAddress {
     ) internal {
         console.log("Setting up campaigns");
         for (uint256 i = 0; i < _contentIds.length; i++) {
-            ContentInteractionDiamond interactionContract = _interactionManager.getInteractionContract(_contentIds[i]);
-            bytes32 tree = interactionContract.getReferralTree();
+            uint256 contentId = _contentIds[i];
+            ContentInteractionDiamond interactionContract = _interactionManager.getInteractionContract(contentId);
+
+            // Get the referral tree
+            bytes32 tree = _interactionManager.getInteractionContract(contentId).getReferralTree();
 
             vm.startBroadcast();
 
-            ReferralCampaign campaign = _deployCampaign(tree, addresses);
-            _interactionManager.attachCampaign(_contentIds[i], campaign);
-            PaywallToken(addresses.paywallToken).mint(address(campaign), 100_000 ether);
+            address campaign = _interactionManager.deployCampaign(
+                contentId, REFERRAL_CAMPAIGN_IDENTIFIER, _campaignDeploymentData(tree, addresses)
+            );
+
+            // Add a few mUSD to the deployed campaign
+            mUSDToken(addresses.mUSDToken).mint(address(campaign), 100_000 ether);
 
             vm.stopBroadcast();
         }
     }
 
-    function _deployCampaign(bytes32 tree, Addresses memory addresses) private returns (ReferralCampaign) {
-        return new ReferralCampaign{salt: tree}(
-            addresses.paywallToken, // token
-            5, // exploration level
-            2_000, // per level distribution (on 1/10_000), so here 20%
-            10 ether, // Initial referral reward
-            500 ether, // Daily distribution cap
-            tree, // referralTree
-            ReferralRegistry(addresses.referralRegistry), // referralRegistry
-            msg.sender, // owner
-            addresses.contentInteractionManager
-        );
+    function _campaignDeploymentData(bytes32 tree, Addresses memory addresses) private returns (bytes memory) {
+        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
+            token: addresses.mUSDToken,
+            referralTree: tree,
+            initialReward: 10 ether,
+            userRewardPercent: 5_000, // 50%
+            distributionCapPeriod: 1 days,
+            distributionCap: 500 ether,
+            startDate: uint48(0),
+            endDate: uint48(0)
+        });
+
+        return abi.encode(config);
     }
 }

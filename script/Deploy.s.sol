@@ -5,6 +5,7 @@ import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
@@ -13,6 +14,7 @@ import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {CommunityToken} from "src/tokens/CommunityToken.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
+import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract Deploy is Script, DeterminedAddress {
     bool internal forceDeploy = vm.envOr("FORCE_DEPLOY", false);
@@ -41,9 +43,11 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
         console.log(" - ContentInteractionManager: %s", addresses.contentInteractionManager);
         console.log(" - FacetFactory: %s", addresses.facetFactory);
-        console.log(" - PaywallToken: %s", addresses.paywallToken);
+        console.log(" - CampaignFactory: %s", addresses.campaignFactory);
         console.log(" - Paywall: %s", addresses.paywall);
         console.log(" - CommunityToken: %s", addresses.communityToken);
+        console.log(" - PaywallToken: %s", addresses.paywallToken);
+        console.log(" - MUSDToken: %s", addresses.mUSDToken);
     }
 
     /// @dev Deploy core ecosystem stuff (ContentRegistry, Community token)
@@ -71,6 +75,14 @@ contract Deploy is Script, DeterminedAddress {
             addresses.facetFactory = address(facetFactory);
         }
 
+        // Deploy the campaign factory
+        if (addresses.campaignFactory.code.length == 0 || forceDeploy) {
+            console.log("Deploying CampaignFactory");
+            CampaignFactory campaignFactory =
+                new CampaignFactory{salt: 0}(ReferralRegistry(addresses.referralRegistry), airdropper);
+            addresses.campaignFactory = address(campaignFactory);
+        }
+
         // Deploy the interaction manager if needed
         if (addresses.contentInteractionManager.code.length == 0 || forceDeploy) {
             console.log("Deploying ContentInteractionManager under erc1967 proxy");
@@ -82,7 +94,9 @@ contract Deploy is Script, DeterminedAddress {
             );
             // Deploy and register proxy
             address proxy = LibClone.deployDeterministicERC1967(implem, 0);
-            ContentInteractionManager(proxy).init(msg.sender, InteractionFacetsFactory(addresses.facetFactory));
+            ContentInteractionManager(proxy).init(
+                msg.sender, InteractionFacetsFactory(addresses.facetFactory), CampaignFactory(addresses.campaignFactory)
+            );
             addresses.contentInteractionManager = proxy;
 
             // Granr it the role to grant tree access on the referral registry
@@ -102,6 +116,14 @@ contract Deploy is Script, DeterminedAddress {
             PaywallToken pFrk = new PaywallToken{salt: 0}(msg.sender);
             pFrk.grantRoles(airdropper, MINTER_ROLE);
             addresses.paywallToken = address(pFrk);
+        }
+
+        // Deploy the mUSD token if not already deployed
+        if (addresses.mUSDToken.code.length == 0 || forceDeploy) {
+            console.log("Deploying mUSDToken");
+            mUSDToken mUSD = new mUSDToken{salt: 0}(msg.sender);
+            mUSD.grantRoles(airdropper, MINTER_ROLE);
+            addresses.mUSDToken = address(mUSD);
         }
 
         // Deploy paywall if needed

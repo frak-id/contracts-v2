@@ -404,6 +404,16 @@ export const contentInteractionManagerAbi = [
     type: 'function',
     inputs: [
       { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_operator', internalType: 'address', type: 'address' },
+    ],
+    name: 'addOperator',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
       {
         name: '_campaign',
         internalType: 'contract InteractionCampaign',
@@ -434,6 +444,27 @@ export const contentInteractionManagerAbi = [
     type: 'function',
     inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
     name: 'deleteInteractionContract',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_operator', internalType: 'address', type: 'address' },
+    ],
+    name: 'deleteOperator',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_campaignIdentifier', internalType: 'bytes4', type: 'bytes4' },
+      { name: '_initData', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'deployCampaign',
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -507,13 +538,28 @@ export const contentInteractionManagerAbi = [
       { name: '_owner', internalType: 'address', type: 'address' },
       {
         name: '_facetsFactory',
-        internalType: 'contract InteractionFacetsFactory',
+        internalType: 'contract IFacetsFactory',
+        type: 'address',
+      },
+      {
+        name: '_campaignFactory',
+        internalType: 'contract ICampaignFactory',
         type: 'address',
       },
     ],
     name: 'init',
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_user', internalType: 'address', type: 'address' },
+    ],
+    name: 'isAllowedOnContent',
+    outputs: [{ name: 'isAllowed', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -587,8 +633,21 @@ export const contentInteractionManagerAbi = [
     type: 'function',
     inputs: [
       {
+        name: '_campaignFactory',
+        internalType: 'contract ICampaignFactory',
+        type: 'address',
+      },
+    ],
+    name: 'updateCampaignFactory',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
         name: '_facetsFactory',
-        internalType: 'contract InteractionFacetsFactory',
+        internalType: 'contract IFacetsFactory',
         type: 'address',
       },
     ],
@@ -619,6 +678,44 @@ export const contentInteractionManagerAbi = [
     name: 'walletLinked',
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'contentId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'ContentOperatorAdded',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'contentId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'ContentOperatorRemoved',
   },
   {
     type: 'event',

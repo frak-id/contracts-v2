@@ -6,11 +6,11 @@ import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
 import {INTERCATION_VALIDATOR_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
-
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
@@ -26,6 +26,7 @@ abstract contract InteractionTest is Test {
     ReferralRegistry internal referralRegistry = new ReferralRegistry(owner);
     ContentInteractionManager internal contentInteractionManager;
     InteractionFacetsFactory internal facetFactory;
+    CampaignFactory internal campaignFactory;
 
     uint256 internal validatorPrivKey;
     address internal validator;
@@ -45,12 +46,13 @@ abstract contract InteractionTest is Test {
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
 
         facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
+        campaignFactory = new CampaignFactory(referralRegistry, owner);
 
         // Create our content interaction
         address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
-        contentInteractionManager.init(owner, facetFactory);
+        contentInteractionManager.init(owner, facetFactory, campaignFactory);
 
         // Grant the right roles to the content interaction manager
         vm.prank(owner);
