@@ -5,6 +5,8 @@ import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+
+import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
@@ -41,6 +43,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
         console.log(" - ContentInteractionManager: %s", addresses.contentInteractionManager);
         console.log(" - FacetFactory: %s", addresses.facetFactory);
+        console.log(" - CampaignFactory: %s", addresses.campaignFactory);
         console.log(" - PaywallToken: %s", addresses.paywallToken);
         console.log(" - Paywall: %s", addresses.paywall);
         console.log(" - CommunityToken: %s", addresses.communityToken);
@@ -71,6 +74,13 @@ contract Deploy is Script, DeterminedAddress {
             addresses.facetFactory = address(facetFactory);
         }
 
+        // Deploy the campaign factory
+        if (addresses.campaignFactory.code.length == 0 || forceDeploy) {
+            console.log("Deploying CampaignFactory");
+            CampaignFactory campaignFactory = new CampaignFactory{salt: 0}(ReferralRegistry(addresses.referralRegistry));
+            addresses.campaignFactory = address(campaignFactory);
+        }
+
         // Deploy the interaction manager if needed
         if (addresses.contentInteractionManager.code.length == 0 || forceDeploy) {
             console.log("Deploying ContentInteractionManager under erc1967 proxy");
@@ -82,7 +92,9 @@ contract Deploy is Script, DeterminedAddress {
             );
             // Deploy and register proxy
             address proxy = LibClone.deployDeterministicERC1967(implem, 0);
-            ContentInteractionManager(proxy).init(msg.sender, InteractionFacetsFactory(addresses.facetFactory));
+            ContentInteractionManager(proxy).init(
+                msg.sender, InteractionFacetsFactory(addresses.facetFactory), CampaignFactory(addresses.campaignFactory)
+            );
             addresses.contentInteractionManager = proxy;
 
             // Granr it the role to grant tree access on the referral registry

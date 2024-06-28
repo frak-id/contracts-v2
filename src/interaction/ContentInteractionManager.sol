@@ -4,6 +4,8 @@ pragma solidity 0.8.23;
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ContentTypes} from "../constants/ContentTypes.sol";
 import {UPGRADE_ROLE} from "../constants/Roles.sol";
+import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
+import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
@@ -55,6 +57,12 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /// @dev Event emitted when an interaction contract is deleted
     event InteractionContractDeleted(uint256 indexed contentId, ContentInteractionDiamond interactionContract);
 
+    /// @dev Event emitted when an operator is added
+    event ContentOperatorAdded(uint256 indexed contentId, address operator);
+
+    /// @dev Event emitted when an operator is removed
+    event ContentOperatorRemoved(uint256 indexed contentId, address operator);
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -63,11 +71,20 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     bytes32 private constant _INTERACTION_MANAGER_STORAGE_SLOT =
         0x53b106ac374d49a224fae3a01f609d01cf52e1b6f965cbfdbbe6a29870a6a161;
 
+    struct ContentStorage {
+        /// @dev The diamond responsible for the interaction of the content
+        ContentInteractionDiamond diamond;
+        /// @dev The allowed operator on the content
+        mapping(address user => bool isAllowed) operators;
+    }
+
     struct InteractionManagerStorage {
-        /// @dev Mapping of content id to the content interaction contract
-        mapping(uint256 _contentId => ContentInteractionDiamond) contentInteractions;
+        /// @dev Mapping of content id to the contents
+        mapping(uint256 contentId => ContentStorage) contents;
         /// @dev The facets factory we will be using
-        InteractionFacetsFactory facetsFactory;
+        IFacetsFactory facetsFactory;
+        /// @dev The campaign factory we will be using
+        ICampaignFactory campaignFactory;
     }
 
     function _storage() private pure returns (InteractionManagerStorage storage storagePtr) {
@@ -86,17 +103,62 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Init our contract with the right owner
-    function init(address _owner, InteractionFacetsFactory _facetsFactory) external initializer {
+    function init(address _owner, IFacetsFactory _facetsFactory, ICampaignFactory _campaignFactory)
+        external
+        initializer
+    {
         _initializeOwner(_owner);
         _setRoles(_owner, UPGRADE_ROLE);
 
-        // Set the facets factory
+        // Set the factories
         _storage().facetsFactory = _facetsFactory;
+        _storage().campaignFactory = _campaignFactory;
     }
 
     /// @dev Update the facets factory
-    function updateFacetsFactory(InteractionFacetsFactory _facetsFactory) external onlyRoles(UPGRADE_ROLE) {
+    function updateFacetsFactory(IFacetsFactory _facetsFactory) external onlyRoles(UPGRADE_ROLE) {
         _storage().facetsFactory = _facetsFactory;
+    }
+
+    /// @dev Update the campaign factory
+    function updateCampaignFactory(ICampaignFactory _campaignFactory) external onlyRoles(UPGRADE_ROLE) {
+        _storage().campaignFactory = _campaignFactory;
+    }
+
+    /// @dev Check if the given `_user` is allowed to perform action on the given `_contentId`
+    function isAllowedOnContent(uint256 _contentId, address _user) public view returns (bool isAllowed) {
+        // Check if he is allowed here
+        isAllowed = _storage().contents[_contentId].operators[_user];
+        // Otherwise, fallback to the allowance on the content registry, they are always allowed here
+        if (!isAllowed) {
+            isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, _user);
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                              Content operator                              */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Add an operator on the given content
+    function addOperator(uint256 _contentId, address _operator) external {
+        // Check that it's a content admin doing the call
+        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
+        if (!isAllowed) revert Unauthorized();
+
+        // Add the operator
+        _storage().contents[_contentId].operators[_operator] = true;
+        emit ContentOperatorAdded(_contentId, _operator);
+    }
+
+    /// @dev Remove an operator on the given content
+    function deleteOperator(uint256 _contentId, address _operator) external {
+        // Check that it's a content admin doing the call, or that it's the operator revoking his role itself
+        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender) || msg.sender == _operator;
+        if (!isAllowed) revert Unauthorized();
+
+        // Remive the operator
+        delete _storage().contents[_contentId].operators[_operator];
+        emit ContentOperatorRemoved(_contentId, _operator);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -104,13 +166,9 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Deploy a new interaction contract for the given `_contentId`
-    function deployInteractionContract(uint256 _contentId) external {
-        // Ensure the caller is allowed to perform the update
-        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
-        if (!isAllowed) revert Unauthorized();
-
+    function deployInteractionContract(uint256 _contentId) external _onlyAllowedOnContent(_contentId) {
         // Check if we already have an interaction contract for this content
-        if (_storage().contentInteractions[_contentId] != ContentInteractionDiamond(address(0))) {
+        if (_storage().contents[_contentId].diamond != ContentInteractionDiamond(address(0))) {
             revert InteractionContractAlreadyDeployed();
         }
 
@@ -135,15 +193,11 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         emit InteractionContractDeployed(_contentId, diamond);
 
         // Save the interaction contract
-        _storage().contentInteractions[_contentId] = diamond;
+        _storage().contents[_contentId].diamond = diamond;
     }
 
     /// @dev Deploy a new interaction contract for the given `_contentId`
-    function updateInteractionContract(uint256 _contentId) external {
-        // Ensure the caller is allowed to perform the update
-        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
-        if (!isAllowed) revert Unauthorized();
-
+    function updateInteractionContract(uint256 _contentId) external _onlyAllowedOnContent(_contentId) {
         // Fetch the current interaction contract
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
@@ -159,11 +213,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Delete the interaction contract for the given `_contentId`
-    function deleteInteractionContract(uint256 _contentId) external {
-        // Ensure the caller is allowed to perform the update
-        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
-        if (!isAllowed) revert Unauthorized();
-
+    function deleteInteractionContract(uint256 _contentId) external _onlyAllowedOnContent(_contentId) {
         // Fetch the current interaction contract
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
@@ -184,7 +234,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         emit InteractionContractDeleted(_contentId, interactionContract);
 
         // Delete the interaction contract
-        delete _storage().contentInteractions[_contentId];
+        delete _storage().contents[_contentId].diamond;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -192,11 +242,22 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Attach a new campaign to the given `_contentId`
-    function attachCampaign(uint256 _contentId, InteractionCampaign _campaign) external {
-        if (!_CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender)) {
-            revert Unauthorized();
-        }
+    function deployCampaign(uint256 _contentId, bytes4 _campaignIdentifier, bytes calldata _initData)
+        public
+        _onlyAllowedOnContent(_contentId)
+    {
+        // Deploy the campaign
+        address campaign = _storage().campaignFactory.createCampaign(_campaignIdentifier, address(this), _initData);
 
+        // And attach it
+        attachCampaign(_contentId, InteractionCampaign(campaign));
+    }
+
+    /// @dev Attach a new campaign to the given `_contentId`
+    function attachCampaign(uint256 _contentId, InteractionCampaign _campaign)
+        public
+        _onlyAllowedOnContent(_contentId)
+    {
         // Retreive the interaction contract
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
@@ -207,11 +268,10 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         _campaign.allowInteractionContract(address(interactionContract));
     }
 
-    function detachCampaigns(uint256 _contentId, InteractionCampaign[] calldata _campaigns) external {
-        if (!_CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender)) {
-            revert Unauthorized();
-        }
-
+    function detachCampaigns(uint256 _contentId, InteractionCampaign[] calldata _campaigns)
+        public
+        _onlyAllowedOnContent(_contentId)
+    {
         // Retreive the interaction contract
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
@@ -230,7 +290,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         returns (ContentInteractionDiamond interactionContract)
     {
         // Retreive the interaction contract
-        interactionContract = _storage().contentInteractions[_contentId];
+        interactionContract = _storage().contents[_contentId].diamond;
         if (interactionContract == ContentInteractionDiamond(address(0))) revert NoInteractionContractFound();
     }
 
@@ -240,6 +300,20 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         // todo: propagate the event to each referral trees
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                                Some helpers                                */
+    /* -------------------------------------------------------------------------- */
+
     /// @dev Upgrade check
     function _authorizeUpgrade(address newImplementation) internal override onlyRoles(UPGRADE_ROLE) {}
+
+    /// @dev Modifier to only allow call from an allowed operator
+    modifier _onlyAllowedOnContent(uint256 _contentId) {
+        bool isAllowed = _storage().contents[_contentId].operators[msg.sender];
+        if (!isAllowed) {
+            isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
+        }
+        if (!isAllowed) revert Unauthorized();
+        _;
+    }
 }

@@ -6,7 +6,9 @@ import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
+import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
     CONTENT_TYPE_DAPP,
     CONTENT_TYPE_PRESS,
@@ -28,6 +30,7 @@ contract ContentInteractionManagerTest is Test {
     ContentRegistry private contentRegistry;
     ReferralRegistry private referralRegistry;
     InteractionFacetsFactory private facetFactory;
+    CampaignFactory private campaignFactory;
 
     uint256 private contentIdDapp;
     uint256 private contentIdPress;
@@ -41,11 +44,12 @@ contract ContentInteractionManagerTest is Test {
         referralRegistry = new ReferralRegistry(owner);
 
         facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
+        campaignFactory = new CampaignFactory(referralRegistry);
 
         address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
-        contentInteractionManager.init(owner, facetFactory);
+        contentInteractionManager.init(owner, facetFactory, campaignFactory);
 
         // Grant the right roles to the content interaction manager
         vm.prank(owner);
@@ -59,6 +63,63 @@ contract ContentInteractionManagerTest is Test {
         contentRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Operator management                            */
+    /* -------------------------------------------------------------------------- */
+
+    function test_addOperator() public {
+        address testOperator = makeAddr("testOperator");
+        address testOperator2 = makeAddr("testOperator2");
+
+        // Ensure only admin can do it
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.addOperator(contentIdPress, testOperator);
+
+        // Add it
+        vm.prank(owner);
+        contentInteractionManager.addOperator(contentIdPress, testOperator);
+
+        assertTrue(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator));
+
+        // Ensure it can't add other operator
+        vm.prank(testOperator);
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.addOperator(contentIdPress, testOperator2);
+
+        assertFalse(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator2));
+
+        // Ensure the operator can deploy stuff
+        vm.prank(testOperator);
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdPress)), address(0));
+    }
+
+    function test_deleteOperator() public {
+        address testOperator1 = makeAddr("testOperator");
+        address testOperator2 = makeAddr("testOperator2");
+
+        vm.startPrank(owner);
+        contentInteractionManager.addOperator(contentIdPress, testOperator1);
+        contentInteractionManager.addOperator(contentIdPress, testOperator2);
+        vm.stopPrank();
+
+        // Admin doing a remove
+        vm.prank(owner);
+        contentInteractionManager.deleteOperator(contentIdPress, testOperator1);
+
+        assertFalse(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator1));
+
+        // Self removing
+        vm.prank(testOperator2);
+        contentInteractionManager.deleteOperator(contentIdPress, testOperator2);
+
+        assertFalse(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator2));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                           Interaction deployment                           */
+    /* -------------------------------------------------------------------------- */
 
     function test_deployInteractionContract_Unauthorized() public {
         vm.expectRevert(Ownable.Unauthorized.selector);
@@ -189,7 +250,7 @@ contract ContentInteractionManagerTest is Test {
         ContentInteractionDiamond interactionContract =
             ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
 
-        // Test op with interaction
+        // Attach campaign
         vm.prank(operator);
         contentInteractionManager.attachCampaign(contentIdPress, campaign1);
         assertEq(interactionContract.getCampaigns().length, 1);
@@ -300,6 +361,37 @@ contract ContentInteractionManagerTest is Test {
         assertFalse(campaign4.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
     }
 
+    function test_deployCampaign() public {
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
+        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
+            token: makeAddr("testToken"),
+            referralTree: 0,
+            initialReward: 10 ether,
+            userRewardPercent: 5_000, // 50%
+            distributionCapPeriod: 1 days,
+            distributionCap: 100 ether,
+            startDate: uint48(0),
+            endDate: uint48(0)
+        });
+        bytes memory initData = abi.encode(config);
+
+        // Deploy interaction
+        vm.prank(operator);
+        contentInteractionManager.deployInteractionContract(contentIdPress);
+        ContentInteractionDiamond interactionContract =
+            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
+
+        // Test role required
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+
+        // Test ok
+        vm.prank(operator);
+        contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+
+        assertEq(interactionContract.getCampaigns().length, 1);
+    }
+
     function test_walletLinked() public {
         address alice = makeAddr("alice");
         address bob = makeAddr("bob");
@@ -317,12 +409,12 @@ contract ContentInteractionManagerTest is Test {
 
     function test_reinit() public {
         vm.expectRevert();
-        contentInteractionManager.init(address(1), facetFactory);
+        contentInteractionManager.init(address(1), facetFactory, campaignFactory);
 
         // Ensure we can't init raw instance
         ContentInteractionManager rawImplem = new ContentInteractionManager(contentRegistry, referralRegistry);
         vm.expectRevert();
-        rawImplem.init(owner, facetFactory);
+        rawImplem.init(owner, facetFactory, campaignFactory);
     }
 
     function test_upgrade() public {

@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 import {ContentTypes} from "../constants/ContentTypes.sol";
+import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
@@ -13,7 +14,7 @@ import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
 /// @author @KONFeature
 /// @notice Contract used to fetch the facets logics for the list of content types
 /// @custom:security-contact contact@frak.id
-contract InteractionFacetsFactory {
+contract InteractionFacetsFactory is IFacetsFactory {
     error CantHandleContentTypes();
 
     /// @dev The press facet address

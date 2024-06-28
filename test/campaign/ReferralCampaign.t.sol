@@ -58,6 +58,9 @@ contract ReferralCampaignTest is Test {
 
         // Mint a few test tokens to the campaign
         token.mint(address(referralCampaign), 1_000 ether);
+
+        // Fake the timestamp
+        vm.warp(100);
     }
 
     function test_init() public {
@@ -83,13 +86,23 @@ contract ReferralCampaignTest is Test {
     }
 
     function test_isActive() public {
-        // Not enogutth token work
+        // Not enoguth token work
         deal(address(token), address(referralCampaign), 1 ether);
         assertEq(referralCampaign.isActive(), false);
 
-        // Not Enough token work
+        // Enough token work
         deal(address(token), address(referralCampaign), 101 ether);
         assertEq(referralCampaign.isActive(), true);
+
+        // Not started yet work
+        vm.prank(owner);
+        referralCampaign.setActivationDate(uint48(vm.getBlockTimestamp() + 1), 0);
+        assertEq(referralCampaign.isActive(), false);
+
+        // Ended work
+        vm.prank(owner);
+        referralCampaign.setActivationDate(0, uint48(vm.getBlockTimestamp() - 1));
+        assertEq(referralCampaign.isActive(), false);
     }
 
     function test_supportContentType() public view {
@@ -172,6 +185,7 @@ contract ReferralCampaignTest is Test {
         vm.prank(owner);
         referralCampaign.withdraw();
         vm.prank(emitter);
+        vm.expectRevert();
         referralCampaign.handleInteraction(fckedUpData);
 
         // Ensure no reward was added
@@ -197,6 +211,7 @@ contract ReferralCampaignTest is Test {
         vm.prank(owner);
         referralCampaign.withdraw();
         vm.prank(emitter);
+        vm.expectRevert();
         referralCampaign.handleInteraction(interactionData);
 
         assertEq(referralCampaign.getPendingAmount(alice), 4 ether);

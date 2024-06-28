@@ -31,6 +31,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     error InvalidConfig();
+    error InactiveCampaign();
     error DistributionCapReached();
 
     /* -------------------------------------------------------------------------- */
@@ -178,7 +179,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     function handleInteraction(bytes calldata _data) public override onlyRoles(CAMPAIGN_EVENT_EMITTER_ROLE) {
         // If the campaign isn't active, directly exit
         if (!isActive()) {
-            return;
+            revert InactiveCampaign();
         }
 
         // Extract the data

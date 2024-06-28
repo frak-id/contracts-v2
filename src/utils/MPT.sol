@@ -7,7 +7,6 @@ import {RLPReader} from "rlp/RLPReader.sol";
 /// Modification:
 ///  - Only keeping EIP-1186 compliant proof check
 ///  - Some gas optimisations
-///  - Solidity version update
 library MPT {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
