@@ -35,6 +35,7 @@ export default defineConfig(
         {
             out: "abi/frak-campaign-abis.ts",
             plugins: foundryPlugin([
+                'CampaignFactory.json',
                 'InteractionCampaign.json',
                 'ReferralCampaign.json',
             ]),
@@ -50,6 +51,7 @@ export default defineConfig(
         {
             out: "abi/frak-gating-abis.ts",
             plugins: foundryPlugin([
+                'mUSDToken.json',
                 'PaywallToken.json',
                 'CommunityToken.json',
                 'Paywall.json'

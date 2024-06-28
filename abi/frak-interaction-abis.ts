@@ -465,7 +465,7 @@ export const contentInteractionManagerAbi = [
       { name: '_initData', internalType: 'bytes', type: 'bytes' },
     ],
     name: 'deployCampaign',
-    outputs: [],
+    outputs: [{ name: 'campaign', internalType: 'address', type: 'address' }],
     stateMutability: 'nonpayable',
   },
   {

@@ -1,4 +1,57 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CampaignFactory
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const campaignFactoryAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      {
+        name: '_referralRegistry',
+        internalType: 'contract ReferralRegistry',
+        type: 'address',
+      },
+      { name: '_frakCampaignWallet', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_identifier', internalType: 'bytes4', type: 'bytes4' },
+      { name: '_owner', internalType: 'address', type: 'address' },
+      {
+        name: '_contentInteractionManager',
+        internalType: 'address',
+        type: 'address',
+      },
+      { name: '_initData', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'createCampaign',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'campaign',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'CampaignCreated',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'identifier', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'UnknownCampaignType',
+  },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // InteractionCampaign
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -265,6 +318,7 @@ export const referralCampaignAbi = [
         type: 'address',
       },
       { name: '_owner', internalType: 'address', type: 'address' },
+      { name: '_frakCampaignWallet', internalType: 'address', type: 'address' },
       {
         name: '_contentInterationManager',
         internalType: 'address',
