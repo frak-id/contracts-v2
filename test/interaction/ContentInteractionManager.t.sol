@@ -44,7 +44,7 @@ contract ContentInteractionManagerTest is Test {
         referralRegistry = new ReferralRegistry(owner);
 
         facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
-        campaignFactory = new CampaignFactory(referralRegistry);
+        campaignFactory = new CampaignFactory(referralRegistry, owner);
 
         address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
         address proxy = LibClone.deployERC1967(implem);

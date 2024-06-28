@@ -66,7 +66,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     bytes32 private immutable REFERRAL_TREE;
 
     /// @dev The accounting wallet of frak that will receive the rewards
-    address private immutable FRAK_ACCOUNTING;
+    address private immutable FRAK_CAMPAIGN;
 
     /// @dev The referral registry
     ReferralRegistry private immutable REFERRAL_REGISTRY;
@@ -116,6 +116,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         CampaignConfig memory _config,
         ReferralRegistry _referralRegistry,
         address _owner,
+        address _frakCampaignWallet,
         address _contentInterationManager
     ) InteractionCampaign(_owner, _contentInterationManager) PushPullModule(_config.token) {
         if (_config.token == address(0)) {
@@ -127,6 +128,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         USER_PERCENT = _config.userRewardPercent;
         BASE_REWARD = _config.initialReward;
         REFERRAL_TREE = _config.referralTree;
+        FRAK_CAMPAIGN = _frakCampaignWallet;
 
         DISTRIBUTION_CAP = _config.distributionCap;
         DISTRIBUTION_CAP_PERIOD = _config.distributionCapPeriod;
@@ -217,7 +219,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
             // First reward is the frak accounting one
             {
                 uint256 frkAmount = (_amount * FRAK_FEE) / PERCENT_BASE;
-                rewards[0] = Reward(FRAK_ACCOUNTING, frkAmount);
+                rewards[0] = Reward(FRAK_CAMPAIGN, frkAmount);
                 // Decrease the amount
                 remainingAmount -= frkAmount;
             }

@@ -46,7 +46,7 @@ abstract contract InteractionTest is Test {
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
 
         facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
-        campaignFactory = new CampaignFactory(referralRegistry);
+        campaignFactory = new CampaignFactory(referralRegistry, owner);
 
         // Create our content interaction
         address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));

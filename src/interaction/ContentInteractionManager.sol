@@ -245,9 +245,10 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     function deployCampaign(uint256 _contentId, bytes4 _campaignIdentifier, bytes calldata _initData)
         public
         _onlyAllowedOnContent(_contentId)
+        returns (address campaign)
     {
         // Deploy the campaign
-        address campaign = _storage().campaignFactory.createCampaign(_campaignIdentifier, address(this), _initData);
+        campaign = _storage().campaignFactory.createCampaign(_campaignIdentifier, msg.sender, address(this), _initData);
 
         // And attach it
         attachCampaign(_contentId, InteractionCampaign(campaign));

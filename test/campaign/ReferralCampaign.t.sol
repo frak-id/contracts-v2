@@ -54,7 +54,7 @@ contract ReferralCampaignTest is Test {
             startDate: uint48(0),
             endDate: uint48(0)
         });
-        referralCampaign = new ReferralCampaign(config, referralRegistry, owner, emitterManager);
+        referralCampaign = new ReferralCampaign(config, referralRegistry, owner, owner, emitterManager);
 
         // Mint a few test tokens to the campaign
         token.mint(address(referralCampaign), 1_000 ether);
@@ -76,7 +76,7 @@ contract ReferralCampaignTest is Test {
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, owner, emitterManager);
+        new ReferralCampaign(config, referralRegistry, owner, owner, emitterManager);
     }
 
     function test_metadata() public view {
