@@ -247,26 +247,15 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         _onlyAllowedOnContent(_contentId)
         returns (address campaign)
     {
-        // Deploy the campaign
-        campaign = _storage().campaignFactory.createCampaign(_campaignIdentifier, msg.sender, address(this), _initData);
-
-        // And attach it
-        attachCampaign(_contentId, InteractionCampaign(campaign));
-    }
-
-    /// @dev Attach a new campaign to the given `_contentId`
-    function attachCampaign(uint256 _contentId, InteractionCampaign _campaign)
-        public
-        _onlyAllowedOnContent(_contentId)
-    {
         // Retreive the interaction contract
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
-        // Attach the campaign to the interaction contract
-        interactionContract.attachCampaign(_campaign);
+        // Deploy the campaign
+        campaign =
+            _storage().campaignFactory.createCampaign(interactionContract, msg.sender, _campaignIdentifier, _initData);
 
-        // Tell the campaign that this interaction is allowed to push events
-        _campaign.allowInteractionContract(address(interactionContract));
+        // Attach the campaign to the interaction contract
+        interactionContract.attachCampaign(InteractionCampaign(campaign));
     }
 
     function detachCampaigns(uint256 _contentId, InteractionCampaign[] calldata _campaigns)

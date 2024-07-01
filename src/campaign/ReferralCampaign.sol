@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "../constants/InteractionType.sol";
+import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
@@ -100,7 +101,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     struct CampaignConfig {
         // Required config
         address token;
-        bytes32 referralTree;
         uint256 initialReward;
         // Percent of the reward for the end users
         uint256 userRewardPercent; // (on a 1/10_000) scale
@@ -117,8 +117,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         ReferralRegistry _referralRegistry,
         address _owner,
         address _frakCampaignWallet,
-        address _contentInterationManager
-    ) InteractionCampaign(_owner, _contentInterationManager) PushPullModule(_config.token) {
+        ContentInteractionDiamond _interaction
+    ) InteractionCampaign(_owner, _interaction) PushPullModule(_config.token) {
         if (_config.token == address(0)) {
             revert InvalidConfig();
         }
@@ -127,11 +127,13 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         REFERRAL_REGISTRY = _referralRegistry;
         USER_PERCENT = _config.userRewardPercent;
         BASE_REWARD = _config.initialReward;
-        REFERRAL_TREE = _config.referralTree;
         FRAK_CAMPAIGN = _frakCampaignWallet;
 
         DISTRIBUTION_CAP = _config.distributionCap;
         DISTRIBUTION_CAP_PERIOD = _config.distributionCapPeriod;
+
+        // Store the referral tree
+        REFERRAL_TREE = _interaction.getReferralTree();
 
         // If we got a start date, set it in storage
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();

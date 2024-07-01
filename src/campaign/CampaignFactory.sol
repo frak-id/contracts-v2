@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
@@ -27,7 +28,8 @@ contract CampaignFactory is ICampaignFactory {
     /*                                  Constants                                 */
     /* -------------------------------------------------------------------------- */
 
-    bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = bytes4(keccak256("frak.campaign.referral"));
+    /// @dev `bytes4(keccak256("frak.campaign.referral"))`
+    bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = 0x1a8750ce;
 
     /// @dev The referral registry
     ReferralRegistry private immutable REFERRAL_REGISTRY;
@@ -46,15 +48,15 @@ contract CampaignFactory is ICampaignFactory {
 
     /// @dev Entry point to create a new campaign
     function createCampaign(
-        bytes4 _identifier,
+        ContentInteractionDiamond _interaction,
         address _owner,
-        address _contentInteractionManager,
+        bytes4 _identifier,
         bytes calldata _initData
     ) public override returns (address) {
         address campaign;
 
         if (_identifier == REFERRAL_CAMPAIGN_IDENTIFIER) {
-            campaign = _createReferralCampaign(_contentInteractionManager, _owner, _initData);
+            campaign = _createReferralCampaign(_interaction, _owner, _initData);
         } else {
             revert UnknownCampaignType(_identifier);
         }
@@ -67,7 +69,7 @@ contract CampaignFactory is ICampaignFactory {
     }
 
     /// @dev Create a new referral campaign
-    function _createReferralCampaign(address _contentInteractionManager, address _owner, bytes calldata _initData)
+    function _createReferralCampaign(ContentInteractionDiamond _interaction, address _owner, bytes calldata _initData)
         internal
         returns (address)
     {
@@ -78,7 +80,7 @@ contract CampaignFactory is ICampaignFactory {
         }
         // Create the campaign
         ReferralCampaign campaign =
-            new ReferralCampaign(config, REFERRAL_REGISTRY, _owner, FRAK_CAMPAIGN_WALLET, _contentInteractionManager);
+            new ReferralCampaign(config, REFERRAL_REGISTRY, _owner, FRAK_CAMPAIGN_WALLET, _interaction);
         return address(campaign);
     }
 }

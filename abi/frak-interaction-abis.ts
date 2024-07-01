@@ -412,20 +412,6 @@ export const contentInteractionManagerAbi = [
   },
   {
     type: 'function',
-    inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
-      {
-        name: '_campaign',
-        internalType: 'contract InteractionCampaign',
-        type: 'address',
-      },
-    ],
-    name: 'attachCampaign',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
     inputs: [],
     name: 'cancelOwnershipHandover',
     outputs: [],

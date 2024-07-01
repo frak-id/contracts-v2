@@ -129,15 +129,11 @@ contract SetupTestContents is Script, DeterminedAddress {
         console.log("Setting up campaigns");
         for (uint256 i = 0; i < _contentIds.length; i++) {
             uint256 contentId = _contentIds[i];
-            ContentInteractionDiamond interactionContract = _interactionManager.getInteractionContract(contentId);
-
-            // Get the referral tree
-            bytes32 tree = _interactionManager.getInteractionContract(contentId).getReferralTree();
 
             vm.startBroadcast();
 
             address campaign = _interactionManager.deployCampaign(
-                contentId, REFERRAL_CAMPAIGN_IDENTIFIER, _campaignDeploymentData(tree, addresses)
+                contentId, REFERRAL_CAMPAIGN_IDENTIFIER, _campaignDeploymentData(addresses)
             );
 
             // Add a few mUSD to the deployed campaign
@@ -147,10 +143,9 @@ contract SetupTestContents is Script, DeterminedAddress {
         }
     }
 
-    function _campaignDeploymentData(bytes32 tree, Addresses memory addresses) private returns (bytes memory) {
+    function _campaignDeploymentData(Addresses memory addresses) private returns (bytes memory) {
         ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
             token: addresses.mUSDToken,
-            referralTree: tree,
             initialReward: 10 ether,
             userRewardPercent: 5_000, // 50%
             distributionCapPeriod: 1 days,

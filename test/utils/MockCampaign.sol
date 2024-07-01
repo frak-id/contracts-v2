@@ -4,13 +4,14 @@ pragma solidity ^0.8.0;
 import {CAMPAIGN_EVENT_EMITTER_ROLE, InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ContentTypes} from "src/constants/ContentTypes.sol";
 
+import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
+import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
+
 contract MockCampaign is InteractionCampaign {
     uint256 private interactionHandled;
     bool private fail;
 
-    constructor(address _owner, address _contentInterationManager)
-        InteractionCampaign(_owner, _contentInterationManager)
-    {}
+    constructor(address _owner, ContentInteractionDiamond _interaction) InteractionCampaign(_owner, _interaction) {}
 
     /// @dev Get the campaign metadata
     function getMetadata() public pure override returns (string memory name, string memory version) {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {InteractionTest} from "../interaction/InteractionTest.sol";
 import {MockErc20} from "../utils/MockErc20.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
@@ -13,29 +14,27 @@ import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
-contract ReferralCampaignTest is Test {
-    address private owner = makeAddr("owner");
-    address private emitter = makeAddr("emitter");
-    address private emitterManager = makeAddr("emitterManager");
+contract ReferralCampaignTest is InteractionTest {
+    address private emitter;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
     address private delta = makeAddr("delta");
 
-    bytes32 private referralTree = keccak256("tree");
-
     /// @dev A mocked erc20 token
     MockErc20 private token = new MockErc20();
-
-    /// @dev The registry we will use
-    ReferralRegistry private referralRegistry;
 
     /// @dev The campaign we will test
     ReferralCampaign private referralCampaign;
 
     function setUp() public {
-        referralRegistry = new ReferralRegistry(owner);
+        vm.prank(owner);
+        contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
+        vm.prank(owner);
+        contentRegistry.setApprovalForAll(operator, true);
+
+        _initInteractionTest();
 
         // Grant the right roles to the content interaction manager
         vm.prank(owner);
@@ -46,7 +45,6 @@ contract ReferralCampaignTest is Test {
         // Our campaign
         ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
             token: address(token),
-            referralTree: referralTree,
             initialReward: 10 ether,
             userRewardPercent: 5_000, // 50%
             distributionCapPeriod: 1 days,
@@ -54,19 +52,31 @@ contract ReferralCampaignTest is Test {
             startDate: uint48(0),
             endDate: uint48(0)
         });
-        referralCampaign = new ReferralCampaign(config, referralRegistry, owner, owner, emitterManager);
+        referralCampaign = new ReferralCampaign(config, referralRegistry, owner, owner, contentInteraction);
 
         // Mint a few test tokens to the campaign
         token.mint(address(referralCampaign), 1_000 ether);
+
+        emitter = address(contentInteraction);
 
         // Fake the timestamp
         vm.warp(100);
     }
 
+    function performSingleInteraction() internal override {
+        vm.skip(true);
+    }
+
+    function getOutOfFacetScopeInteraction() internal override returns (bytes memory a, bytes memory b) {
+        vm.skip(true);
+        // just for linter stuff
+        a = abi.encodePacked("a");
+        b = abi.encodePacked("b");
+    }
+
     function test_init() public {
         ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
             token: address(0),
-            referralTree: referralTree,
             initialReward: 10 ether,
             userRewardPercent: 5_000, // 50%
             distributionCapPeriod: 1 days,
@@ -76,7 +86,7 @@ contract ReferralCampaignTest is Test {
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, owner, owner, emitterManager);
+        new ReferralCampaign(config, referralRegistry, owner, owner, contentInteraction);
     }
 
     function test_metadata() public view {
@@ -164,7 +174,7 @@ contract ReferralCampaignTest is Test {
         assertEq(referralCampaign.getPendingAmount(alice), 79.992 ether);
     }
 
-    function test_handleInteraction_doNothing() public withReferralChain withAllowedEmitter {
+    function test_handleInteraction_doNothing() public withReferralChain {
         bytes memory fckedUpData = hex"13";
 
         // Ensure we can't distribute if not allowed
@@ -195,7 +205,7 @@ contract ReferralCampaignTest is Test {
         assertEq(referralCampaign.getPendingAmount(delta), 0);
     }
 
-    function test_handleInteraction_sharedArticleUsed() public withReferralChain withAllowedEmitter {
+    function test_handleInteraction_sharedArticleUsed() public withReferralChain {
         bytes memory interactionData = InteractionTypeLib.packForCampaign(PressInteractions.REFERRED, alice);
 
         // Ensure call won't fail with fcked up data
@@ -220,7 +230,7 @@ contract ReferralCampaignTest is Test {
         assertEq(referralCampaign.getPendingAmount(delta), 0.16 ether);
     }
 
-    function test_disallowMe() public withReferralChain withAllowedEmitter {
+    function test_disallowMe() public withReferralChain {
         bytes memory interactionData = InteractionTypeLib.packForCampaign(PressInteractions.REFERRED, alice);
 
         vm.prank(emitter);
@@ -228,18 +238,6 @@ contract ReferralCampaignTest is Test {
 
         vm.expectRevert(Ownable.Unauthorized.selector);
         referralCampaign.handleInteraction(interactionData);
-    }
-
-    function test_allowInteractionContract() public withReferralChain withAllowedEmitter {
-        address testEmitter = makeAddr("testEmitter");
-
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        referralCampaign.allowInteractionContract(testEmitter);
-
-        vm.prank(emitterManager);
-        referralCampaign.allowInteractionContract(testEmitter);
-
-        assertTrue(referralCampaign.hasAnyRole(testEmitter, CAMPAIGN_EVENT_EMITTER_ROLE));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -252,12 +250,6 @@ contract ReferralCampaignTest is Test {
         referralRegistry.saveReferrer(referralTree, bob, charlie);
         referralRegistry.saveReferrer(referralTree, charlie, delta);
         vm.stopPrank();
-        _;
-    }
-
-    modifier withAllowedEmitter() {
-        vm.prank(emitterManager);
-        referralCampaign.allowInteractionContract(emitter);
         _;
     }
 }

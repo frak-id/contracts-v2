@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {CAMPAIGN_EVENT_EMITTER_ROLE, MockCampaign} from "../utils/MockCampaign.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
+import {CAMPAIGN_EVENT_EMITTER_ROLE} from "src/campaign/InteractionCampaign.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
@@ -230,142 +230,71 @@ contract ContentInteractionManagerTest is Test {
     /*                          Campaign management test                          */
     /* -------------------------------------------------------------------------- */
 
-    function test_attachCampaign() public {
-        MockCampaign campaign1 = new MockCampaign(owner, address(contentInteractionManager));
-        MockCampaign campaign2 = new MockCampaign(owner, address(contentInteractionManager));
-        MockCampaign campaign3 = new MockCampaign(owner, address(contentInteractionManager));
-
-        // Test role required
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
-
-        // Test fail if interaction not present
-        vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
-        vm.prank(operator);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
-
-        // Deploy interaction
-        vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
-        ContentInteractionDiamond interactionContract =
-            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
-
-        // Attach campaign
-        vm.prank(operator);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
-        assertEq(interactionContract.getCampaigns().length, 1);
-        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
-
-        // Test op with multiple campaign
-        vm.startPrank(operator);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign2);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign3);
-        vm.stopPrank();
-        assertEq(interactionContract.getCampaigns().length, 3);
-        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
-        assertEq(address(interactionContract.getCampaigns()[1]), address(campaign2));
-        assertEq(address(interactionContract.getCampaigns()[2]), address(campaign3));
-
-        // Test can't repush an existing campaign
-        vm.expectRevert(ContentInteractionDiamond.CampaignAlreadyPresent.selector);
-        vm.prank(operator);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
-
-        // Ensure each campaign has the right roles from the interaction contract
-        assertTrue(campaign1.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
-        assertTrue(campaign2.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
-        assertTrue(campaign3.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
-    }
-
-    function test_detachCampaigns_single() public {
-        MockCampaign campaign1 = new MockCampaign(owner, address(contentInteractionManager));
-        MockCampaign campaign2 = new MockCampaign(owner, address(contentInteractionManager));
-
-        // Deploy interaction and add campaign
-        vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
-        ContentInteractionDiamond interactionContract =
-            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
-        vm.prank(operator);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
-
-        InteractionCampaign[] memory toRemove = new InteractionCampaign[](1);
-        toRemove[0] = campaign1;
-
-        // Test role required
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
-        assertEq(interactionContract.getCampaigns().length, 1);
-        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
-
-        // Test not present campaign
-        toRemove[0] = campaign2;
-        vm.prank(operator);
-        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
-        assertEq(interactionContract.getCampaigns().length, 1);
-        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign1));
-
-        // Test ok
-        toRemove[0] = campaign1;
-        vm.prank(operator);
-        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
-
-        assertEq(interactionContract.getCampaigns().length, 0);
-        assertFalse(campaign1.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
-    }
-
     function test_detachCampaigns_multi() public {
-        MockCampaign campaign1 = new MockCampaign(owner, address(contentInteractionManager));
-        MockCampaign campaign2 = new MockCampaign(owner, address(contentInteractionManager));
-        MockCampaign campaign3 = new MockCampaign(owner, address(contentInteractionManager));
-        MockCampaign campaign4 = new MockCampaign(owner, address(contentInteractionManager));
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
+        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
+            token: makeAddr("testToken"),
+            initialReward: 10 ether,
+            userRewardPercent: 5_000, // 50%
+            distributionCapPeriod: 1 days,
+            distributionCap: 100 ether,
+            startDate: uint48(0),
+            endDate: uint48(0)
+        });
+        bytes memory initData = abi.encode(config);
 
         // Deploy interaction and add campaign
-        vm.prank(operator);
+        vm.startPrank(operator);
         contentInteractionManager.deployInteractionContract(contentIdPress);
         ContentInteractionDiamond interactionContract =
             ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
-        vm.startPrank(operator);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign1);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign2);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign3);
-        contentInteractionManager.attachCampaign(contentIdPress, campaign4);
+
+        address campaign1 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+        address campaign2 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+        address campaign3 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+        address campaign4 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
         vm.stopPrank();
 
         InteractionCampaign[] memory toRemove = new InteractionCampaign[](1);
-        toRemove[0] = campaign1;
+        toRemove[0] = InteractionCampaign(campaign1);
 
         // Test ok with reordering
-        toRemove[0] = campaign1;
         vm.prank(operator);
         contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
         assertEq(interactionContract.getCampaigns().length, 3);
-        assertEq(address(interactionContract.getCampaigns()[0]), address(campaign4));
-        assertEq(address(interactionContract.getCampaigns()[1]), address(campaign2));
-        assertEq(address(interactionContract.getCampaigns()[2]), address(campaign3));
+        assertEq(address(interactionContract.getCampaigns()[0]), campaign4);
+        assertEq(address(interactionContract.getCampaigns()[1]), campaign2);
+        assertEq(address(interactionContract.getCampaigns()[2]), campaign3);
 
         // Test remove all
         toRemove = new InteractionCampaign[](4);
-        toRemove[0] = campaign1;
-        toRemove[1] = campaign2;
-        toRemove[2] = campaign3;
-        toRemove[3] = campaign4;
+        toRemove[0] = InteractionCampaign(campaign1);
+        toRemove[1] = InteractionCampaign(campaign2);
+        toRemove[2] = InteractionCampaign(campaign3);
+        toRemove[3] = InteractionCampaign(campaign4);
 
         vm.prank(operator);
         contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
 
         assertEq(interactionContract.getCampaigns().length, 0);
-        assertFalse(campaign1.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
-        assertFalse(campaign2.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
-        assertFalse(campaign3.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
-        assertFalse(campaign4.hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE));
+        assertFalse(
+            InteractionCampaign(campaign1).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
+        );
+        assertFalse(
+            InteractionCampaign(campaign2).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
+        );
+        assertFalse(
+            InteractionCampaign(campaign3).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
+        );
+        assertFalse(
+            InteractionCampaign(campaign4).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
+        );
     }
 
     function test_deployCampaign() public {
         bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
         ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
             token: makeAddr("testToken"),
-            referralTree: 0,
             initialReward: 10 ether,
             userRewardPercent: 5_000, // 50%
             distributionCapPeriod: 1 days,

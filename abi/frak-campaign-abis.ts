@@ -18,13 +18,13 @@ export const campaignFactoryAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_identifier', internalType: 'bytes4', type: 'bytes4' },
-      { name: '_owner', internalType: 'address', type: 'address' },
       {
-        name: '_contentInteractionManager',
-        internalType: 'address',
+        name: '_interaction',
+        internalType: 'contract ContentInteractionDiamond',
         type: 'address',
       },
+      { name: '_owner', internalType: 'address', type: 'address' },
+      { name: '_identifier', internalType: 'bytes4', type: 'bytes4' },
       { name: '_initData', internalType: 'bytes', type: 'bytes' },
     ],
     name: 'createCampaign',
@@ -56,19 +56,6 @@ export const campaignFactoryAbi = [
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export const interactionCampaignAbi = [
-  {
-    type: 'function',
-    inputs: [
-      {
-        name: '_interactionContract',
-        internalType: 'address',
-        type: 'address',
-      },
-    ],
-    name: 'allowInteractionContract',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
   {
     type: 'function',
     inputs: [],
@@ -295,7 +282,6 @@ export const referralCampaignAbi = [
         type: 'tuple',
         components: [
           { name: 'token', internalType: 'address', type: 'address' },
-          { name: 'referralTree', internalType: 'bytes32', type: 'bytes32' },
           { name: 'initialReward', internalType: 'uint256', type: 'uint256' },
           {
             name: 'userRewardPercent',
@@ -320,24 +306,11 @@ export const referralCampaignAbi = [
       { name: '_owner', internalType: 'address', type: 'address' },
       { name: '_frakCampaignWallet', internalType: 'address', type: 'address' },
       {
-        name: '_contentInterationManager',
-        internalType: 'address',
+        name: '_interaction',
+        internalType: 'contract ContentInteractionDiamond',
         type: 'address',
       },
     ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      {
-        name: '_interactionContract',
-        internalType: 'address',
-        type: 'address',
-      },
-    ],
-    name: 'allowInteractionContract',
-    outputs: [],
     stateMutability: 'nonpayable',
   },
   {

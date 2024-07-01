@@ -3,17 +3,25 @@ pragma solidity 0.8.23;
 
 import {ContentTypes} from "../constants/ContentTypes.sol";
 import {InteractionType} from "../constants/InteractionType.sol";
+import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
+import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 
 /// @author @KONFeature
 /// @title InteractionCampaign
-/// @notice Interface representing a campaign around some content interactions
+/// @notice Interface representing a campaign around some interactions
 /// @custom:security-contact contact@frak.id
 abstract contract InteractionCampaign is OwnableRoles {
-    constructor(address _owner, address _contentInterationManager) {
+    /// @dev Content id linked to this campaign
+    uint256 internal immutable CONTENT_ID;
+
+    constructor(address _owner, ContentInteractionDiamond _interaction) {
+        CONTENT_ID = _interaction.getContentId();
+
         _initializeOwner(_owner);
         _setRoles(_owner, CAMPAIGN_MANAGER_ROLE);
-        _setRoles(_contentInterationManager, CAMPAIGN_DEPLOYER_ROLE);
+
+        _setRoles(address(_interaction), CAMPAIGN_EVENT_EMITTER_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -25,11 +33,6 @@ abstract contract InteractionCampaign is OwnableRoles {
     /* -------------------------------------------------------------------------- */
     /*                               Role managments                              */
     /* -------------------------------------------------------------------------- */
-
-    /// @dev Register the campaign deployer role
-    function allowInteractionContract(address _interactionContract) public onlyRoles(CAMPAIGN_DEPLOYER_ROLE) {
-        _setRoles(_interactionContract, CAMPAIGN_EVENT_EMITTER_ROLE);
-    }
 
     /// @dev Deregsiter the campaign deployer role for the calling contract
     function disallowMe() public {
@@ -49,9 +52,6 @@ abstract contract InteractionCampaign is OwnableRoles {
     /// @dev Handle the given interaction
     function handleInteraction(bytes calldata _data) public virtual;
 }
-
-/// @dev The role for the a campaign event emitter
-uint256 constant CAMPAIGN_DEPLOYER_ROLE = 1 << 1;
 
 /// @dev The role for the a campaign event emitter
 uint256 constant CAMPAIGN_EVENT_EMITTER_ROLE = 1 << 2;
