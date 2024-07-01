@@ -9,6 +9,7 @@ import {CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
+import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {PaywallToken} from "src/tokens/PaywallToken.sol";
@@ -16,11 +17,12 @@ import {PaywallToken} from "src/tokens/PaywallToken.sol";
 /// todo: Should be refacto to update the faucet factory, set it on the contentInteractionManager, and then call the update function
 contract UpdateContentInteractions is Script, DeterminedAddress {
     function run() public {
-        // updateManager();
-        updateInteractions();
+        // _updateManager();
+        //_updateInteractions();
+        _updateCampaigns();
     }
 
-    function updateManager() internal {
+    function _updateManager() internal {
         Addresses memory addresses = _getAddresses();
 
         ContentInteractionManager currentManager = ContentInteractionManager(addresses.contentInteractionManager);
@@ -37,7 +39,7 @@ contract UpdateContentInteractions is Script, DeterminedAddress {
         vm.stopBroadcast();
     }
 
-    function updateInteractions() internal {
+    function _updateInteractions() internal {
         ContentIds memory contentIds = _getContentIds();
         Addresses memory addresses = _getAddresses();
 
@@ -55,6 +57,20 @@ contract UpdateContentInteractions is Script, DeterminedAddress {
         contentInteractionManager.updateInteractionContract(contentIds.cWired);
         contentInteractionManager.updateInteractionContract(contentIds.cFrak);
         contentInteractionManager.updateInteractionContract(contentIds.cFrakDapp);
+
+        vm.stopBroadcast();
+    }
+
+    function _updateCampaigns() internal {
+        Addresses memory addresses = _getAddresses();
+
+        ContentInteractionManager contentInteractionManager =
+            ContentInteractionManager(addresses.contentInteractionManager);
+
+        vm.startBroadcast();
+
+        // update the campaign factory
+        contentInteractionManager.updateCampaignFactory(ICampaignFactory(addresses.campaignFactory));
 
         vm.stopBroadcast();
     }

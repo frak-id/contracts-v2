@@ -69,8 +69,8 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     constructor(
         uint256 _contentId,
         ReferralRegistry _referralRegistry,
-        address _interactionMananger,
-        address _interactionManangerOwner,
+        address _interactionManager,
+        address _interactionManagerOwner,
         address _contentOwner
     ) {
         // Set immutable variable (since embeded inside the bytecode)
@@ -81,10 +81,10 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         _disableInitializers();
 
         // Global owner is the same as the interaction manager owner
-        _initializeOwner(_interactionManangerOwner);
-        _setRoles(_interactionManangerOwner, UPGRADE_ROLE);
+        _initializeOwner(_interactionManagerOwner);
+        _setRoles(_interactionManagerOwner, UPGRADE_ROLE);
         // The interaction manager can trigger updates
-        _setRoles(_interactionMananger, UPGRADE_ROLE | CAMPAIGN_MANAGER_ROLE);
+        _setRoles(_interactionManager, UPGRADE_ROLE | CAMPAIGN_MANAGER_ROLE);
         // The content owner can manage almost everything
         _setRoles(_contentOwner, INTERCATION_VALIDATOR_ROLE | UPGRADE_ROLE);
 

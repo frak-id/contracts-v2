@@ -28,7 +28,7 @@ abstract contract InteractionCampaign is OwnableRoles {
     /*                               Metadata reader                              */
     /* -------------------------------------------------------------------------- */
 
-    function getMetadata() public pure virtual returns (string memory name, string memory version);
+    function getMetadata() public pure virtual returns (string memory _type, string memory version);
 
     /* -------------------------------------------------------------------------- */
     /*                               Role managments                              */

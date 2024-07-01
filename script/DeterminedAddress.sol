@@ -40,7 +40,7 @@ contract DeterminedAddress {
             referralRegistry: 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43,
             contentInteractionManager: 0xC97D72A8a9d1D2Ed326EB04f2d706A21cEe2B94E,
             facetFactory: 0x27EFC7876a0C21239fA33eb62Ae55591D5204781,
-            campaignFactory: 0x1f65A60340E4D017DdfeE45aA2905b6D79a55672,
+            campaignFactory: 0x440B19d7694f4B8949b02e674870880c5e40250C,
             paywall: 0x1d11207BD915D1f8A4393D20AB318a1a961CCE6F,
             communityToken: 0x5E7759F47b5992DFB85Ef38dD48A9201aDF24b75,
             paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,

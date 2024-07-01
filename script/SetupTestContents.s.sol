@@ -30,10 +30,10 @@ contract SetupTestContents is Script, DeterminedAddress {
         uint256[] memory contentIds = _getContentIdsArr();
 
         // Setup the paywall
-        // _setupPaywall(paywall, contentIds);
+        _setupPaywall(paywall, contentIds);
 
         // Setup the community tokens
-        // _setupCommunityTokens(CommunityToken(addresses.communityToken), contentIds);
+        _setupCommunityTokens(CommunityToken(addresses.communityToken), contentIds);
 
         // Setup the interactions
         _setupInteractions(contentInteractionManager, contentIds);
@@ -143,7 +143,7 @@ contract SetupTestContents is Script, DeterminedAddress {
         }
     }
 
-    function _campaignDeploymentData(Addresses memory addresses) private returns (bytes memory) {
+    function _campaignDeploymentData(Addresses memory addresses) private pure returns (bytes memory) {
         ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
             token: addresses.mUSDToken,
             initialReward: 10 ether,

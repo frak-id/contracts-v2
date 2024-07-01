@@ -90,6 +90,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         /// @dev Start and end data
         uint48 startDate;
         uint48 endDate;
+        /// @dev Name of the campaign
+        string name;
     }
 
     function _referralCampaignStorage() private pure returns (ReferralCampaignStorage storage storagePtr) {
@@ -150,9 +152,23 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the campaign metadata
-    function getMetadata() public pure override returns (string memory name, string memory version) {
-        name = "frak.campaign.referral";
+    function getMetadata() public pure override returns (string memory _type, string memory version) {
+        _type = "frak.campaign.referral";
         version = "0.0.1";
+    }
+
+    /// @dev Get the campaign config
+    function getConfig() public view returns (CampaignConfig memory) {
+        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+        return CampaignConfig({
+            token: TOKEN,
+            initialReward: BASE_REWARD,
+            userRewardPercent: USER_PERCENT,
+            distributionCapPeriod: DISTRIBUTION_CAP_PERIOD,
+            distributionCap: DISTRIBUTION_CAP,
+            startDate: campaignStorage.startDate,
+            endDate: campaignStorage.endDate
+        });
     }
 
     /// @dev Check if the campaign is active or not

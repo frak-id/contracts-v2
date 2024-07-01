@@ -12,13 +12,9 @@ export const contentInteractionDiamondAbi = [
         internalType: 'contract ReferralRegistry',
         type: 'address',
       },
+      { name: '_interactionManager', internalType: 'address', type: 'address' },
       {
-        name: '_interactionMananger',
-        internalType: 'address',
-        type: 'address',
-      },
-      {
-        name: '_interactionManangerOwner',
+        name: '_interactionManagerOwner',
         internalType: 'address',
         type: 'address',
       },
