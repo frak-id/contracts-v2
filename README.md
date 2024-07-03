@@ -11,12 +11,14 @@ Address of the Frak contracts, deployed on Arbitrum and arbitrum sepolia.
 
 | Name                      | Address                                       |
 |---------------------------|-----------------------------------------------|
-| Content Registry          | `0x5be7ae9f47dfe007CecA06b299e7CdAcD0A5C40e`  |
+| Content Registry          | `0xC110ecb55EbAa4Ea9eFC361C4bBB224A6664Ea45`  |
 | Referral Registry         | `0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43`  |
-| Content Interaction Mgr   | `0x7A710e18a12E1C832c6f833c60e2ac389Aa14e96`  |
+| Content Interaction Mgr   | `0xC97D72A8a9d1D2Ed326EB04f2d706A21cEe2B94E`  |
+| Content Facet Factory     | `0x27EFC7876a0C21239fA33eb62Ae55591D5204781`  |
+| Content Campaign Factory  | `0x440B19d7694f4B8949b02e674870880c5e40250C`  |
+| Paywall Contract          | `0x1d11207BD915D1f8A4393D20AB318a1a961CCE6F`  |
+| Community Token           | `0x5E7759F47b5992DFB85Ef38dD48A9201aDF24b75`  | 
 | FRK Paywall Token         | `0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2`  |
-| Paywall Contract          | `0x2Ed88d7A95d687aE262A385DaB7255FA1cA39901`  |
-| Community Token           | `0x581199D05d01B949c91933636EB90014cDB0168c`  | 
 
 ### Kernel plugins
 
@@ -36,6 +38,8 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 | Kernel V2                                                                             |
 | MultiWebAuthN - Kernel v2             | `0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808`  |
 | MultiWebAuthN Recovery - Kernel v2    | `0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9`  |
+| Content interaction session           | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
+| Content interaction actions           | `0xbDa850Ec1CD0F15275746fb185F98eE03F8Cdc4d`  |
 
 
 ## Folder Structure

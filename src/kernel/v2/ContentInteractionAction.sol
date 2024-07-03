@@ -24,10 +24,12 @@ contract ContentInteractionAction {
 
     /// @dev Send a single interaction
     function sendInteraction(Interaction calldata _interaction) external {
-        _sendInteraction(_interaction);
+        bool success = _sendInteraction(_interaction);
+        if (!success) revert InteractionFailed();
     }
 
     /// @dev Send multiple interactions
+    /// @dev Don't revert if any of them is failing
     function sendInteractions(Interaction[] calldata _interactions) external {
         for (uint256 i = 0; i < _interactions.length; i++) {
             _sendInteraction(_interactions[i]);
@@ -35,18 +37,14 @@ contract ContentInteractionAction {
     }
 
     /// @dev Send the given interaction
-    function _sendInteraction(Interaction calldata _interaction) internal {
+    function _sendInteraction(Interaction calldata _interaction) internal returns (bool success) {
         // If no content id, directly call the interaction manager with the given data
-        bool success;
         if (_interaction.contentId == 0) {
             (success,) = address(_INTERACTION_MANAGER).call(_interaction.data);
-            return;
         } else {
             // Call the interaction contract of the given content
             (success,) =
                 address(_INTERACTION_MANAGER.getInteractionContract(_interaction.contentId)).call(_interaction.data);
         }
-
-        if (!success) revert InteractionFailed();
     }
 }
