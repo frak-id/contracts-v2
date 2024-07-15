@@ -22,6 +22,8 @@ contract ContentRegistry is ERC721, OwnableRoles {
 
     error AlreadyExistingContent();
 
+    error InvalidOwner();
+
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
@@ -78,12 +80,13 @@ contract ContentRegistry is ERC721, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Mint a new content with the given metadata
-    function mint(ContentTypes _contentTypes, string calldata _name, string calldata _domain)
+    function mint(ContentTypes _contentTypes, string calldata _name, string calldata _domain, address _owner)
         public
         onlyRoles(MINTER_ROLE)
         returns (uint256 id)
     {
         if (bytes(_name).length == 0 || bytes(_domain).length == 0) revert InvalidNameOrDomain();
+        if (_owner == address(0)) revert InvalidOwner();
 
         // Compute the id (keccak of domain)
         id = uint256(keccak256(abi.encodePacked(_domain)));
@@ -98,7 +101,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
         emit ContentMinted(id, _domain, _contentTypes, _name);
 
         // And mint it
-        _mint(msg.sender, id);
+        _mint(_owner, id);
     }
 
     /* -------------------------------------------------------------------------- */

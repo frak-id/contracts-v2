@@ -56,10 +56,10 @@ contract ContentInteractionManagerTest is Test {
         referralRegistry.grantRoles(address(contentInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
 
         vm.startPrank(owner);
-        contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain");
-        contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
-        contentIdMulti = contentRegistry.mint(CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS, "name", "multi-domain");
-        contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(uint256(1 << 99)), "name", "unknown-domain");
+        contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain", owner);
+        contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain", owner);
+        contentIdMulti = contentRegistry.mint(CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS, "name", "multi-domain", owner);
+        contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(uint256(1 << 99)), "name", "unknown-domain", owner);
         contentRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
     }

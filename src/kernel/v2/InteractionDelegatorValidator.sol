@@ -4,12 +4,8 @@ pragma solidity 0.8.23;
 import {InteractionDelegatorAction} from "./InteractionDelegatorAction.sol";
 import {UserOperation} from "I4337/interfaces/UserOperation.sol";
 import {Kernel} from "kernel-v2/Kernel.sol";
-import {ValidAfter, ValidUntil, ValidationData, packValidationData} from "kernel-v2/common/Types.sol";
+import {ValidationData} from "kernel-v2/common/Types.sol";
 import {IKernelValidator} from "kernel-v2/interfaces/IKernelValidator.sol";
-import {ECDSA} from "solady/utils/ECDSA.sol";
-import {EIP712} from "solady/utils/EIP712.sol";
-
-ValidationData constant SIG_VALIDATION_FAILED = ValidationData.wrap(1);
 
 /// @author @KONFeature
 /// @title InteractionDelegatorValidator

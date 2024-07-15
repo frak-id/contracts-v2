@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {Interaction, InteractionDelegatorAction} from "./InteractionDelegatorAction.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {LibZip} from "solady/utils/LibZip.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 
 /// @author @KONFeature
 /// @title InteractionDelegator

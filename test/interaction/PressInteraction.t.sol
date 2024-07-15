@@ -21,7 +21,7 @@ contract PressInteractionTest is InteractionTest {
     function setUp() public {
         // TODO: Setup with a more granular approach
         vm.prank(owner);
-        contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
+        contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain", owner);
         vm.prank(owner);
         contentRegistry.setApprovalForAll(operator, true);
 

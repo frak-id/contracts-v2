@@ -26,8 +26,8 @@ contract SetupTestContents is Script, DeterminedAddress {
             ContentInteractionManager(addresses.contentInteractionManager);
 
         // Mint the contents
-        // uint256[] memory contentIds = _mintContents(contentRegistry);
-        uint256[] memory contentIds = _getContentIdsArr();
+        uint256[] memory contentIds = _mintContents(contentRegistry);
+        // uint256[] memory contentIds = _getContentIdsArr();
 
         // Setup the paywall
         _setupPaywall(paywall, contentIds);
@@ -73,7 +73,7 @@ contract SetupTestContents is Script, DeterminedAddress {
         string memory _name,
         string memory _domain
     ) internal returns (uint256) {
-        return _contentRegistry.mint(_contentTypes, _name, _domain);
+        return _contentRegistry.mint(_contentTypes, _name, _domain, contentOwner);
     }
 
     /// @dev Setup the paywall for the given contents

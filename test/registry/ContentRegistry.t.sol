@@ -41,45 +41,49 @@ contract ContentRegistryTest is Test {
 
     function test_mint_Unauthorized() public {
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain", minter);
     }
 
     function test_mint_InvalidNameOrDomain() public {
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.InvalidNameOrDomain.selector);
-        contentRegistry.mint(CONTENT_TYPE_DAPP, "", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "", "domain", minter);
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.InvalidNameOrDomain.selector);
-        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "", minter);
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.InvalidNameOrDomain.selector);
-        contentRegistry.mint(CONTENT_TYPE_DAPP, "", "");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "", "", minter);
+
+        vm.prank(minter);
+        vm.expectRevert(ContentRegistry.InvalidOwner.selector);
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "test", "test", address(0));
     }
 
     function test_mint_AlreadyExistingContent() public {
         vm.prank(minter);
-        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain", minter);
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.AlreadyExistingContent.selector);
-        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain", minter);
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.AlreadyExistingContent.selector);
-        contentRegistry.mint(CONTENT_TYPE_DAPP, "name-wtf", "domain");
+        contentRegistry.mint(CONTENT_TYPE_DAPP, "name-wtf", "domain", minter);
 
         vm.prank(minter);
         vm.expectRevert(ContentRegistry.AlreadyExistingContent.selector);
-        contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "domain");
+        contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "domain", minter);
     }
 
     function test_mint() public {
         uint256 id = uint256(keccak256("domain"));
 
         vm.prank(minter);
-        uint256 mintedId = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
+        uint256 mintedId = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain", minter);
 
         assertEq(mintedId, id);
         assertEq(contentRegistry.ownerOf(mintedId), address(minter));
@@ -94,7 +98,7 @@ contract ContentRegistryTest is Test {
 
     function test_updateMetadata() public {
         vm.prank(minter);
-        uint256 id = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
+        uint256 id = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain", minter);
 
         Metadata memory metadata = contentRegistry.getMetadata(id);
         assertEq(ContentTypes.unwrap(metadata.contentTypes), ContentTypes.unwrap(CONTENT_TYPE_DAPP));
@@ -119,7 +123,7 @@ contract ContentRegistryTest is Test {
 
     function test_isAuthorized() public {
         vm.prank(minter);
-        uint256 id = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain");
+        uint256 id = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "domain", minter);
 
         assertEq(contentRegistry.isAuthorized(id, minter), true);
         assertEq(contentRegistry.isAuthorized(id, owner), false);

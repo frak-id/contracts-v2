@@ -51,6 +51,7 @@ contract CleanupCampaigns is Script, DeterminedAddress {
 
     function _cleanupReferralCampaign(ReferralCampaign _campaign) internal {
         console.log("Witdrawing campaign %s token", address(_campaign));
+        address campaignAddress = address(_campaign);
         vm.startBroadcast();
         _campaign.withdraw();
         vm.stopBroadcast();

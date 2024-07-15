@@ -17,9 +17,9 @@ contract DeployModuleV2 is Script, DeterminedAddress {
     address MULTI_WEBAUTHN_VALIDATOR_ADDRESS = 0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808;
     address MULTI_WEBAUTHN_VALIDATOR_RECOVERY_ADDRESS = 0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9;
 
-    address INTERACTION_DELEGATOR_ADDRESS = 0x7caF754C934710D7C73bc453654552BEcA38223F;
-    address INTERACTION_DELEGATOR_VALIDATOR_ADDRESS = 0x7caF754C934710D7C73bc453654552BEcA38223F;
-    address INTERACTION_DELEGATOR_ACTION_ADDRESS = 0x7caF754C934710D7C73bc453654552BEcA38223F;
+    address INTERACTION_DELEGATOR_ADDRESS = 0x71F9fA6567508d8221aa689290f6d92B493fD10A;
+    address INTERACTION_DELEGATOR_VALIDATOR_ADDRESS = 0xb86e5f95904A40f12Bbe0a466c73cDec55154Ec1;
+    address INTERACTION_DELEGATOR_ACTION_ADDRESS = 0xD910e1e952ab2F23282dB8450AA7054841Ef53B8;
 
     function run() public {
         deploy();
@@ -78,29 +78,30 @@ contract DeployModuleV2 is Script, DeterminedAddress {
         }
 
         // Deploy the interaction delegator validator if not already deployed
-        InteractionDelegatorValidator interactionValidator;
+        InteractionDelegatorValidator interactionDelegatorValidator;
         if (INTERACTION_DELEGATOR_VALIDATOR_ADDRESS.code.length == 0) {
             console.log("Deploying InteractionDelegatorValidator");
-            interactionValidator = new InteractionDelegatorValidator{salt: 0}(address(interactionDelegator));
+            interactionDelegatorValidator = new InteractionDelegatorValidator{salt: 0}(address(interactionDelegator));
         } else {
-            interactionValidator = InteractionDelegatorValidator(INTERACTION_DELEGATOR_VALIDATOR_ADDRESS);
+            interactionDelegatorValidator = InteractionDelegatorValidator(INTERACTION_DELEGATOR_VALIDATOR_ADDRESS);
         }
 
         // Deploy the interaction delegator action if not already deployed
-        InteractionDelegatorAction contentInteractionAction;
+        InteractionDelegatorAction interactionDelegatorAction;
         if (INTERACTION_DELEGATOR_ACTION_ADDRESS.code.length == 0) {
             console.log("Deploying InteractionDelegatorAction");
-            contentInteractionAction = new InteractionDelegatorAction{salt: 0}(
+            interactionDelegatorAction = new InteractionDelegatorAction{salt: 0}(
                 ContentInteractionManager(_getAddresses().contentInteractionManager)
             );
         } else {
-            contentInteractionAction = InteractionDelegatorAction(INTERACTION_DELEGATOR_ACTION_ADDRESS);
+            interactionDelegatorAction = InteractionDelegatorAction(INTERACTION_DELEGATOR_ACTION_ADDRESS);
         }
 
         // Log every deployed address
         console.log("Chain: %s", block.chainid);
-        console.log(" - InteractionSessionValidator: %s", address(interactionValidator));
-        console.log(" - ContentInteractionAction: %s", address(contentInteractionAction));
+        console.log(" - InteractionDelegator: %s", address(interactionDelegator));
+        console.log(" - InteractionDelegatorValidator: %s", address(interactionDelegatorValidator));
+        console.log(" - InteractionDelegatorAction: %s", address(interactionDelegatorAction));
 
         vm.stopBroadcast();
     }

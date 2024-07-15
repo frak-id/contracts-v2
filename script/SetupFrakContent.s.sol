@@ -28,8 +28,8 @@ contract SetupTestContents is Script, DeterminedAddress {
             ContentInteractionManager(addresses.contentInteractionManager);
 
         // Mint the contents
-        //uint256 frakContentId = _mintFrakContent(contentRegistry);
-        uint256 frakContentId = _getContentIds().cFrakDapp;
+        uint256 frakContentId = _mintFrakContent(contentRegistry);
+        // uint256 frakContentId = _getContentIds().cFrakDapp;
 
         // Setup the interactions
         _setupInteractions(contentInteractionManager, frakContentId);
@@ -60,7 +60,7 @@ contract SetupTestContents is Script, DeterminedAddress {
         string memory _name,
         string memory _domain
     ) internal returns (uint256) {
-        return _contentRegistry.mint(_contentTypes, _name, _domain);
+        return _contentRegistry.mint(_contentTypes, _name, _domain, contentOwner);
     }
 
     /// @dev Setup the paywall for the given contents

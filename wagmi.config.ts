@@ -63,8 +63,9 @@ export default defineConfig(
             plugins: foundryPlugin([
                 'MultiWebAuthNRecoveryAction.json',
                 'MultiWebAuthNValidatorV2.json',
-                'InteractionSessionValidator.json',
-                'ContentInteractionAction.json'
+                'InteractionDelegatorValidator.json',
+                'InteractionDelegatorAction.json',
+                'InteractionDelegator.json'
             ]),
         },
         // Kernel v3 abis
