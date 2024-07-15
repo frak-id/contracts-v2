@@ -21,22 +21,44 @@ contract InteractionDelegator is OwnableRoles {
     /// @dev Represent a delegated interaction
     struct DelegatedInteraction {
         address wallet;
-        uint256 contentId;
-        bytes data;
+        Interaction interaction;
     }
 
     /// @dev The execute the given `_compressed` interactions on the behalf of the users
     function execute(bytes calldata _compressed) external onlyRoles(DELEGATION_EXECUTOR_ROLE) {
         // Parse the interactions
-        DelegatedInteraction[] memory interactions = abi.decode(_compressed.cdDecompress(), (DelegatedInteraction[]));
+        DelegatedInteraction[] memory delegatedInteractions =
+            abi.decode(_compressed.cdDecompress(), (DelegatedInteraction[]));
 
         // Execute the interactions
-        for (uint256 i = 0; i < interactions.length; i++) {
-            DelegatedInteraction memory interaction = interactions[i];
+        for (uint256 i = 0; i < delegatedInteractions.length; i++) {
+            DelegatedInteraction memory dInteraction = delegatedInteractions[i];
             // Map to smart wallet
-            InteractionDelegatorAction walletAction = InteractionDelegatorAction(interaction.wallet);
+            InteractionDelegatorAction walletAction = InteractionDelegatorAction(dInteraction.wallet);
             // Execute the interaction (we don't handle error)
-            try walletAction.sendInteraction(Interaction(interaction.contentId, interaction.data)) {} catch {}
+            try walletAction.sendInteraction(dInteraction.interaction) {} catch {}
+        }
+    }
+
+    /// @dev Represent a delegated interaction
+    struct DelegatedBatchedInteraction {
+        address wallet;
+        Interaction[] interactions;
+    }
+
+    /// @dev The execute the given `_compressed` interactions on the behalf of the users
+    function executeBatched(bytes calldata _compressed) external onlyRoles(DELEGATION_EXECUTOR_ROLE) {
+        // Parse the interactions
+        DelegatedBatchedInteraction[] memory delegatedInteractions =
+            abi.decode(_compressed.cdDecompress(), (DelegatedBatchedInteraction[]));
+
+        // Execute the interactions
+        for (uint256 i = 0; i < delegatedInteractions.length; i++) {
+            DelegatedBatchedInteraction memory dInteraction = delegatedInteractions[i];
+            // Map to smart wallet
+            InteractionDelegatorAction walletAction = InteractionDelegatorAction(dInteraction.wallet);
+            // Execute the interaction (we don't handle error)
+            try walletAction.sendInteractions(dInteraction.interactions) {} catch {}
         }
     }
 }

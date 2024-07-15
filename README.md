@@ -38,8 +38,10 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 | Kernel V2                                                                             |
 | MultiWebAuthN - Kernel v2             | `0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808`  |
 | MultiWebAuthN Recovery - Kernel v2    | `0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9`  |
-| Content interaction session           | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
-| Content interaction actions           | `0xbDa850Ec1CD0F15275746fb185F98eE03F8Cdc4d`  |
+| Interaction delegator                 | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
+| Interaction delegator validator       | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
+| Interaction delegator action          | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
+| Interaction delegator validator       | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
 
 
 ## Folder Structure
