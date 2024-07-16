@@ -19,8 +19,8 @@ contract AddOperator is Script, DeterminedAddress {
     function run() public {
         Addresses memory addresses = _getAddresses();
 
-        //_addContentMinter(ContentRegistry(addresses.contentRegistry));
-        //return;
+        _addContentMinter(ContentRegistry(addresses.contentRegistry));
+        return;
 
         ContentInteractionManager contentInteractionManager =
             ContentInteractionManager(addresses.contentInteractionManager);

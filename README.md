@@ -36,12 +36,11 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 | Recovery Policy                       | `0xD0b868A455d39be41f6f4bEb1efe3912966e8233`  |
 | Recovery Contract                     | `0x518B5EFB2A2A3c1D408b8aE60A2Ba8D6d264D7BA`  |
 | Kernel V2                                                                             |
-| MultiWebAuthN - Kernel v2             | `0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808`  |
-| MultiWebAuthN Recovery - Kernel v2    | `0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9`  |
-| Interaction delegator                 | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
-| Interaction delegator validator       | `0x71F9fA6567508d8221aa689290f6d92B493fD10A`  |
-| Interaction delegator action          | `0xb86e5f95904A40f12Bbe0a466c73cDec55154Ec1`  |
-| Interaction delegator validator       | `0xD910e1e952ab2F23282dB8450AA7054841Ef53B8`  |
+| MultiWebAuthN - Kernel v2             | `0xF05f18D9312f10d1d417c45040B8497899f66A5E`  |
+| MultiWebAuthN Recovery - Kernel v2    | `0x8b29229515D3e5b829D59617A791b5B3a2c32ff1`  |
+| Interaction delegator                 | `0x4b8350E6291063bF14ca1E4379147a3bd23714CB`  |
+| Interaction delegator validator       | `0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C`  |
+| Interaction delegator action          | `0xD910e1e952ab2F23282dB8450AA7054841Ef53B8`  |
 
 
 ## Folder Structure

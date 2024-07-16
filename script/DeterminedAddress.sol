@@ -17,6 +17,17 @@ struct Addresses {
     address paywallToken;
 }
 
+struct KernelAddresses {
+    // WebAuthN
+    address p256Wrapper;
+    address webAuthNValidator;
+    address webAuthNRecoveryAction;
+    // InteractionDelegator
+    address interactionDelegator;
+    address interactionDelegatorValidator;
+    address interactionDelegatorAction;
+}
+
 struct ContentIds {
     uint256 cLeMonde;
     uint256 cLequipe;
@@ -46,6 +57,17 @@ contract DeterminedAddress {
             communityToken: 0x721bc5Aa7051A262cC5826c407f20484cd325ABe,
             paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,
             mUSDToken: 0x56039fa1a804F614eBD714139F29a3ff4DB57ad6
+        });
+    }
+
+    function _getKernelAddresses() internal pure returns (KernelAddresses memory) {
+        return KernelAddresses({
+            p256Wrapper: 0x97A24c95E317c44c0694200dd0415dD6F556663D,
+            webAuthNValidator: 0xF05f18D9312f10d1d417c45040B8497899f66A5E,
+            webAuthNRecoveryAction: 0x8b29229515D3e5b829D59617A791b5B3a2c32ff1,
+            interactionDelegator: 0x4b8350E6291063bF14ca1E4379147a3bd23714CB,
+            interactionDelegatorValidator: 0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C,
+            interactionDelegatorAction: 0xD910e1e952ab2F23282dB8450AA7054841Ef53B8
         });
     }
 
