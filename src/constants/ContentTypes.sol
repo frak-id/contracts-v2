@@ -27,6 +27,10 @@ library ContentTypesLib {
         return self.containType(CONTENT_TYPE_PRESS);
     }
 
+    function hasReferralFeature(ContentTypes self) internal pure returns (bool isType) {
+        return self.containType(CONTENT_TYPE_FEATURE_REFERRAL);
+    }
+
     function containType(ContentTypes self, ContentTypes typeToCheck) internal pure returns (bool containsType) {
         return ContentTypes.unwrap(self) & ContentTypes.unwrap(typeToCheck) != 0;
     }
@@ -60,12 +64,18 @@ library ContentTypesLib {
 /*                        The content types denominator                       */
 /* -------------------------------------------------------------------------- */
 
-uint8 constant DENOMINATOR_PRESS = 2;
+// Global content types
 uint8 constant DENOMINATOR_DAPP = 1;
+uint8 constant DENOMINATOR_PRESS = 2;
+
+// Feature types denominators
+uint8 constant DENOMINATOR_FEATURE_REFERRAL = 30;
 
 /* -------------------------------------------------------------------------- */
 /*                          All of our content types                          */
 /* -------------------------------------------------------------------------- */
 
-ContentTypes constant CONTENT_TYPE_PRESS = ContentTypes.wrap(uint256(1 << DENOMINATOR_PRESS));
 ContentTypes constant CONTENT_TYPE_DAPP = ContentTypes.wrap(uint256(1 << DENOMINATOR_DAPP));
+ContentTypes constant CONTENT_TYPE_PRESS = ContentTypes.wrap(uint256(1 << DENOMINATOR_PRESS));
+
+ContentTypes constant CONTENT_TYPE_FEATURE_REFERRAL = ContentTypes.wrap(uint256(1 << DENOMINATOR_FEATURE_REFERRAL));

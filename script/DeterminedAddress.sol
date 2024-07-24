@@ -29,11 +29,9 @@ struct KernelAddresses {
 }
 
 struct ContentIds {
-    uint256 cLeMonde;
-    uint256 cLequipe;
-    uint256 cWired;
-    uint256 cFrak;
-    uint256 cFrakDapp;
+    uint256 cNewsPaper;
+    uint256 cNewsExample;
+    uint256 cEthccDemo;
 }
 
 struct DeploymentBlocks {
@@ -51,8 +49,8 @@ contract DeterminedAddress {
             contentRegistry: 0x758F01B484212b38EAe264F75c0DD7842d510D9c,
             referralRegistry: 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43,
             contentInteractionManager: 0xFE0717cACd6Fff3001EdD3f360Eb2854F54861DD,
-            facetFactory: 0x80CAac4B9A0fA96db053aa08A79E17aa22EC29fc,
-            campaignFactory: 0x440B19d7694f4B8949b02e674870880c5e40250C,
+            facetFactory: 0xCB5207712044eC3B3787269CAA2B90c120Bc24e6,
+            campaignFactory: 0xeBFCD452F92C679B85C00a9E2A6D299A73F48C5A,
             paywall: 0x25Bc9633dD2B96D3C913D9b5D37AD92d5FaA00Ac,
             communityToken: 0x721bc5Aa7051A262cC5826c407f20484cd325ABe,
             paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,
@@ -73,24 +71,21 @@ contract DeterminedAddress {
 
     function _getContentIds() internal pure returns (ContentIds memory) {
         return ContentIds({
-            cLeMonde: 106219508196454080375526586478153583586194937194493887259467424694676997453395,
-            cLequipe: 108586150798115180574743190405367285583167702751783717273705027881651322809951,
-            cWired: 61412812549033025435811962204424170589965658763482764336017940556663446417829,
-            cFrak: 20376791661718660580662410765070640284736320707848823176694931891585259913409,
-            cFrakDapp: 79779516358427208576129661848423776934526633566649852115422670859041784133448
+            cNewsPaper: 20376791661718660580662410765070640284736320707848823176694931891585259913409,
+            cNewsExample: 8073960722007594212918575991467917289452723924551607525414094759273404023523,
+            cEthccDemo: 33953649417576654953995537313820306697747390492794311279756157547821320957282
         });
     }
 
     function _getContentIdsArr() internal pure returns (uint256[] memory arr) {
         ContentIds memory contentIds = _getContentIds();
-        arr = new uint256[](4);
-        arr[0] = contentIds.cLeMonde;
-        arr[1] = contentIds.cLequipe;
-        arr[2] = contentIds.cWired;
-        arr[3] = contentIds.cFrak;
+        arr = new uint256[](3);
+        arr[0] = contentIds.cNewsPaper;
+        arr[1] = contentIds.cNewsExample;
+        arr[2] = contentIds.cEthccDemo;
     }
 
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {
-        return DeploymentBlocks({arbSepolia: 54321880});
+        return DeploymentBlocks({arbSepolia: 66229858});
     }
 }

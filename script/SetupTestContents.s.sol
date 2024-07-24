@@ -5,7 +5,12 @@ import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
+import {
+    CONTENT_TYPE_DAPP,
+    CONTENT_TYPE_FEATURE_REFERRAL,
+    CONTENT_TYPE_PRESS,
+    ContentTypes
+} from "src/constants/ContentTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
@@ -27,10 +32,9 @@ contract SetupTestContents is Script, DeterminedAddress {
 
         // Mint the contents
         uint256[] memory contentIds = _mintContents(contentRegistry);
-        // uint256[] memory contentIds = _getContentIdsArr();
 
-        // Setup the paywall
-        _setupPaywall(paywall, contentIds);
+        // Setup the paywall for the news example website
+        _setupPaywall(paywall, _getContentIds().cNewsExample);
 
         // Setup the community tokens
         _setupCommunityTokens(CommunityToken(addresses.communityToken), contentIds);
@@ -43,27 +47,35 @@ contract SetupTestContents is Script, DeterminedAddress {
 
     /// @dev Mint the test contents
     function _mintContents(ContentRegistry contentRegistry) internal returns (uint256[] memory contentIds) {
-        contentIds = new uint256[](4);
+        contentIds = new uint256[](2);
         vm.startBroadcast();
 
         // Mint the tests contents
-        uint256 cLeMonde =
-            _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "Le Monde", "news-example.frak.id/le-monde");
-        uint256 cLequipe = _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "L'equipe", "news-example.frak.id/lequipe");
-        uint256 cWired = _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "Wired", "news-example.frak.id/wired");
-        uint256 cFrak = _mintContent(contentRegistry, CONTENT_TYPE_PRESS, "Frak", "news-paper.xyz");
+        uint256 cEthccDemo = _mintContent(
+            contentRegistry,
+            CONTENT_TYPE_PRESS | CONTENT_TYPE_DAPP | CONTENT_TYPE_FEATURE_REFERRAL,
+            "Frak - EthCC demo",
+            "ethcc.news-paper.xyz"
+        );
+        uint256 cNewsExample = _mintContent(
+            contentRegistry,
+            CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL,
+            "Frak - Gating Example",
+            "news-example.frak.id"
+        );
+        uint256 cNewsPaper = _mintContent(
+            contentRegistry, CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL, "A Positivie World", "news-paper.xyz"
+        );
         vm.stopBroadcast();
 
         console.log("Content id:");
-        console.log(" - Le Monde: %s", cLeMonde); // 106219508196454080375526586478153583586194937194493887259467424694676997453395
-        console.log(" - L'equipe: %s", cLequipe); // 108586150798115180574743190405367285583167702751783717273705027881651322809951
-        console.log(" - Wired: %s", cWired); // 61412812549033025435811962204424170589965658763482764336017940556663446417829
-        console.log(" - Frak: %s", cFrak); // 20376791661718660580662410765070640284736320707848823176694931891585259913409
+        console.log(" - News-Paper: %s", cNewsPaper); // 20376791661718660580662410765070640284736320707848823176694931891585259913409
+        console.log(" - News-Example: %s", cNewsExample); // 8073960722007594212918575991467917289452723924551607525414094759273404023523
+        console.log(" - EthCC demo: %s", cEthccDemo); // 33953649417576654953995537313820306697747390492794311279756157547821320957282
 
-        contentIds[0] = cLeMonde;
-        contentIds[1] = cLequipe;
-        contentIds[2] = cWired;
-        contentIds[3] = cFrak;
+        contentIds[0] = cNewsExample;
+        contentIds[1] = cEthccDemo;
+        contentIds[2] = cNewsPaper;
     }
 
     /// @dev Mint a content with the given name and domain
@@ -77,15 +89,13 @@ contract SetupTestContents is Script, DeterminedAddress {
     }
 
     /// @dev Setup the paywall for the given contents
-    function _setupPaywall(Paywall _paywall, uint256[] memory _contentIds) internal {
+    function _setupPaywall(Paywall _paywall, uint256 _contentId) internal {
         console.log("Setting up paywall");
+
         vm.startBroadcast();
-        for (uint256 i = 0; i < _contentIds.length; i++) {
-            uint256 _contentId = _contentIds[i];
-            _paywall.addPrice(_contentId, Paywall.UnlockPrice(50 ether, 1 days, true));
-            _paywall.addPrice(_contentId, Paywall.UnlockPrice(300 ether, 7 days, true));
-            _paywall.addPrice(_contentId, Paywall.UnlockPrice(1000 ether, 30 days, true));
-        }
+        _paywall.addPrice(_contentId, Paywall.UnlockPrice(50 ether, 1 days, true));
+        _paywall.addPrice(_contentId, Paywall.UnlockPrice(300 ether, 7 days, true));
+        _paywall.addPrice(_contentId, Paywall.UnlockPrice(1000 ether, 30 days, true));
         vm.stopBroadcast();
     }
 

@@ -28,6 +28,7 @@ export default defineConfig(
                 'ContentInteractionManager.json',
                 'ContentInteractionDiamond.json',
                 'PressInteractionFacet.json',
+                'ReferralFeatureFacet.json',
                 'DappInteractionFacet.json',
             ]),
         },
