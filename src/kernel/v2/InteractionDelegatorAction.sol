@@ -10,9 +10,9 @@ struct Interaction {
 }
 
 /// @author @KONFeature
-/// @title ContentInteractionAction
+/// @title InteractionDelegatorAction
 /// @notice A kernel action used to interaction with content interactions
-contract ContentInteractionAction {
+contract InteractionDelegatorAction {
     error InteractionFailed();
 
     /// @dev The content registry

@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
-import {InteractionType, InteractionTypeLib, PressInteractions} from "../constants/InteractionType.sol";
+import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../constants/InteractionType.sol";
 import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
@@ -18,7 +18,7 @@ import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 contract ReferralCampaign is InteractionCampaign, PushPullModule {
     using SafeTransferLib for address;
     using InteractionTypeLib for bytes;
-    using PressInteractions for bytes;
+    using ReferralInteractions for bytes;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
@@ -188,7 +188,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev Check if the given campaign support the `_contentType`
     function supportContentType(ContentTypes _contentType) public pure override returns (bool) {
         // Only supporting press content
-        return _contentType.isPressType();
+        return _contentType.hasReferralFeature();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -206,7 +206,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
 
         // If the interaction is a usage of a share link, handle it
-        if (interactionType == PressInteractions.REFERRED) {
+        if (interactionType == ReferralInteractions.REFERRED) {
             _performTokenDistribution(user, BASE_REWARD);
         }
     }
@@ -278,6 +278,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         }
     }
 
+    /// @dev Update the distribution cap
+    /// @dev  And reset it if needed
     function _updateDistributionCap(uint256 _distributedAmount) private {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
 

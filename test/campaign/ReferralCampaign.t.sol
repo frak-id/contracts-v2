@@ -8,8 +8,13 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {CAMPAIGN_EVENT_EMITTER_ROLE} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {CONTENT_TYPE_DAPP, CONTENT_TYPE_PRESS, ContentTypes} from "src/constants/ContentTypes.sol";
-import {InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
+import {
+    CONTENT_TYPE_DAPP,
+    CONTENT_TYPE_FEATURE_REFERRAL,
+    CONTENT_TYPE_PRESS,
+    ContentTypes
+} from "src/constants/ContentTypes.sol";
+import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
@@ -30,7 +35,8 @@ contract ReferralCampaignTest is InteractionTest {
 
     function setUp() public {
         vm.prank(owner);
-        contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
+        contentId =
+            contentRegistry.mint(CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL, "name", "press-domain", owner);
         vm.prank(owner);
         contentRegistry.setApprovalForAll(operator, true);
 
@@ -118,7 +124,12 @@ contract ReferralCampaignTest is InteractionTest {
     function test_supportContentType() public view {
         assertEq(referralCampaign.supportContentType(CONTENT_TYPE_DAPP), false);
         assertEq(referralCampaign.supportContentType(ContentTypes.wrap(uint256(1 << 9))), false);
-        assertEq(referralCampaign.supportContentType(CONTENT_TYPE_PRESS), true);
+        assertEq(referralCampaign.supportContentType(CONTENT_TYPE_PRESS), false);
+        assertEq(referralCampaign.supportContentType(CONTENT_TYPE_FEATURE_REFERRAL), true);
+        assertEq(
+            referralCampaign.supportContentType(CONTENT_TYPE_FEATURE_REFERRAL | CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS),
+            true
+        );
     }
 
     function test_withdraw() public {
@@ -206,7 +217,7 @@ contract ReferralCampaignTest is InteractionTest {
     }
 
     function test_handleInteraction_sharedArticleUsed() public withReferralChain {
-        bytes memory interactionData = InteractionTypeLib.packForCampaign(PressInteractions.REFERRED, alice);
+        bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
 
         // Ensure call won't fail with fcked up data
         vm.prank(emitter);
@@ -231,7 +242,7 @@ contract ReferralCampaignTest is InteractionTest {
     }
 
     function test_disallowMe() public withReferralChain {
-        bytes memory interactionData = InteractionTypeLib.packForCampaign(PressInteractions.REFERRED, alice);
+        bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
 
         vm.prank(emitter);
         referralCampaign.disallowMe();

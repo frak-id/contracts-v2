@@ -298,6 +298,9 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
 
         // If the campaign to remove is the last one, directly pop the element out of the array and exit
         if (address(lastCampaign) == address(_campaign)) {
+            // Emit the campaign detachment
+            emit CampaignDetached(_campaign);
+            // Disalow it and exit
             lastCampaign.disallowMe();
             campaigns.pop();
             return;

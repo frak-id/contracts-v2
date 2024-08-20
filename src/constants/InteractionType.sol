@@ -133,14 +133,12 @@ library PressInteractions {
 
     /// @dev `bytes4(keccak256("frak.press.interaction.read_article"))`
     InteractionType constant READ_ARTICLE = InteractionType.wrap(0xd5bd0fbe);
+}
 
-    /// @dev `bytes4(keccak256("frak.press.interaction.referred"))`
-    InteractionType constant REFERRED = InteractionType.wrap(0x3d1508ad);
+library ReferralInteractions {
+    /// @dev `bytes4(keccak256("frak.referral.interaction.referred"))`
+    InteractionType constant REFERRED = InteractionType.wrap(0x010cc3b9);
 
-    /// @dev Decode a referred interaction
-    function decodeReferred(bytes calldata _data) internal pure returns (address referrer) {
-        assembly {
-            referrer := shr(96, calldataload(_data.offset))
-        }
-    }
+    /// @dev `bytes4(keccak256("frak.referral.interaction.link_creation"))`
+    InteractionType constant REFERRAL_LINK_CREATION = InteractionType.wrap(0xb2c0f17c);
 }

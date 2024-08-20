@@ -225,7 +225,7 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
 
     /// @dev Check if the caller is a valid signer, this don't apply to the WebAuthN validator, since it's using a public key
     function validCaller(address, bytes calldata) external pure override returns (bool) {
-        revert NotImplemented();
+        return false;
     }
 
     /// @notice Validates the given `_signature` against the `_hash` for the given `_sender`

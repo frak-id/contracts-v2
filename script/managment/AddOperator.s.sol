@@ -6,14 +6,24 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
+import {MINTER_ROLE} from "src/constants/Roles.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract AddOperator is Script, DeterminedAddress {
-    address private operator = 0x04C799736D1aCfA30a0B952c2be5ADF960d5dDaa;
+    address private operator = 0xB875AAD94cd568CE0359A73b62Af1614E4ff0901;
+
+    address private contentMinter = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
 
     function run() public {
         Addresses memory addresses = _getAddresses();
+
+        //_addContentMinter(ContentRegistry(addresses.contentRegistry));
+
+        // _addMinter(mUSDToken(addresses.mUSDToken));
+        //return;
 
         ContentInteractionManager contentInteractionManager =
             ContentInteractionManager(addresses.contentInteractionManager);
@@ -31,6 +41,18 @@ contract AddOperator is Script, DeterminedAddress {
     function _addOperator(ContentInteractionManager _contentInteractionManager, uint256 _cId) internal {
         vm.startBroadcast();
         _contentInteractionManager.addOperator(_cId, operator);
+        vm.stopBroadcast();
+    }
+
+    function _addContentMinter(ContentRegistry _contentRegistry) internal {
+        vm.startBroadcast();
+        _contentRegistry.grantRoles(contentMinter, MINTER_ROLE);
+        vm.stopBroadcast();
+    }
+
+    function _addMinter(mUSDToken _musdToken) internal {
+        vm.startBroadcast();
+        _musdToken.grantRoles(airdropper, MINTER_ROLE);
         vm.stopBroadcast();
     }
 }

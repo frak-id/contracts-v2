@@ -11,14 +11,11 @@ Address of the Frak contracts, deployed on Arbitrum and arbitrum sepolia.
 
 | Name                      | Address                                       |
 |---------------------------|-----------------------------------------------|
-| Content Registry          | `0xC110ecb55EbAa4Ea9eFC361C4bBB224A6664Ea45`  |
+| Content Registry          | `0x758F01B484212b38EAe264F75c0DD7842d510D9c`  |
 | Referral Registry         | `0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43`  |
-| Content Interaction Mgr   | `0xC97D72A8a9d1D2Ed326EB04f2d706A21cEe2B94E`  |
-| Content Facet Factory     | `0x27EFC7876a0C21239fA33eb62Ae55591D5204781`  |
+| Content Interaction Mgr   | `0xFE0717cACd6Fff3001EdD3f360Eb2854F54861DD`  |
+| Content Facet Factory     | `0x80CAac4B9A0fA96db053aa08A79E17aa22EC29fc`  |
 | Content Campaign Factory  | `0x440B19d7694f4B8949b02e674870880c5e40250C`  |
-| Paywall Contract          | `0x1d11207BD915D1f8A4393D20AB318a1a961CCE6F`  |
-| Community Token           | `0x5E7759F47b5992DFB85Ef38dD48A9201aDF24b75`  | 
-| FRK Paywall Token         | `0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2`  |
 
 ### Kernel plugins
 
@@ -36,10 +33,11 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 | Recovery Policy                       | `0xD0b868A455d39be41f6f4bEb1efe3912966e8233`  |
 | Recovery Contract                     | `0x518B5EFB2A2A3c1D408b8aE60A2Ba8D6d264D7BA`  |
 | Kernel V2                                                                             |
-| MultiWebAuthN - Kernel v2             | `0xD546c4Ba2e8e5e5c961C36e6Db0460Be03425808`  |
-| MultiWebAuthN Recovery - Kernel v2    | `0x67236B8AAF4B32d2D3269e088B1d43aef7736ab9`  |
-| Content interaction session           | `0x4794D967Bcd1A07EBd1c6dC4A44210Bb27ca7f50`  |
-| Content interaction actions           | `0xbDa850Ec1CD0F15275746fb185F98eE03F8Cdc4d`  |
+| MultiWebAuthN - Kernel v2             | `0xF05f18D9312f10d1d417c45040B8497899f66A5E`  |
+| MultiWebAuthN Recovery - Kernel v2    | `0x8b29229515D3e5b829D59617A791b5B3a2c32ff1`  |
+| Interaction delegator                 | `0x4b8350E6291063bF14ca1E4379147a3bd23714CB`  |
+| Interaction delegator validator       | `0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C`  |
+| Interaction delegator action          | `0xD910e1e952ab2F23282dB8450AA7054841Ef53B8`  |
 
 
 ## Folder Structure
@@ -61,8 +59,6 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 ├── registry
 │   ├── ContentRegistry.sol
 │   └── ReferralRegistry.sol
-├── gating
-│   └── Paywall.sol
 ├── constants
 ├── tokens
 ├── kernel
@@ -152,18 +148,3 @@ Contracts for running campaigns within the Frak ecosystem.
     - Supports multi-level referral systems, rewarding both referrers and referees at multiple levels.
     - Allows for customizable reward distribution, where the percentage of rewards allocated to each referral level can be configured.
     - Implements a daily distribution cap to prevent abuse and ensure the sustainability of the campaign.
-
-
-## Gating
-
-### `gating/`
-
-This directory contains contracts related to content access control and monetization within the Frak ecosystem.
-
-#### `Paywall.sol`
-
-- Allows content creators to restrict access to their content and require payment for access.
-- **Key Features:**
-    - Enables content creators to define access rules for their content, specifying which users or wallets are allowed to access it.
-    - Supports integration with payment tokens, allowing users to pay for content access using designated cryptocurrencies.
-    - Can be extended to implement subscription-based access models, where users pay a recurring fee for ongoing content access. 

@@ -9,6 +9,7 @@ import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
 import {DappInteractionFacet} from "./facets/DappInteractionFacet.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
+import {ReferralFeatureFacet} from "./facets/ReferralFeatureFacet.sol";
 
 /// @title InteractionFacetsFactory
 /// @author @KONFeature
@@ -21,9 +22,10 @@ contract InteractionFacetsFactory is IFacetsFactory {
     ReferralRegistry private immutable _REFERRAL_REGISTRY;
     ContentRegistry private immutable _CONTENT_REGISTRY;
 
-    /// @dev The press facet address
+    /// @dev The facets addresses
     IInteractionFacet private immutable _PRESS_FACET;
     IInteractionFacet private immutable _DAPP_FACET;
+    IInteractionFacet private immutable _REFERRAL_FEATURE_FACET;
 
     /// @dev Constructor, will deploy all the known facets
     constructor(ReferralRegistry _referralRegistry, ContentRegistry _contentRegistry) {
@@ -32,8 +34,9 @@ contract InteractionFacetsFactory is IFacetsFactory {
         _CONTENT_REGISTRY = _contentRegistry;
 
         // Our facets
-        _PRESS_FACET = new PressInteractionFacet(_referralRegistry);
+        _PRESS_FACET = new PressInteractionFacet();
         _DAPP_FACET = new DappInteractionFacet();
+        _REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -83,8 +86,10 @@ contract InteractionFacetsFactory is IFacetsFactory {
             facets[index] = _DAPP_FACET;
             index++;
         }
-
-        // TODO: dapp facet, to check when the stylus contract would be live, and adapt depending on it
+        if (contentTypes.hasReferralFeature()) {
+            facets[index] = _REFERRAL_FEATURE_FACET;
+            index++;
+        }
 
         // Resize the array to the correct size
         assembly {

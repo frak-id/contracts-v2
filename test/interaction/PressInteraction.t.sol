@@ -21,7 +21,7 @@ contract PressInteractionTest is InteractionTest {
     function setUp() public {
         // TODO: Setup with a more granular approach
         vm.prank(owner);
-        contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain");
+        contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain", owner);
         vm.prank(owner);
         contentRegistry.setApprovalForAll(operator, true);
 
@@ -54,7 +54,7 @@ contract PressInteractionTest is InteractionTest {
 
     function test_construct() public {
         // Can be built
-        PressInteractionFacet tFacet = new PressInteractionFacet(referralRegistry);
+        PressInteractionFacet tFacet = new PressInteractionFacet();
         assertEq(tFacet.contentTypeDenominator(), DENOMINATOR_PRESS);
     }
 
@@ -159,68 +159,6 @@ contract PressInteractionTest is InteractionTest {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                                Test referred                               */
-    /* -------------------------------------------------------------------------- */
-
-    function test_referred_simple() public {
-        (bytes memory packedInteraction, bytes memory signature) =
-            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(bob), alice);
-
-        // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
-        emit PressInteractionFacet.UserReferred(alice, bob);
-        // Call the open referral method
-        vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
-
-        assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
-    }
-
-    function test_referred_simple(address _user, address _referrer) public {
-        vm.assume(_user != address(0) && _referrer != address(0));
-        (bytes memory packedInteraction, bytes memory signature) =
-            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(_referrer), _user);
-
-        // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
-        emit PressInteractionFacet.UserReferred(_user, _referrer);
-        // Call the open referral method
-        vm.prank(_user);
-        contentInteraction.handleInteraction(packedInteraction, signature);
-
-        assertEq(referralRegistry.getReferrer(referralTree, _user), _referrer);
-    }
-
-    function test_referred_doNothing() public {
-        (bytes memory packedInteraction, bytes memory signature) =
-            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(address(0)), alice);
-
-        // Call the referral method
-        vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
-
-        assertEq(referralRegistry.getReferrer(referralTree, alice), address(0));
-    }
-
-    function test_referred_alreadyHasReferrer() public {
-        (bytes memory packedInteraction, bytes memory signature) =
-            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(bob), alice);
-
-        // Call the referral method
-        vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
-        assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
-
-        (packedInteraction, signature) =
-            _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.REFERRED, _referredData(charlie), alice);
-        vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
-
-        // Ensure it hasn't changed
-        assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
-    }
-
-    /* -------------------------------------------------------------------------- */
     /*                             Some small helpers                             */
     /* -------------------------------------------------------------------------- */
 
@@ -230,9 +168,5 @@ contract PressInteractionTest is InteractionTest {
 
     function _readArticleData(bytes32 _articleId) private pure returns (bytes memory) {
         return abi.encode(_articleId);
-    }
-
-    function _referredData(address _referrer) private pure returns (bytes memory) {
-        return abi.encode(_referrer);
     }
 }
