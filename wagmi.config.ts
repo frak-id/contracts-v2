@@ -48,16 +48,6 @@ export default defineConfig(
                 'StylusFlattened.json',
             ]),
         },
-        // Frak gating abis
-        {
-            out: "abi/frak-gating-abis.ts",
-            plugins: foundryPlugin([
-                'mUSDToken.json',
-                'PaywallToken.json',
-                'CommunityToken.json',
-                'Paywall.json'
-            ]),
-        },
         // Kernel v2 abis
         {
             out: "abi/kernel-v2-abis.ts",

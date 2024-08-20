@@ -11,13 +11,11 @@ import {
     CONTENT_TYPE_PRESS,
     ContentTypes
 } from "src/constants/ContentTypes.sol";
-import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
-import {PaywallToken} from "src/tokens/PaywallToken.sol";
 
 /// todo: Should be refacto to update the faucet factory, set it on the contentInteractionManager, and then call the update function
 contract UpdateContentInteractions is Script, DeterminedAddress {

@@ -12,12 +12,10 @@ import {
     ContentTypes
 } from "src/constants/ContentTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
-import {Paywall} from "src/gating/Paywall.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
-import {CommunityToken} from "src/tokens/CommunityToken.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract SetupTestContents is Script, DeterminedAddress {
@@ -26,18 +24,11 @@ contract SetupTestContents is Script, DeterminedAddress {
     function run() public {
         Addresses memory addresses = _getAddresses();
         ContentRegistry contentRegistry = ContentRegistry(addresses.contentRegistry);
-        Paywall paywall = Paywall(addresses.paywall);
         ContentInteractionManager contentInteractionManager =
             ContentInteractionManager(addresses.contentInteractionManager);
 
         // Mint the contents
         uint256[] memory contentIds = _mintContents(contentRegistry);
-
-        // Setup the paywall for the news example website
-        _setupPaywall(paywall, _getContentIds().cNewsExample);
-
-        // Setup the community tokens
-        _setupCommunityTokens(CommunityToken(addresses.communityToken), contentIds);
 
         // Setup the interactions
         _setupInteractions(contentInteractionManager, contentIds);
@@ -88,28 +79,7 @@ contract SetupTestContents is Script, DeterminedAddress {
         return _contentRegistry.mint(_contentTypes, _name, _domain, contentOwner);
     }
 
-    /// @dev Setup the paywall for the given contents
-    function _setupPaywall(Paywall _paywall, uint256 _contentId) internal {
-        console.log("Setting up paywall");
-
-        vm.startBroadcast();
-        _paywall.addPrice(_contentId, Paywall.UnlockPrice(50 ether, 1 days, true));
-        _paywall.addPrice(_contentId, Paywall.UnlockPrice(300 ether, 7 days, true));
-        _paywall.addPrice(_contentId, Paywall.UnlockPrice(1000 ether, 30 days, true));
-        vm.stopBroadcast();
-    }
-
-    /// @dev Setup the paywall for the given contents
-    function _setupCommunityTokens(CommunityToken _communityToken, uint256[] memory _contentIds) internal {
-        console.log("Setting up community tokens");
-        vm.startBroadcast();
-        for (uint256 i = 0; i < _contentIds.length; i++) {
-            _communityToken.allowCommunityToken(_contentIds[i]);
-        }
-        vm.stopBroadcast();
-    }
-
-    /// @dev Setup the paywall for the given contents
+    /// @dev Setup the interaction contracts for the given contents
     function _setupInteractions(ContentInteractionManager _interactionManager, uint256[] memory _contentIds) internal {
         console.log("Setting up interactions");
         vm.startBroadcast();
@@ -130,7 +100,7 @@ contract SetupTestContents is Script, DeterminedAddress {
 
     bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = bytes4(keccak256("frak.campaign.referral"));
 
-    /// @dev Setup the paywall for the given contents
+    /// @dev Setup the itneraction campaigns for the given contents
     function _setupCampaigns(
         ContentInteractionManager _interactionManager,
         Addresses memory addresses,

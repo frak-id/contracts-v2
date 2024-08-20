@@ -8,13 +8,8 @@ struct Addresses {
     address facetFactory;
     address campaignFactory;
     address contentInteractionManager;
-    // Gating
-    address paywall;
-    // Community
-    address communityToken;
     // Token
     address mUSDToken;
-    address paywallToken;
 }
 
 struct KernelAddresses {
@@ -51,9 +46,6 @@ contract DeterminedAddress {
             contentInteractionManager: 0xFE0717cACd6Fff3001EdD3f360Eb2854F54861DD,
             facetFactory: 0xCB5207712044eC3B3787269CAA2B90c120Bc24e6,
             campaignFactory: 0xeBFCD452F92C679B85C00a9E2A6D299A73F48C5A,
-            paywall: 0x25Bc9633dD2B96D3C913D9b5D37AD92d5FaA00Ac,
-            communityToken: 0x721bc5Aa7051A262cC5826c407f20484cd325ABe,
-            paywallToken: 0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2,
             mUSDToken: 0x56039fa1a804F614eBD714139F29a3ff4DB57ad6
         });
     }

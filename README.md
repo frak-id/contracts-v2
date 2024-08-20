@@ -16,9 +16,6 @@ Address of the Frak contracts, deployed on Arbitrum and arbitrum sepolia.
 | Content Interaction Mgr   | `0xFE0717cACd6Fff3001EdD3f360Eb2854F54861DD`  |
 | Content Facet Factory     | `0x80CAac4B9A0fA96db053aa08A79E17aa22EC29fc`  |
 | Content Campaign Factory  | `0x440B19d7694f4B8949b02e674870880c5e40250C`  |
-| Paywall Contract          | `0x25Bc9633dD2B96D3C913D9b5D37AD92d5FaA00Ac`  |
-| Community Token           | `0x721bc5Aa7051A262cC5826c407f20484cd325ABe`  | 
-| FRK Paywall Token         | `0x9584A61F70cC4BEF5b8B5f588A1d35740f0C7ae2`  |
 
 ### Kernel plugins
 
@@ -62,8 +59,6 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 ├── registry
 │   ├── ContentRegistry.sol
 │   └── ReferralRegistry.sol
-├── gating
-│   └── Paywall.sol
 ├── constants
 ├── tokens
 ├── kernel
@@ -153,18 +148,3 @@ Contracts for running campaigns within the Frak ecosystem.
     - Supports multi-level referral systems, rewarding both referrers and referees at multiple levels.
     - Allows for customizable reward distribution, where the percentage of rewards allocated to each referral level can be configured.
     - Implements a daily distribution cap to prevent abuse and ensure the sustainability of the campaign.
-
-
-## Gating
-
-### `gating/`
-
-This directory contains contracts related to content access control and monetization within the Frak ecosystem.
-
-#### `Paywall.sol`
-
-- Allows content creators to restrict access to their content and require payment for access.
-- **Key Features:**
-    - Enables content creators to define access rules for their content, specifying which users or wallets are allowed to access it.
-    - Supports integration with payment tokens, allowing users to pay for content access using designated cryptocurrencies.
-    - Can be extended to implement subscription-based access models, where users pay a recurring fee for ongoing content access. 
