@@ -28,7 +28,8 @@ contract SetupTestContents is Script, DeterminedAddress {
             ContentInteractionManager(addresses.contentInteractionManager);
 
         // Mint the contents
-        uint256[] memory contentIds = _mintContents(contentRegistry);
+        // uint256[] memory contentIds = _mintContents(contentRegistry);
+        uint256[] memory contentIds = _getContentIdsArr();
 
         // Setup the interactions
         _setupInteractions(contentInteractionManager, contentIds);
@@ -55,7 +56,7 @@ contract SetupTestContents is Script, DeterminedAddress {
             "news-example.frak.id"
         );
         uint256 cNewsPaper = _mintContent(
-            contentRegistry, CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL, "A Positivie World", "news-paper.xyz"
+            contentRegistry, CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL, "A Positive World", "news-paper.xyz"
         );
         vm.stopBroadcast();
 
@@ -131,7 +132,8 @@ contract SetupTestContents is Script, DeterminedAddress {
             distributionCapPeriod: 1 days,
             distributionCap: 500 ether,
             startDate: uint48(0),
-            endDate: uint48(0)
+            endDate: uint48(0),
+            name: ""
         });
 
         return abi.encode(config);

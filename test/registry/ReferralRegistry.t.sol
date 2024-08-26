@@ -46,6 +46,10 @@ contract ReferralRegistryTest is Test {
         vm.expectRevert(ReferralRegistry.InvalidReferrer.selector);
         vm.prank(tree1Owner);
         referralRegistry.saveReferrer(TREE_1, alice, address(0));
+
+        vm.expectRevert(ReferralRegistry.InvalidReferrer.selector);
+        vm.prank(tree1Owner);
+        referralRegistry.saveReferrer(TREE_1, alice, alice);
     }
 
     function test_saveReferrer_NotAllowedOnTheGivenTree() public {

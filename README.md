@@ -12,10 +12,10 @@ Address of the Frak contracts, deployed on Arbitrum and arbitrum sepolia.
 | Name                      | Address                                       |
 |---------------------------|-----------------------------------------------|
 | Content Registry          | `0x758F01B484212b38EAe264F75c0DD7842d510D9c`  |
-| Referral Registry         | `0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43`  |
-| Content Interaction Mgr   | `0xFE0717cACd6Fff3001EdD3f360Eb2854F54861DD`  |
-| Content Facet Factory     | `0xCB5207712044eC3B3787269CAA2B90c120Bc24e6`  |
-| Content Campaign Factory  | `0x2c0cD8e217AAAA73A0a756B1D82e67Ad6aF7fA04`  |
+| Referral Registry         | `0x66820744dBD98b24C05A1fd21809684647c6cC6E`  |
+| Content Interaction Mgr   | `0xB3fc8bD4e71a15a674ed6BAb63e884720FC4A3B4`  |
+| Content Facet Factory     | `0xce9e06e2139Fc13079C778a172769c3333f33fC1`  |
+| Content Campaign Factory  | `0xB178c17AC5ad0455b1a10b05d25Fe4847567Ef1D`  |
 
 ### Kernel plugins
 
@@ -37,7 +37,7 @@ They can be deployed on any chain via the `deploy/` folder, using [orchestra](ht
 | MultiWebAuthN Recovery - Kernel v2    | `0x8b29229515D3e5b829D59617A791b5B3a2c32ff1`  |
 | Interaction delegator                 | `0x4b8350E6291063bF14ca1E4379147a3bd23714CB`  |
 | Interaction delegator validator       | `0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C`  |
-| Interaction delegator action          | `0xD910e1e952ab2F23282dB8450AA7054841Ef53B8`  |
+| Interaction delegator action          | `0xF9aC3355363a1F3b501Df411cA4d08e8F854bF76`  |
 
 
 ## Folder Structure

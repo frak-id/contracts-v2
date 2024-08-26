@@ -136,6 +136,13 @@ export const interactionCampaignAbi = [
   {
     type: 'function',
     inputs: [],
+    name: 'isRunning',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
     name: 'owner',
     outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
     stateMutability: 'view',
@@ -186,6 +193,13 @@ export const interactionCampaignAbi = [
     name: 'rolesOf',
     outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_isRunning', internalType: 'bool', type: 'bool' }],
+    name: 'setRunningStatus',
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -265,6 +279,7 @@ export const interactionCampaignAbi = [
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'Reentrancy' },
   { type: 'error', inputs: [], name: 'Unauthorized' },
 ] as const
 
@@ -296,6 +311,7 @@ export const referralCampaignAbi = [
           { name: 'distributionCap', internalType: 'uint256', type: 'uint256' },
           { name: 'startDate', internalType: 'uint48', type: 'uint48' },
           { name: 'endDate', internalType: 'uint48', type: 'uint48' },
+          { name: 'name', internalType: 'bytes32', type: 'bytes32' },
         ],
       },
       {
@@ -371,6 +387,7 @@ export const referralCampaignAbi = [
           { name: 'distributionCap', internalType: 'uint256', type: 'uint256' },
           { name: 'startDate', internalType: 'uint48', type: 'uint48' },
           { name: 'endDate', internalType: 'uint48', type: 'uint48' },
+          { name: 'name', internalType: 'bytes32', type: 'bytes32' },
         ],
       },
     ],

@@ -11,7 +11,9 @@ contract MockCampaign is InteractionCampaign {
     uint256 private interactionHandled;
     bool private fail;
 
-    constructor(address _owner, ContentInteractionDiamond _interaction) InteractionCampaign(_owner, _interaction) {}
+    constructor(address _owner, ContentInteractionDiamond _interaction)
+        InteractionCampaign(_owner, _interaction, "mock")
+    {}
 
     /// @dev Get the campaign metadata
     function getMetadata() public pure override returns (string memory name, string memory version) {

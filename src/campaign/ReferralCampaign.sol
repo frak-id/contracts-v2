@@ -90,10 +90,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         /// @dev Start and end data
         uint48 startDate;
         uint48 endDate;
-        /// @dev Is the campaign running or not
-        bool isRunning;
-        /// @dev Name of the campaign
-        string name;
     }
 
     function _referralCampaignStorage() private pure returns (ReferralCampaignStorage storage storagePtr) {
@@ -114,6 +110,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         // Optional data range for the config
         uint48 startDate;
         uint48 endDate;
+        // Optional name for the campaign (as bytes32)
+        bytes32 name;
     }
 
     constructor(
@@ -122,7 +120,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         address _owner,
         address _frakCampaignWallet,
         ContentInteractionDiamond _interaction
-    ) InteractionCampaign(_owner, _interaction) PushPullModule(_config.token) {
+    ) InteractionCampaign(_owner, _interaction, _config.name) PushPullModule(_config.token) {
         if (_config.token == address(0)) {
             revert InvalidConfig();
         }
@@ -147,9 +145,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         if (_config.endDate != 0) {
             campaignStorage.endDate = _config.endDate;
         }
-
-        // On creation, mark the campaign as running
-        campaignStorage.isRunning = true;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -159,12 +154,13 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev Get the campaign metadata
     function getMetadata() public pure override returns (string memory _type, string memory version) {
         _type = "frak.campaign.referral";
-        version = "0.0.2";
+        version = "0.0.1";
     }
 
     /// @dev Get the campaign config
     function getConfig() public view returns (CampaignConfig memory) {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+        InteractionCampaignStorage storage interactionStorage = _interactionCampaignStorage();
         return CampaignConfig({
             token: TOKEN,
             initialReward: BASE_REWARD,
@@ -172,7 +168,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
             distributionCapPeriod: DISTRIBUTION_CAP_PERIOD,
             distributionCap: DISTRIBUTION_CAP,
             startDate: campaignStorage.startDate,
-            endDate: campaignStorage.endDate
+            endDate: campaignStorage.endDate,
+            name: interactionStorage.name
         });
     }
 
@@ -182,7 +179,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
 
         // If it's not running, directly exit
-        if (!campaignStorage.isRunning) {
+        if (!_interactionCampaignStorage().isRunning) {
             return false;
         }
 
@@ -195,11 +192,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         }
         // Active only if we can distribute a few rewards
         return TOKEN.balanceOf(address(this)) > BASE_REWARD * 2;
-    }
-
-    /// @dev Check if the campaign is running
-    function isRunning() public view returns (bool) {
-        return _referralCampaignStorage().isRunning;
     }
 
     /// @dev Check if the given campaign support the `_contentType`
@@ -343,11 +335,5 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
         campaignStorage.startDate = _startDate;
         campaignStorage.endDate = _endDate;
-    }
-
-    /// @dev Update the campaign running status
-    function setRunningStatus(bool _isRunning) external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        campaignStorage.isRunning = _isRunning;
     }
 }

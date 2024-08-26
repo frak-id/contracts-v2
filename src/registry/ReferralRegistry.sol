@@ -92,6 +92,7 @@ contract ReferralRegistry is OwnableRoles {
     function saveReferrer(bytes32 _selector, address _user, address _referrer) public {
         if (!isAllowedOnTree(_selector, msg.sender)) revert NotAllowedOnTheGivenTree();
         if (_referrer == address(0)) revert InvalidReferrer();
+        if (_referrer == _user) revert InvalidReferrer();
 
         // Get our referral tree
         mapping(address referee => address referrer) storage tree = _referralStorage().referralTrees[_selector];

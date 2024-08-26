@@ -239,7 +239,8 @@ contract ContentInteractionManagerTest is Test {
             distributionCapPeriod: 1 days,
             distributionCap: 100 ether,
             startDate: uint48(0),
-            endDate: uint48(0)
+            endDate: uint48(0),
+            name: "test"
         });
         bytes memory initData = abi.encode(config);
 
@@ -300,7 +301,8 @@ contract ContentInteractionManagerTest is Test {
             distributionCapPeriod: 1 days,
             distributionCap: 100 ether,
             startDate: uint48(0),
-            endDate: uint48(0)
+            endDate: uint48(0),
+            name: ""
         });
         bytes memory initData = abi.encode(config);
 

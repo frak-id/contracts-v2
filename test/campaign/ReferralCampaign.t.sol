@@ -56,7 +56,8 @@ contract ReferralCampaignTest is InteractionTest {
             distributionCapPeriod: 1 days,
             distributionCap: 100 ether,
             startDate: uint48(0),
-            endDate: uint48(0)
+            endDate: uint48(0),
+            name: "test"
         });
         referralCampaign = new ReferralCampaign(config, referralRegistry, owner, owner, contentInteraction);
 
@@ -88,7 +89,8 @@ contract ReferralCampaignTest is InteractionTest {
             distributionCapPeriod: 1 days,
             distributionCap: 100 ether,
             startDate: uint48(0),
-            endDate: uint48(0)
+            endDate: uint48(0),
+            name: "test"
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
@@ -98,7 +100,7 @@ contract ReferralCampaignTest is InteractionTest {
     function test_metadata() public view {
         (string memory name, string memory version) = referralCampaign.getMetadata();
         assertEq(name, "frak.campaign.referral");
-        assertEq(version, "0.0.2");
+        assertEq(version, "0.0.1");
     }
 
     function test_isActive() public {
