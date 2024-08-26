@@ -90,6 +90,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         /// @dev Start and end data
         uint48 startDate;
         uint48 endDate;
+        /// @dev Is the campaign running or not
+        bool isRunning;
         /// @dev Name of the campaign
         string name;
     }
@@ -145,6 +147,9 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         if (_config.endDate != 0) {
             campaignStorage.endDate = _config.endDate;
         }
+
+        // On creation, mark the campaign as running
+        campaignStorage.isRunning = true;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -154,7 +159,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev Get the campaign metadata
     function getMetadata() public pure override returns (string memory _type, string memory version) {
         _type = "frak.campaign.referral";
-        version = "0.0.1";
+        version = "0.0.2";
     }
 
     /// @dev Get the campaign config
@@ -175,6 +180,13 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     function isActive() public view override returns (bool) {
         // Check if with start and end date
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+
+        // If it's not running, directly exit
+        if (!campaignStorage.isRunning) {
+            return false;
+        }
+
+        // Otherwise, check the date
         if (campaignStorage.startDate != 0 && block.timestamp < campaignStorage.startDate) {
             return false;
         }
@@ -183,6 +195,11 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         }
         // Active only if we can distribute a few rewards
         return TOKEN.balanceOf(address(this)) > BASE_REWARD * 2;
+    }
+
+    /// @dev Check if the campaign is running
+    function isRunning() public view returns (bool) {
+        return _referralCampaignStorage().isRunning;
     }
 
     /// @dev Check if the given campaign support the `_contentType`
@@ -216,6 +233,10 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         external
         onlyRoles(CAMPAIGN_MANAGER_ROLE)
     {
+        // If the campaign isn't active, directly exit
+        if (!isActive()) {
+            revert InactiveCampaign();
+        }
         _performTokenDistribution(_user, _initialAmount);
     }
 
@@ -308,17 +329,25 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /*                           Campaign Administration                          */
     /* -------------------------------------------------------------------------- */
 
+    /// @dev Withdraw the remaining token from the campaign
     function withdraw() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
         TOKEN.safeTransfer(msg.sender, TOKEN.balanceOf(address(this)));
     }
 
-    function setActivationDate(uint48 startDate, uint48 endDate)
+    /// @dev Update the campaign activation date
+    function setActivationDate(uint48 _startDate, uint48 _endDate)
         external
         nonReentrant
         onlyRoles(CAMPAIGN_MANAGER_ROLE)
     {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        campaignStorage.startDate = startDate;
-        campaignStorage.endDate = endDate;
+        campaignStorage.startDate = _startDate;
+        campaignStorage.endDate = _endDate;
+    }
+
+    /// @dev Update the campaign running status
+    function setRunningStatus(bool _isRunning) external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+        campaignStorage.isRunning = _isRunning;
     }
 }

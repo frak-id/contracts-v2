@@ -98,7 +98,7 @@ contract ReferralCampaignTest is InteractionTest {
     function test_metadata() public view {
         (string memory name, string memory version) = referralCampaign.getMetadata();
         assertEq(name, "frak.campaign.referral");
-        assertEq(version, "0.0.1");
+        assertEq(version, "0.0.2");
     }
 
     function test_isActive() public {
@@ -108,6 +108,16 @@ contract ReferralCampaignTest is InteractionTest {
 
         // Enough token work
         deal(address(token), address(referralCampaign), 101 ether);
+        assertEq(referralCampaign.isActive(), true);
+
+        // Not running work
+        vm.prank(owner);
+        referralCampaign.setRunningStatus(false);
+        assertEq(referralCampaign.isActive(), false);
+
+        // Running work
+        vm.prank(owner);
+        referralCampaign.setRunningStatus(true);
         assertEq(referralCampaign.isActive(), true);
 
         // Not started yet work

@@ -14,8 +14,8 @@ Address of the Frak contracts, deployed on Arbitrum and arbitrum sepolia.
 | Content Registry          | `0x758F01B484212b38EAe264F75c0DD7842d510D9c`  |
 | Referral Registry         | `0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43`  |
 | Content Interaction Mgr   | `0xFE0717cACd6Fff3001EdD3f360Eb2854F54861DD`  |
-| Content Facet Factory     | `0x80CAac4B9A0fA96db053aa08A79E17aa22EC29fc`  |
-| Content Campaign Factory  | `0x440B19d7694f4B8949b02e674870880c5e40250C`  |
+| Content Facet Factory     | `0xCB5207712044eC3B3787269CAA2B90c120Bc24e6`  |
+| Content Campaign Factory  | `0x2c0cD8e217AAAA73A0a756B1D82e67Ad6aF7fA04`  |
 
 ### Kernel plugins
 

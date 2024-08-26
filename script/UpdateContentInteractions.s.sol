@@ -21,8 +21,8 @@ import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 contract UpdateContentInteractions is Script, DeterminedAddress {
     function run() public {
         // _updateManager();
-        _updateContents();
-        _updateInteractions();
+        //_updateContents();
+        //_updateInteractions();
         _updateCampaigns();
     }
 

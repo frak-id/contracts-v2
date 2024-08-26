@@ -45,7 +45,7 @@ contract DeterminedAddress {
             referralRegistry: 0x0a1d4292bC42d39e02b98A6AF9d2E49F16DBED43,
             contentInteractionManager: 0xFE0717cACd6Fff3001EdD3f360Eb2854F54861DD,
             facetFactory: 0xCB5207712044eC3B3787269CAA2B90c120Bc24e6,
-            campaignFactory: 0xeBFCD452F92C679B85C00a9E2A6D299A73F48C5A,
+            campaignFactory: 0x2c0cD8e217AAAA73A0a756B1D82e67Ad6aF7fA04,
             mUSDToken: 0x56039fa1a804F614eBD714139F29a3ff4DB57ad6
         });
     }
