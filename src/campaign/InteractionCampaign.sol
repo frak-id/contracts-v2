@@ -25,10 +25,11 @@ abstract contract InteractionCampaign is OwnableRoles, ReentrancyGuard {
     bytes32 private constant _INTERACTION_CAMPAIGN_STORAGE_SLOT =
         0x4502c16acecc256a847201528afb77b0e7b8fd0eb82752bc0f0a6a604a9c2eb4;
 
+    /// @custom:storage-location erc7201:frak.campaign
     struct InteractionCampaignStorage {
         /// @dev Is the campaign running or not
         bool isRunning;
-        /// @dev Name of the campaign (as bytes32)
+        /// @dev Name of the campaign (string shortened to a bytes32 to reduce storage size)
         bytes32 name;
     }
 

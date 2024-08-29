@@ -17,6 +17,7 @@ abstract contract ContentInteractionStorageLib {
     bytes32 private constant _CONTENT_INTERACTION_STORAGE_SLOT =
         0xd966519fe3fe853ea9b03acd8a0422a17006c68dbe1d8fa2b9127b9e8e22eac4;
 
+    /// @custom:storage-location erc7201:frak.content.interaction
     struct ContentInteractionStorage {
         /// @dev The referral tree for this content
         bytes32 referralTree;

@@ -39,14 +39,17 @@ contract ContentRegistry is ERC721, OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @notice Storage for the content registry
-    /// @custom:storage-location erc7201:content_registry.main
+    /// @custom:storage-location erc7201:frak.registry.product
     struct ContentRegistryStorage {
-        mapping(uint256 => Metadata) _metadata;
+        /// @dev Metadata of the each products
+        mapping(uint256 productId => Metadata metadata) _metadata;
+        /// @dev Roles per products and per users
+        mapping(uint256 productId => mapping(address user => uint256 roles)) _roles;
     }
 
-    ///@dev bytes32(uint256(keccak256('frak.registry.content')) - 1)
+    ///@dev bytes32(uint256(keccak256('frak.registry.product')) - 1)
     uint256 private constant _CONTENT_REGISTRY_STORAGE_SLOT =
-        0x56c313dda80793d04a0a01007411cca82592313e657ea2ef71694d8ac8281531;
+        0xf9df516f065b012608cb860b47ffdf715a747b8c52bde5c3ad9b08ef8f84b949;
 
     function _getStorage() private pure returns (ContentRegistryStorage storage $) {
         assembly {
@@ -101,7 +104,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
         emit ContentMinted(id, _domain, _contentTypes, _name);
 
         // And mint it
-        _mint(_owner, id);
+        _safeMint(_owner, id);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -118,7 +121,7 @@ contract ContentRegistry is ERC721, OwnableRoles {
         return _getStorage()._metadata[_contentId].contentTypes;
     }
 
-    /// @notice Get the metadata of a content
+    /// @notice Check if a content exists
     function isExistingContent(uint256 _contentId) public view returns (bool) {
         return _exists(_contentId);
     }

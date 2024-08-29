@@ -44,6 +44,7 @@ contract ReferralRegistry is OwnableRoles {
     bytes32 private constant _REFERRAL_REGISTRY_STORAGE_SLOT =
         0x7604630823fe740cd249174fdd8aaffc7f3bd2a8dffc7d7da7625ddeb9cbed9e;
 
+    /// @custom:storage-location erc7201:frak.registry.referral
     struct ReferralRegistryStorage {
         /// @dev Mapping of custom tree selector to referral tree
         mapping(bytes32 selector => mapping(address referee => address referrer)) referralTrees;

@@ -80,6 +80,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     bytes32 private constant _REFERRAL_CAMPAIGN_STORAGE_SLOT =
         0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f;
 
+    /// @custom:storage-location erc7201:frak.campaign.referral
     struct ReferralCampaignStorage {
         /// @dev The start timestamp for the cap computation
         uint48 capStartTimestamp;

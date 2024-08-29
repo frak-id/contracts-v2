@@ -71,6 +71,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     bytes32 private constant _INTERACTION_MANAGER_STORAGE_SLOT =
         0x53b106ac374d49a224fae3a01f609d01cf52e1b6f965cbfdbbe6a29870a6a161;
 
+    /// @custom:storage-location erc7201:frak.interaction.manager
     struct ContentStorage {
         /// @dev The diamond responsible for the interaction of the content
         ContentInteractionDiamond diamond;
