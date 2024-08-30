@@ -9,7 +9,7 @@ import {ContentInteractionManager} from "../interaction/ContentInteractionManage
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {CAMPAIGN_EVENT_EMITTER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
+import {InteractionCampaign} from "./InteractionCampaign.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 

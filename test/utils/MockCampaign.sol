@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {CAMPAIGN_EVENT_EMITTER_ROLE, InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
+import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ContentTypes} from "src/constants/ContentTypes.sol";
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 

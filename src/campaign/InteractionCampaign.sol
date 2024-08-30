@@ -74,16 +74,6 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     function getMetadata() public pure virtual returns (string memory _type, string memory version);
 
     /* -------------------------------------------------------------------------- */
-    /*                               Role managments                              */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev Deregsiter the campaign deployer role for the calling contract
-    function disallowMe() public {
-        // todo: review this to lock the campaign?
-        // _removeRoles(msg.sender, CAMPAIGN_EVENT_EMITTER_ROLE);
-    }
-
-    /* -------------------------------------------------------------------------- */
     /*                              Campaign related                              */
     /* -------------------------------------------------------------------------- */
 
@@ -101,7 +91,7 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Handle the given interaction
-    function handleInteraction(bytes calldata _data) public onlyAllowedManager onlyActiveCampaign {
+    function handleInteraction(bytes calldata _data) public onlyInteractionEmitter onlyActiveCampaign {
         innerHandleInteraction(_data);
     }
 
@@ -143,6 +133,3 @@ abstract contract InteractionCampaign is ReentrancyGuard {
         _;
     }
 }
-
-/// @dev The role for the a campaign event emitter
-uint256 constant CAMPAIGN_EVENT_EMITTER_ROLE = 1 << 2;

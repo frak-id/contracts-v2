@@ -6,7 +6,6 @@ import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
-import {CAMPAIGN_EVENT_EMITTER_ROLE} from "src/campaign/InteractionCampaign.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
@@ -281,18 +280,6 @@ contract ContentInteractionManagerTest is Test {
         contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
 
         assertEq(interactionContract.getCampaigns().length, 0);
-        /*assertFalse(
-            InteractionCampaign(campaign1).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
-        );
-        assertFalse(
-            InteractionCampaign(campaign2).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
-        );
-        assertFalse(
-            InteractionCampaign(campaign3).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
-        );
-        assertFalse(
-            InteractionCampaign(campaign4).hasAllRoles(address(interactionContract), CAMPAIGN_EVENT_EMITTER_ROLE)
-        );*/
     }
 
     function test_deployCampaign() public {

@@ -66,6 +66,9 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /// @dev The product administrator registry
     ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
+    /// @dev The content interaction manager address
+    address internal immutable INTERACTION_MANAGER;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -81,6 +84,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         CONTENT_ID = _contentId;
         REFERRAL_REGISTRY = _referralRegistry;
         PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
+        INTERACTION_MANAGER = _interactionManager;
 
         // Disable init on deployed raw instance
         _disableInitializers();
@@ -303,8 +307,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         if (address(lastCampaign) == address(_campaign)) {
             // Emit the campaign detachment
             emit CampaignDetached(_campaign);
-            // Disalow it and exit
-            lastCampaign.disallowMe();
+            // Remove the campaign
             campaigns.pop();
             return;
         }
@@ -322,8 +325,6 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
             }
             // Emit the campaign detachment
             emit CampaignDetached(_campaign);
-            // Remove the roles on the campagn
-            campaigns[i].disallowMe();
             // If we found the campaign, we replace it by the last item of our campaigns
             campaigns[i] = campaigns[campaigns.length - 1];
             campaigns.pop();
@@ -340,10 +341,12 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /*                              Helper modifiers                              */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Restrict the execution to the campaign manager only
+    /// @dev Restrict the execution to the campaign manager or an approved manager
     modifier onlyAllowedCampaignManager() {
-        bool isAllowed =
-            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(CONTENT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
+        bool isAllowed = msg.sender == INTERACTION_MANAGER;
+        if (!isAllowed) {
+            isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(CONTENT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
+        }
         if (!isAllowed) revert Unauthorized();
         _;
     }

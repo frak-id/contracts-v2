@@ -6,7 +6,6 @@ import {MockErc20} from "../utils/MockErc20.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-import {CAMPAIGN_EVENT_EMITTER_ROLE} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
     CONTENT_TYPE_DAPP,
@@ -218,7 +217,6 @@ contract ReferralCampaignTest is InteractionTest {
         vm.prank(owner);
         referralCampaign.withdraw();
         vm.prank(emitter);
-        vm.expectRevert();
         referralCampaign.handleInteraction(fckedUpData);
 
         // Ensure no reward was added
@@ -251,16 +249,6 @@ contract ReferralCampaignTest is InteractionTest {
         assertEq(referralCampaign.getPendingAmount(bob), 3.2 ether);
         assertEq(referralCampaign.getPendingAmount(charlie), 0.64 ether);
         assertEq(referralCampaign.getPendingAmount(delta), 0.16 ether);
-    }
-
-    function test_disallowMe() public withReferralChain {
-        bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
-
-        vm.prank(emitter);
-        referralCampaign.disallowMe();
-
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        referralCampaign.handleInteraction(interactionData);
     }
 
     /* -------------------------------------------------------------------------- */
