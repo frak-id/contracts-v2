@@ -132,7 +132,7 @@ contract ProductRegistryTest is Test {
         vm.prank(minter);
         productRegistry.setApprovalForAll(operator, true);
 
-        assertEq(productRegistry.isAuthorized(id, operator), true);
+        assertEq(productRegistry.isAuthorized(id, operator), false);
 
         vm.prank(minter);
         productRegistry.setApprovalForAll(operator, false);

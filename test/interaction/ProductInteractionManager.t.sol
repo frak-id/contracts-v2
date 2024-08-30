@@ -15,12 +15,10 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {PRODUCT_MANAGER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-
+import {PRODUCT_MANAGER_ROLE, PRODUCT_MANAGER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
-
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
@@ -64,7 +62,12 @@ contract ProductInteractionManagerTest is Test {
         productIdPress = productRegistry.mint(PRODUCT_TYPE_PRESS, "name", "press-domain", owner);
         productIdMulti = productRegistry.mint(PRODUCT_TYPE_DAPP | PRODUCT_TYPE_PRESS, "name", "multi-domain", owner);
         productIdUnknown = productRegistry.mint(ProductTypes.wrap(uint256(1 << 99)), "name", "unknown-domain", owner);
-        productRegistry.setApprovalForAll(operator, true);
+
+        // Grant the roles
+        adminRegistry.grantRoles(productIdDapp, operator, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, operator, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdMulti, operator, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdUnknown, operator, PRODUCT_MANAGER_ROLE);
         vm.stopPrank();
     }
 
