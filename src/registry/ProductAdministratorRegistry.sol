@@ -99,42 +99,9 @@ contract ProductAdministratorRegistry {
         }
     }
 
-    /// @dev Throws if the sender does not have any of the `roles`.
-    function _checkRoles(uint256 productId, uint256 roles) internal view virtual {
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Compute the role slot.
-            mstore(0x0c, _ROLE_SLOT_SEED)
-            mstore(0x00, caller())
-            mstore(0x20, productId)
-            // Load the stored value, and if the `and` intersection
-            // of the value and `roles` is zero, revert.
-            if iszero(and(sload(keccak256(0x0c, 0x40)), roles)) {
-                mstore(0x00, 0x82b42900) // `Unauthorized()`.
-                revert(0x1c, 0x04)
-            }
-        }
-    }
-
-    /// @dev Throws if the sender does not have any of the `roles`,
-    /// and is not the owner.
-    /// Checks for roles first, then lazily checks for ownership.
-    function _checkRolesOrAdmin(uint256 productId, uint256 roles) internal view virtual {
-        // Check the roles first.
-        _checkRoles(productId, roles);
-        // Then check if the user is an authorized product admin
-        if (!isAuthorizedAdmin(productId, msg.sender)) revert Unauthorized();
-    }
-
     /* -------------------------------------------------------------------------- */
     /*                             Public role updated                            */
     /* -------------------------------------------------------------------------- */
-
-    /// @dev Allow the caller to remove their own roles.
-    /// If the caller does not have a role, then it will be an no-op for the role.
-    function renounceRoles(uint256 productId, uint256 roles) public payable virtual {
-        _updateRoles(productId, msg.sender, roles, false);
-    }
 
     /// @dev Allows the owner to grant `user` `roles`.
     /// If the `user` already has a role, then it will be an no-op for the role.
@@ -147,6 +114,18 @@ contract ProductAdministratorRegistry {
         _updateRoles(productId, user, roles, true);
     }
 
+    /// @dev Allow the caller to remove their own roles.
+    /// If the caller does not have a role, then it will be an no-op for the role.
+    function renounceRoles(uint256 productId, uint256 roles) public payable virtual {
+        _updateRoles(productId, msg.sender, roles, false);
+    }
+
+    /// @dev Allow the caller to remove their own roles.
+    /// If the caller does not have a role, then it will be an no-op for the role.
+    function renounceAllRoles(uint256 productId) public payable virtual {
+        _setRoles(productId, msg.sender, 0);
+    }
+
     /// @dev Allows the owner to remove `user` `roles`.
     /// If the `user` does not have a role, then it will be an no-op for the role.
     function revokeRoles(uint256 productId, address user, uint256 roles)
@@ -156,6 +135,12 @@ contract ProductAdministratorRegistry {
         onlyProductAdmin(productId)
     {
         _updateRoles(productId, user, roles, false);
+    }
+
+    /// @dev Allows the owner to remove all the `user` roles.
+    /// If the `user` does not have a role, then it will be an no-op for the role.
+    function revokeAllRoles(uint256 productId, address user) public payable virtual onlyProductAdmin(productId) {
+        _setRoles(productId, user, 0);
     }
 
     /* -------------------------------------------------------------------------- */

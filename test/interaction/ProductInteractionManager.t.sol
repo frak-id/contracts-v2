@@ -15,7 +15,7 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
+import {PRODUCT_MANAGER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
@@ -72,26 +72,26 @@ contract ProductInteractionManagerTest is Test {
     /*                             Operator management                            */
     /* -------------------------------------------------------------------------- */
 
-    /*function test_addOperator() public {
+    function test_addOperator() public {
         address testOperator = makeAddr("testOperator");
         address testOperator2 = makeAddr("testOperator2");
 
         // Ensure only admin can do it
         vm.expectRevert(Ownable.Unauthorized.selector);
-        productInteractionManager.addOperator(productIdPress, testOperator);
+        adminRegistry.grantRoles(productIdPress, testOperator, PRODUCT_MANAGER_ROLE);
 
         // Add it
         vm.prank(owner);
-        productInteractionManager.addOperator(productIdPress, testOperator);
+        adminRegistry.grantRoles(productIdPress, testOperator, PRODUCT_MANAGER_ROLE);
 
-        assertTrue(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator));
+        assertTrue(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator, PRODUCT_MANAGER_ROLE));
 
         // Ensure it can't add other operator
         vm.prank(testOperator);
         vm.expectRevert(Ownable.Unauthorized.selector);
-        productInteractionManager.addOperator(productIdPress, testOperator2);
+        adminRegistry.grantRoles(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE);
 
-        assertFalse(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator2));
+        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE));
 
         // Ensure the operator can deploy stuff
         vm.prank(testOperator);
@@ -104,22 +104,22 @@ contract ProductInteractionManagerTest is Test {
         address testOperator2 = makeAddr("testOperator2");
 
         vm.startPrank(owner);
-        productInteractionManager.addOperator(productIdPress, testOperator1);
-        productInteractionManager.addOperator(productIdPress, testOperator2);
+        adminRegistry.grantRoles(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE);
         vm.stopPrank();
 
         // Admin doing a remove
         vm.prank(owner);
-        productInteractionManager.deleteOperator(productIdPress, testOperator1);
+        adminRegistry.revokeRoles(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE);
 
-        assertFalse(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator1));
+        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE));
 
         // Self removing
         vm.prank(testOperator2);
-        productInteractionManager.deleteOperator(productIdPress, testOperator2);
+        adminRegistry.renounceRoles(productIdPress, PRODUCT_MANAGER_ROLE);
 
-        assertFalse(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator2));
-    }*/
+        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE));
+    }
 
     /* -------------------------------------------------------------------------- */
     /*                           Interaction deployment                           */

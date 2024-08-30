@@ -70,11 +70,28 @@ export const productAdministratorRegistryAbi = [
   },
   {
     type: 'function',
+    inputs: [{ name: 'productId', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceAllRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
     inputs: [
       { name: 'productId', internalType: 'uint256', type: 'uint256' },
       { name: 'roles', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'user', internalType: 'address', type: 'address' },
+    ],
+    name: 'revokeAllRoles',
     outputs: [],
     stateMutability: 'payable',
   },
