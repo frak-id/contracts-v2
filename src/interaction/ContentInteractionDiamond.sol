@@ -5,6 +5,7 @@ import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ContentTypes} from "../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib} from "../constants/InteractionType.sol";
 import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {ContentInteractionStorageLib} from "./lib/ContentInteractionStorageLib.sol";
@@ -50,17 +51,20 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /* -------------------------------------------------------------------------- */
 
     /// @dev EIP-712 typehash used to validate the given transaction
-    bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
+    bytes32 private constant VALIDATE_INTERACTION_TYPEHASH =
         keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)");
 
     /// @dev The base content referral tree: `keccak256("ContentReferralTree")`
-    bytes32 private constant _BASE_CONTENT_TREE = 0x3d16196f272c96153eabc4eb746e08ae541cf36535edb959ed80f5e5169b6787;
+    bytes32 private constant BASE_CONTENT_TREE = 0x3d16196f272c96153eabc4eb746e08ae541cf36535edb959ed80f5e5169b6787;
 
     /// @dev The content id
-    uint256 internal immutable _CONTENT_ID;
+    uint256 internal immutable CONTENT_ID;
 
     /// @dev The referral registry
-    ReferralRegistry internal immutable _REFERRAL_REGISTRY;
+    ReferralRegistry internal immutable REFERRAL_REGISTRY;
+
+    /// @dev The product administrator registry
+    ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -74,8 +78,8 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         address _contentOwner
     ) {
         // Set immutable variable (since embeded inside the bytecode)
-        _CONTENT_ID = _contentId;
-        _REFERRAL_REGISTRY = _referralRegistry;
+        CONTENT_ID = _contentId;
+        REFERRAL_REGISTRY = _referralRegistry;
 
         // Disable init on deployed raw instance
         _disableInitializers();
@@ -84,14 +88,14 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         _initializeOwner(_interactionManagerOwner);
         _setRoles(_interactionManagerOwner, UPGRADE_ROLE);
         // The interaction manager can trigger updates
-        _setRoles(_interactionManager, UPGRADE_ROLE | CAMPAIGN_MANAGER_ROLE);
+        _setRoles(_interactionManager, UPGRADE_ROLE);
         // The content owner can manage almost everything
         _setRoles(_contentOwner, INTERCATION_VALIDATOR_ROLE | UPGRADE_ROLE);
 
         // Compute and store the referral tree
         bytes32 tree;
         assembly {
-            mstore(0, _BASE_CONTENT_TREE)
+            mstore(0, BASE_CONTENT_TREE)
             mstore(0x20, _contentId)
             tree := keccak256(0, 0x40)
         }
@@ -204,8 +208,8 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         bytes32 digest = _hashTypedData(
             keccak256(
                 abi.encode(
-                    _VALIDATE_INTERACTION_TYPEHASH,
-                    _CONTENT_ID,
+                    VALIDATE_INTERACTION_TYPEHASH,
+                    CONTENT_ID,
                     _interactionData,
                     _user,
                     _contentInteractionStorage().nonces[nonceKey]++
@@ -241,7 +245,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
 
     /// @dev Get the id for the current content
     function getContentId() public view returns (uint256) {
-        return _CONTENT_ID;
+        return CONTENT_ID;
     }
 
     /// @dev Get the referral tree for the current content
@@ -268,7 +272,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Activate a new campaign
-    function attachCampaign(InteractionCampaign _campaign) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+    function attachCampaign(InteractionCampaign _campaign) external onlyAllowedCampaignManager {
         InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
 
         // Ensure we don't already have this campaign attached
@@ -284,7 +288,7 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Detach multiple campaigns
-    function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+    function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyAllowedCampaignManager {
         InteractionCampaign[] storage campaigns = _contentInteractionStorage().campaigns;
 
         for (uint256 i = 0; i < _campaigns.length; i++) {
@@ -331,5 +335,17 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     /// @dev Get all the campaigns attached to this interaction
     function getCampaigns() external view returns (InteractionCampaign[] memory) {
         return _contentInteractionStorage().campaigns;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                              Helper modifiers                              */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Restrict the execution to the campaign manager only
+    modifier onlyAllowedCampaignManager() {
+        bool isAllowed =
+            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(CONTENT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
+        if (!isAllowed) revert Unauthorized();
+        _;
     }
 }

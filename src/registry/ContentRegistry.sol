@@ -48,12 +48,12 @@ contract ContentRegistry is ERC721, OwnableRoles {
     }
 
     ///@dev bytes32(uint256(keccak256('frak.registry.product')) - 1)
-    uint256 private constant _CONTENT_REGISTRY_STORAGE_SLOT =
+    uint256 private constant CONTENT_REGISTRY_STORAGE_SLOT =
         0xf9df516f065b012608cb860b47ffdf715a747b8c52bde5c3ad9b08ef8f84b949;
 
     function _getStorage() private pure returns (ContentRegistryStorage storage $) {
         assembly {
-            $.slot := _CONTENT_REGISTRY_STORAGE_SLOT
+            $.slot := CONTENT_REGISTRY_STORAGE_SLOT
         }
     }
 

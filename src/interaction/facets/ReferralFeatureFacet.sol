@@ -25,10 +25,10 @@ contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet
     event UserReferred(address indexed user, address indexed referrer);
 
     /// @dev The referral registry
-    ReferralRegistry internal immutable _REFERRAL_REGISTRY;
+    ReferralRegistry internal immutable REFERRAL_REGISTRY;
 
     constructor(ReferralRegistry _referralRegistry) {
-        _REFERRAL_REGISTRY = _referralRegistry;
+        REFERRAL_REGISTRY = _referralRegistry;
     }
 
     /// @dev High level interaction router
@@ -107,11 +107,11 @@ contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet
 
     /// @dev Save on the registry level that `_user` has been referred by `_referrer`
     function _saveReferrer(bytes32 tree, address _user, address _referrer) internal {
-        _REFERRAL_REGISTRY.saveReferrer(tree, _user, _referrer);
+        REFERRAL_REGISTRY.saveReferrer(tree, _user, _referrer);
     }
 
     /// @dev Check on the registry if the `_user` has already a referrer
     function _isUserAlreadyReferred(bytes32 tree, address _user) internal view returns (bool) {
-        return _REFERRAL_REGISTRY.getReferrer(tree, _user) != address(0);
+        return REFERRAL_REGISTRY.getReferrer(tree, _user) != address(0);
     }
 }

@@ -4,6 +4,8 @@ pragma solidity 0.8.23;
 import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
+
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ReferralCampaign} from "./ReferralCampaign.sol";
 
@@ -34,11 +36,19 @@ contract CampaignFactory is ICampaignFactory {
     /// @dev The referral registry
     ReferralRegistry private immutable REFERRAL_REGISTRY;
 
+    /// @dev The referral registry
+    ProductAdministratorRegistry private immutable PRODUCT_ADMINISTRATOR_REGISTRY;
+
     /// @dev The frak campaign wallet
     address private immutable FRAK_CAMPAIGN_WALLET;
 
-    constructor(ReferralRegistry _referralRegistry, address _frakCampaignWallet) {
+    constructor(
+        ReferralRegistry _referralRegistry,
+        ProductAdministratorRegistry _productAdministratorRegistry,
+        address _frakCampaignWallet
+    ) {
         REFERRAL_REGISTRY = _referralRegistry;
+        PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
         FRAK_CAMPAIGN_WALLET = _frakCampaignWallet;
     }
 
@@ -47,16 +57,15 @@ contract CampaignFactory is ICampaignFactory {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Entry point to create a new campaign
-    function createCampaign(
-        ContentInteractionDiamond _interaction,
-        address _owner,
-        bytes4 _identifier,
-        bytes calldata _initData
-    ) public override returns (address) {
+    function createCampaign(ContentInteractionDiamond _interaction, bytes4 _identifier, bytes calldata _initData)
+        public
+        override
+        returns (address)
+    {
         address campaign;
 
         if (_identifier == REFERRAL_CAMPAIGN_IDENTIFIER) {
-            campaign = _createReferralCampaign(_interaction, _owner, _initData);
+            campaign = _createReferralCampaign(_interaction, _initData);
         } else {
             revert UnknownCampaignType(_identifier);
         }
@@ -69,7 +78,7 @@ contract CampaignFactory is ICampaignFactory {
     }
 
     /// @dev Create a new referral campaign
-    function _createReferralCampaign(ContentInteractionDiamond _interaction, address _owner, bytes calldata _initData)
+    function _createReferralCampaign(ContentInteractionDiamond _interaction, bytes calldata _initData)
         internal
         returns (address)
     {
@@ -79,8 +88,9 @@ contract CampaignFactory is ICampaignFactory {
             config := _initData.offset
         }
         // Create the campaign
-        ReferralCampaign campaign =
-            new ReferralCampaign(config, REFERRAL_REGISTRY, _owner, FRAK_CAMPAIGN_WALLET, _interaction);
+        ReferralCampaign campaign = new ReferralCampaign(
+            config, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, FRAK_CAMPAIGN_WALLET, _interaction
+        );
         return address(campaign);
     }
 }

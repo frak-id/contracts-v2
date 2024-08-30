@@ -41,7 +41,7 @@ contract ReferralRegistry is OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev bytes32(uint256(keccak256('frak.registry.referral')) - 1)
-    bytes32 private constant _REFERRAL_REGISTRY_STORAGE_SLOT =
+    bytes32 private constant REFERRAL_REGISTRY_STORAGE_SLOT =
         0x7604630823fe740cd249174fdd8aaffc7f3bd2a8dffc7d7da7625ddeb9cbed9e;
 
     /// @custom:storage-location erc7201:frak.registry.referral
@@ -54,7 +54,7 @@ contract ReferralRegistry is OwnableRoles {
 
     function _referralStorage() private pure returns (ReferralRegistryStorage storage storagePtr) {
         assembly {
-            storagePtr.slot := _REFERRAL_REGISTRY_STORAGE_SLOT
+            storagePtr.slot := REFERRAL_REGISTRY_STORAGE_SLOT
         }
     }
 

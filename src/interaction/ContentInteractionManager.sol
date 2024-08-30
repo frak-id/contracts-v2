@@ -3,10 +3,11 @@ pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ContentTypes} from "../constants/ContentTypes.sol";
-import {UPGRADE_ROLE} from "../constants/Roles.sol";
+import {PRODUCT_MANAGER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
 import {InteractionFacetsFactory} from "./InteractionFacetsFactory.sol";
@@ -25,10 +26,13 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev The referral registry
-    ReferralRegistry internal immutable _REFERRAL_REGISTRY;
+    ReferralRegistry internal immutable REFERRAL_REGISTRY;
 
     /// @dev The content registry
-    ContentRegistry internal immutable _CONTENT_REGISTRY;
+    ContentRegistry internal immutable CONTENT_REGISTRY;
+
+    /// @dev The product administrator registry
+    ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
@@ -57,12 +61,6 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /// @dev Event emitted when an interaction contract is deleted
     event InteractionContractDeleted(uint256 indexed contentId, ContentInteractionDiamond interactionContract);
 
-    /// @dev Event emitted when an operator is added
-    event ContentOperatorAdded(uint256 indexed contentId, address operator);
-
-    /// @dev Event emitted when an operator is removed
-    event ContentOperatorRemoved(uint256 indexed contentId, address operator);
-
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -75,8 +73,6 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     struct ContentStorage {
         /// @dev The diamond responsible for the interaction of the content
         ContentInteractionDiamond diamond;
-        /// @dev The allowed operator on the content
-        mapping(address user => bool isAllowed) operators;
     }
 
     struct InteractionManagerStorage {
@@ -96,8 +92,8 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     constructor(ContentRegistry _contentRegistry, ReferralRegistry _referralRegistry) {
         // Set immutable variable (since embeded inside the bytecode)
-        _CONTENT_REGISTRY = _contentRegistry;
-        _REFERRAL_REGISTRY = _referralRegistry;
+        CONTENT_REGISTRY = _contentRegistry;
+        REFERRAL_REGISTRY = _referralRegistry;
 
         // Disable init on deployed raw instance
         _disableInitializers();
@@ -127,39 +123,8 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Check if the given `_user` is allowed to perform action on the given `_contentId`
-    function isAllowedOnContent(uint256 _contentId, address _user) public view returns (bool isAllowed) {
-        // Check if he is allowed here
-        isAllowed = _storage().contents[_contentId].operators[_user];
-        // Otherwise, fallback to the allowance on the content registry, they are always allowed here
-        if (!isAllowed) {
-            isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, _user);
-        }
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                              Content operator                              */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev Add an operator on the given content
-    function addOperator(uint256 _contentId, address _operator) external {
-        // Check that it's a content admin doing the call
-        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
-        if (!isAllowed) revert Unauthorized();
-
-        // Add the operator
-        _storage().contents[_contentId].operators[_operator] = true;
-        emit ContentOperatorAdded(_contentId, _operator);
-    }
-
-    /// @dev Remove an operator on the given content
-    function deleteOperator(uint256 _contentId, address _operator) external {
-        // Check that it's a content admin doing the call, or that it's the operator revoking his role itself
-        bool isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender) || msg.sender == _operator;
-        if (!isAllowed) revert Unauthorized();
-
-        // Remive the operator
-        delete _storage().contents[_contentId].operators[_operator];
-        emit ContentOperatorRemoved(_contentId, _operator);
+    function isAllowedOnContent(uint256 _contentId, address _user) public view returns (bool) {
+        return PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(_contentId, _user, PRODUCT_MANAGER_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -188,7 +153,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
         // Grant the allowance manager role to the referral registry
         bytes32 referralTree = diamond.getReferralTree();
-        _REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(diamond));
+        REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(diamond));
 
         // Emit the creation event type
         emit InteractionContractDeployed(_contentId, diamond);
@@ -204,7 +169,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
         // Get the list of all the facets we will attach to the contract
         IInteractionFacet[] memory facets =
-            _storage().facetsFactory.getFacets(_CONTENT_REGISTRY.getContentTypes(_contentId));
+            _storage().facetsFactory.getFacets(CONTENT_REGISTRY.getContentTypes(_contentId));
 
         // Send them to the interaction contract
         interactionContract.setFacets(facets);
@@ -219,7 +184,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
         // Retreive the content types
-        ContentTypes contentTypes = _CONTENT_REGISTRY.getContentTypes(_contentId);
+        ContentTypes contentTypes = CONTENT_REGISTRY.getContentTypes(_contentId);
 
         // Delete the facets
         interactionContract.deleteFacets(contentTypes);
@@ -230,7 +195,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
         // Revoke the allowance manager role to the referral registry
         bytes32 referralTree = interactionContract.getReferralTree();
-        _REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(0)); // Grant the access to nobody
+        REFERRAL_REGISTRY.grantAccessToTree(referralTree, address(0)); // Grant the access to nobody
 
         emit InteractionContractDeleted(_contentId, interactionContract);
 
@@ -252,8 +217,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         ContentInteractionDiamond interactionContract = getInteractionContract(_contentId);
 
         // Deploy the campaign
-        campaign =
-            _storage().campaignFactory.createCampaign(interactionContract, msg.sender, _campaignIdentifier, _initData);
+        campaign = _storage().campaignFactory.createCampaign(interactionContract, _campaignIdentifier, _initData);
 
         // Attach the campaign to the interaction contract
         interactionContract.attachCampaign(InteractionCampaign(campaign));
@@ -300,10 +264,7 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     /// @dev Modifier to only allow call from an allowed operator
     modifier _onlyAllowedOnContent(uint256 _contentId) {
-        bool isAllowed = _storage().contents[_contentId].operators[msg.sender];
-        if (!isAllowed) {
-            isAllowed = _CONTENT_REGISTRY.isAuthorized(_contentId, msg.sender);
-        }
+        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(_contentId, msg.sender, PRODUCT_MANAGER_ROLE);
         if (!isAllowed) revert Unauthorized();
         _;
     }

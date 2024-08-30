@@ -3,11 +3,13 @@ pragma solidity 0.8.23;
 
 import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../constants/InteractionType.sol";
+import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
 import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
 import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {CAMPAIGN_EVENT_EMITTER_ROLE, CAMPAIGN_MANAGER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
+import {CAMPAIGN_EVENT_EMITTER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
@@ -32,7 +34,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     error InvalidConfig();
-    error InactiveCampaign();
     error DistributionCapReached();
 
     /* -------------------------------------------------------------------------- */
@@ -118,10 +119,10 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     constructor(
         CampaignConfig memory _config,
         ReferralRegistry _referralRegistry,
-        address _owner,
+        ProductAdministratorRegistry _productAdministratorRegistry,
         address _frakCampaignWallet,
         ContentInteractionDiamond _interaction
-    ) InteractionCampaign(_owner, _interaction, _config.name) PushPullModule(_config.token) {
+    ) InteractionCampaign(_productAdministratorRegistry, _interaction, _config.name) PushPullModule(_config.token) {
         if (_config.token == address(0)) {
             revert InvalidConfig();
         }
@@ -206,12 +207,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Handle the given interaction
-    function handleInteraction(bytes calldata _data) public override onlyRoles(CAMPAIGN_EVENT_EMITTER_ROLE) {
-        // If the campaign isn't active, directly exit
-        if (!isActive()) {
-            revert InactiveCampaign();
-        }
-
+    function innerHandleInteraction(bytes calldata _data) internal override {
         // Extract the data
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
 
@@ -224,7 +220,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev External method callable by the manager, to distribute token to all the user referrers
     function distributeTokenToUserReferrers(address _user, uint256 _initialAmount)
         external
-        onlyRoles(CAMPAIGN_MANAGER_ROLE)
+        onlyAllowedManager
+        onlyActiveCampaign
     {
         // If the campaign isn't active, directly exit
         if (!isActive()) {
@@ -323,16 +320,12 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Withdraw the remaining token from the campaign
-    function withdraw() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+    function withdraw() external nonReentrant onlyAllowedManager {
         TOKEN.safeTransfer(msg.sender, TOKEN.balanceOf(address(this)));
     }
 
     /// @dev Update the campaign activation date
-    function setActivationDate(uint48 _startDate, uint48 _endDate)
-        external
-        nonReentrant
-        onlyRoles(CAMPAIGN_MANAGER_ROLE)
-    {
+    function setActivationDate(uint48 _startDate, uint48 _endDate) external nonReentrant onlyAllowedManager {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
         campaignStorage.startDate = _startDate;
         campaignStorage.endDate = _endDate;

@@ -10,10 +10,7 @@ import {ContentInteractionManager} from "../interaction/ContentInteractionManage
 /// @custom:security-contact contact@frak.id
 interface ICampaignFactory {
     /// @dev Entry point to create a new campaign for the given `_identifier` with the given `_initData`
-    function createCampaign(
-        ContentInteractionDiamond _interaction,
-        address _owner,
-        bytes4 _identifier,
-        bytes calldata _initData
-    ) external returns (address);
+    function createCampaign(ContentInteractionDiamond _interaction, bytes4 _identifier, bytes calldata _initData)
+        external
+        returns (address);
 }

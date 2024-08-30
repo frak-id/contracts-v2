@@ -3,16 +3,17 @@ pragma solidity ^0.8.0;
 
 import {CAMPAIGN_EVENT_EMITTER_ROLE, InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ContentTypes} from "src/constants/ContentTypes.sol";
-
 import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
+
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 
 contract MockCampaign is InteractionCampaign {
     uint256 private interactionHandled;
     bool private fail;
 
-    constructor(address _owner, ContentInteractionDiamond _interaction)
-        InteractionCampaign(_owner, _interaction, "mock")
+    constructor(ProductAdministratorRegistry adminRegistry, address _owner, ContentInteractionDiamond _interaction)
+        InteractionCampaign(adminRegistry, _interaction, "mock")
     {}
 
     /// @dev Get the campaign metadata
@@ -32,7 +33,7 @@ contract MockCampaign is InteractionCampaign {
     }
 
     /// @dev Handle the given interaction
-    function handleInteraction(bytes calldata) public override {
+    function innerHandleInteraction(bytes calldata) internal override {
         if (fail) {
             revert("MockCampaign: fail");
         }

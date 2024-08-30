@@ -19,24 +19,24 @@ contract InteractionFacetsFactory is IFacetsFactory {
     error CantHandleContentTypes();
 
     /// @dev The press facet address
-    ReferralRegistry private immutable _REFERRAL_REGISTRY;
-    ContentRegistry private immutable _CONTENT_REGISTRY;
+    ReferralRegistry private immutable REFERRAL_REGISTRY;
+    ContentRegistry private immutable CONTENT_REGISTRY;
 
     /// @dev The facets addresses
-    IInteractionFacet private immutable _PRESS_FACET;
-    IInteractionFacet private immutable _DAPP_FACET;
-    IInteractionFacet private immutable _REFERRAL_FEATURE_FACET;
+    IInteractionFacet private immutable PRESS_FACET;
+    IInteractionFacet private immutable DAPP_FACET;
+    IInteractionFacet private immutable REFERRAL_FEATURE_FACET;
 
     /// @dev Constructor, will deploy all the known facets
     constructor(ReferralRegistry _referralRegistry, ContentRegistry _contentRegistry) {
         // Save the registries
-        _REFERRAL_REGISTRY = _referralRegistry;
-        _CONTENT_REGISTRY = _contentRegistry;
+        REFERRAL_REGISTRY = _referralRegistry;
+        CONTENT_REGISTRY = _contentRegistry;
 
         // Our facets
-        _PRESS_FACET = new PressInteractionFacet();
-        _DAPP_FACET = new DappInteractionFacet();
-        _REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
+        PRESS_FACET = new PressInteractionFacet();
+        DAPP_FACET = new DappInteractionFacet();
+        REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -50,13 +50,13 @@ contract InteractionFacetsFactory is IFacetsFactory {
         returns (ContentInteractionDiamond diamond)
     {
         // Retreive the owner of this content
-        address contentOwner = _CONTENT_REGISTRY.ownerOf(_contentId);
+        address contentOwner = CONTENT_REGISTRY.ownerOf(_contentId);
 
         // Deploy the interaction contract
-        diamond = new ContentInteractionDiamond(_contentId, _REFERRAL_REGISTRY, address(this), _owner, contentOwner);
+        diamond = new ContentInteractionDiamond(_contentId, REFERRAL_REGISTRY, address(this), _owner, contentOwner);
 
         // Get the facets for it
-        IInteractionFacet[] memory facets = getFacets(_CONTENT_REGISTRY.getContentTypes(_contentId));
+        IInteractionFacet[] memory facets = getFacets(CONTENT_REGISTRY.getContentTypes(_contentId));
 
         // If we have no facet logics, revert
         if (facets.length == 0) {
@@ -79,15 +79,15 @@ contract InteractionFacetsFactory is IFacetsFactory {
 
         // Check if we have a press content type
         if (contentTypes.isPressType()) {
-            facets[index] = _PRESS_FACET;
+            facets[index] = PRESS_FACET;
             index++;
         }
         if (contentTypes.isDappType()) {
-            facets[index] = _DAPP_FACET;
+            facets[index] = DAPP_FACET;
             index++;
         }
         if (contentTypes.hasReferralFeature()) {
-            facets[index] = _REFERRAL_FEATURE_FACET;
+            facets[index] = REFERRAL_FEATURE_FACET;
             index++;
         }
 

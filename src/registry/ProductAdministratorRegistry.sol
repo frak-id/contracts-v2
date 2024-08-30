@@ -2,9 +2,6 @@
 pragma solidity 0.8.23;
 
 import {ContentRegistry} from "./ContentRegistry.sol";
-import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {ERC721} from "solady/tokens/ERC721.sol";
-import {LibString} from "solady/utils/LibString.sol";
 
 /// @author @KONFeature
 /// @title ProductAdministratorRegistry
@@ -47,10 +44,10 @@ contract ProductAdministratorRegistry {
     /* -------------------------------------------------------------------------- */
 
     /// @dev The content registry
-    ContentRegistry internal immutable _CONTENT_REGISTRY;
+    ContentRegistry internal immutable CONTENT_REGISTRY;
 
     constructor(ContentRegistry _contentRegistry) {
-        _CONTENT_REGISTRY = _contentRegistry;
+        CONTENT_REGISTRY = _contentRegistry;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -167,7 +164,7 @@ contract ProductAdministratorRegistry {
 
     /// @dev Check if the `_caller` is authorized to manage the `_productId` (basically if he have the admin right on the product)
     function isAuthorizedAdmin(uint256 _productId, address _caller) public view returns (bool) {
-        return _CONTENT_REGISTRY.isAuthorized(_productId, _caller);
+        return CONTENT_REGISTRY.isAuthorized(_productId, _caller);
     }
 
     /// @dev Returns the roles of `user`.
@@ -191,6 +188,13 @@ contract ProductAdministratorRegistry {
     /// @dev Returns whether `user` has all of `roles`.
     function hasAllRoles(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
         return rolesOf(productId, user) & roles == roles;
+    }
+
+    /// @dev Returns whether `user` has all of `roles`.
+    function hasAllRolesOrAdmin(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
+        bool hasRoles = rolesOf(productId, user) & roles == roles;
+        if (hasRoles) return true;
+        return isAuthorizedAdmin(productId, user);
     }
 
     /* -------------------------------------------------------------------------- */
