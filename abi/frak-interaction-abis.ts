@@ -1,15 +1,372 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContentInteractionDiamond
+// DappInteractionFacet
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const contentInteractionDiamondAbi = [
+export const dappInteractionFacetAbi = [
+  { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
+  { type: 'fallback', stateMutability: 'nonpayable' },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'cancelOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'completeOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'id', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'deleteProductContract',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'pendingOwner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ownershipHandoverExpiresAt',
+    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'productTypeDenominator',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'requestOwnershipHandover',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_contractAddress', internalType: 'address', type: 'address' },
+      { name: '_storageCheckSelector', internalType: 'bytes4', type: 'bytes4' },
+    ],
+    name: 'setProductContract',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'smartContract',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'value',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'CallableStorageUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'id', internalType: 'bytes4', type: 'bytes4', indexed: true },
+      {
+        name: 'contractAddress',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'fnSelector',
+        internalType: 'bytes4',
+        type: 'bytes4',
+        indexed: false,
+      },
+    ],
+    name: 'ContractRegistered',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'id', internalType: 'bytes4', type: 'bytes4', indexed: true },
+    ],
+    name: 'ContractUnRegistered',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverCanceled',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'pendingOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipHandoverRequested',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'oldOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'newOwner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'OwnershipTransferred',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'smartContract',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'slot',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'value',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ProofStorageUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'RolesUpdated',
+  },
+  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'CallFailed' },
+  { type: 'error', inputs: [], name: 'CallVerificationFailed' },
+  {
+    type: 'error',
+    inputs: [{ name: 'index', internalType: 'uint256', type: 'uint256' }],
+    name: 'InvalidProof',
+  },
+  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
+  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+  { type: 'error', inputs: [], name: 'UnknownContract' },
+  { type: 'error', inputs: [], name: 'UnknownInteraction' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PressInteractionFacet
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const pressInteractionFacetAbi = [
+  { type: 'fallback', stateMutability: 'nonpayable' },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'productTypeDenominator',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'articleId',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      {
+        name: 'user',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'ArticleOpened',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'articleId',
+        internalType: 'bytes32',
+        type: 'bytes32',
+        indexed: true,
+      },
+      {
+        name: 'user',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'ArticleRead',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'referrer',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+    ],
+    name: 'UserReferred',
+  },
+  { type: 'error', inputs: [], name: 'UnknownInteraction' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ProductInteractionDiamond
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const productInteractionDiamondAbi = [
   {
     type: 'constructor',
     inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_productId', internalType: 'uint256', type: 'uint256' },
       {
         name: '_referralRegistry',
         internalType: 'contract ReferralRegistry',
+        type: 'address',
+      },
+      {
+        name: '_productAdministratorRegistry',
+        internalType: 'contract ProductAdministratorRegistry',
         type: 'address',
       },
       { name: '_interactionManager', internalType: 'address', type: 'address' },
@@ -18,7 +375,6 @@ export const contentInteractionDiamondAbi = [
         internalType: 'address',
         type: 'address',
       },
-      { name: '_contentOwner', internalType: 'address', type: 'address' },
     ],
     stateMutability: 'nonpayable',
   },
@@ -54,7 +410,7 @@ export const contentInteractionDiamondAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentTypeDenominator', internalType: 'uint8', type: 'uint8' },
+      { name: '_productTypeDenominator', internalType: 'uint8', type: 'uint8' },
       { name: '_call', internalType: 'bytes', type: 'bytes' },
     ],
     name: 'delegateToFacet',
@@ -64,7 +420,7 @@ export const contentInteractionDiamondAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentTypes', internalType: 'ContentTypes', type: 'uint256' },
+      { name: '_productTypes', internalType: 'ProductTypes', type: 'uint256' },
     ],
     name: 'deleteFacets',
     outputs: [],
@@ -114,13 +470,6 @@ export const contentInteractionDiamondAbi = [
   {
     type: 'function',
     inputs: [],
-    name: 'getContentId',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
     name: 'getDomainSeparator',
     outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
     stateMutability: 'view',
@@ -141,6 +490,13 @@ export const contentInteractionDiamondAbi = [
       { name: '_user', internalType: 'address', type: 'address' },
     ],
     name: 'getNonceForInteraction',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'getProductId',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
   },
@@ -370,22 +726,22 @@ export const contentInteractionDiamondAbi = [
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
   { type: 'error', inputs: [], name: 'NotInitializing' },
-  { type: 'error', inputs: [], name: 'UnandledContentType' },
+  { type: 'error', inputs: [], name: 'UnandledProductType' },
   { type: 'error', inputs: [], name: 'Unauthorized' },
   { type: 'error', inputs: [], name: 'WrongInteractionSigner' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContentInteractionManager
+// ProductInteractionManager
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const contentInteractionManagerAbi = [
+export const productInteractionManagerAbi = [
   {
     type: 'constructor',
     inputs: [
       {
-        name: '_contentRegistry',
-        internalType: 'contract ContentRegistry',
+        name: '_productRegistry',
+        internalType: 'contract ProductRegistry',
         type: 'address',
       },
       {
@@ -393,17 +749,12 @@ export const contentInteractionManagerAbi = [
         internalType: 'contract ReferralRegistry',
         type: 'address',
       },
+      {
+        name: '_productAdministratorRegistry',
+        internalType: 'contract ProductAdministratorRegistry',
+        type: 'address',
+      },
     ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
-      { name: '_operator', internalType: 'address', type: 'address' },
-    ],
-    name: 'addOperator',
-    outputs: [],
     stateMutability: 'nonpayable',
   },
   {
@@ -424,7 +775,7 @@ export const contentInteractionManagerAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
+    inputs: [{ name: '_productId', internalType: 'uint256', type: 'uint256' }],
     name: 'deleteInteractionContract',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -432,17 +783,7 @@ export const contentInteractionManagerAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
-      { name: '_operator', internalType: 'address', type: 'address' },
-    ],
-    name: 'deleteOperator',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_productId', internalType: 'uint256', type: 'uint256' },
       { name: '_campaignIdentifier', internalType: 'bytes4', type: 'bytes4' },
       { name: '_initData', internalType: 'bytes', type: 'bytes' },
     ],
@@ -452,7 +793,7 @@ export const contentInteractionManagerAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
+    inputs: [{ name: '_productId', internalType: 'uint256', type: 'uint256' }],
     name: 'deployInteractionContract',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -460,7 +801,7 @@ export const contentInteractionManagerAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_productId', internalType: 'uint256', type: 'uint256' },
       {
         name: '_campaigns',
         internalType: 'contract InteractionCampaign[]',
@@ -473,12 +814,12 @@ export const contentInteractionManagerAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
+    inputs: [{ name: '_productId', internalType: 'uint256', type: 'uint256' }],
     name: 'getInteractionContract',
     outputs: [
       {
         name: 'interactionContract',
-        internalType: 'contract ContentInteractionDiamond',
+        internalType: 'contract ProductInteractionDiamond',
         type: 'address',
       },
     ],
@@ -536,11 +877,11 @@ export const contentInteractionManagerAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_productId', internalType: 'uint256', type: 'uint256' },
       { name: '_user', internalType: 'address', type: 'address' },
     ],
-    name: 'isAllowedOnContent',
-    outputs: [{ name: 'isAllowed', internalType: 'bool', type: 'bool' }],
+    name: 'isAllowedOnProduct',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
     stateMutability: 'view',
   },
   {
@@ -639,7 +980,7 @@ export const contentInteractionManagerAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
+    inputs: [{ name: '_productId', internalType: 'uint256', type: 'uint256' }],
     name: 'updateInteractionContract',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -666,44 +1007,6 @@ export const contentInteractionManagerAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'contentId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'operator',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'ContentOperatorAdded',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'contentId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'operator',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'ContentOperatorRemoved',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
         name: 'version',
         internalType: 'uint64',
         type: 'uint64',
@@ -717,14 +1020,14 @@ export const contentInteractionManagerAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'contentId',
+        name: 'productId',
         internalType: 'uint256',
         type: 'uint256',
         indexed: true,
       },
       {
         name: 'interactionContract',
-        internalType: 'contract ContentInteractionDiamond',
+        internalType: 'contract ProductInteractionDiamond',
         type: 'address',
         indexed: false,
       },
@@ -736,14 +1039,14 @@ export const contentInteractionManagerAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'contentId',
+        name: 'productId',
         internalType: 'uint256',
         type: 'uint256',
         indexed: true,
       },
       {
         name: 'interactionContract',
-        internalType: 'contract ContentInteractionDiamond',
+        internalType: 'contract ProductInteractionDiamond',
         type: 'address',
         indexed: false,
       },
@@ -755,14 +1058,14 @@ export const contentInteractionManagerAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'contentId',
+        name: 'productId',
         internalType: 'uint256',
         type: 'uint256',
         indexed: false,
       },
       {
         name: 'interactionContract',
-        internalType: 'contract ContentInteractionDiamond',
+        internalType: 'contract ProductInteractionDiamond',
         type: 'address',
         indexed: false,
       },
@@ -861,7 +1164,7 @@ export const contentInteractionManagerAbi = [
     name: 'WalletLinked',
   },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
-  { type: 'error', inputs: [], name: 'CantHandleContentTypes' },
+  { type: 'error', inputs: [], name: 'CantHandleProductTypes' },
   { type: 'error', inputs: [], name: 'InteractionContractAlreadyDeployed' },
   { type: 'error', inputs: [], name: 'InvalidInitialization' },
   { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
@@ -871,358 +1174,6 @@ export const contentInteractionManagerAbi = [
   { type: 'error', inputs: [], name: 'Unauthorized' },
   { type: 'error', inputs: [], name: 'UnauthorizedCallContext' },
   { type: 'error', inputs: [], name: 'UpgradeFailed' },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// DappInteractionFacet
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const dappInteractionFacetAbi = [
-  { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
-  { type: 'fallback', stateMutability: 'nonpayable' },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'cancelOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'completeOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'contentTypeDenominator',
-    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'id', internalType: 'bytes4', type: 'bytes4' }],
-    name: 'deleteContentContract',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'grantRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAllRoles',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAnyRole',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'owner',
-    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'ownershipHandoverExpiresAt',
-    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'renounceOwnership',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    name: 'renounceRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'requestOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'revokeRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
-    name: 'rolesOf',
-    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '_contractAddress', internalType: 'address', type: 'address' },
-      { name: '_storageCheckSelector', internalType: 'bytes4', type: 'bytes4' },
-    ],
-    name: 'setContentContract',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
-    name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'smartContract',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'value',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'CallableStorageUpdated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'id', internalType: 'bytes4', type: 'bytes4', indexed: true },
-      {
-        name: 'contractAddress',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-      {
-        name: 'fnSelector',
-        internalType: 'bytes4',
-        type: 'bytes4',
-        indexed: false,
-      },
-    ],
-    name: 'ContractRegistered',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'id', internalType: 'bytes4', type: 'bytes4', indexed: true },
-    ],
-    name: 'ContractUnRegistered',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverCanceled',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverRequested',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'oldOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'newOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipTransferred',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'smartContract',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'slot',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'value',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-    ],
-    name: 'ProofStorageUpdated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'roles',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'RolesUpdated',
-  },
-  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
-  { type: 'error', inputs: [], name: 'CallFailed' },
-  { type: 'error', inputs: [], name: 'CallVerificationFailed' },
-  {
-    type: 'error',
-    inputs: [{ name: 'index', internalType: 'uint256', type: 'uint256' }],
-    name: 'InvalidProof',
-  },
-  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
-  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
-  { type: 'error', inputs: [], name: 'Unauthorized' },
-  { type: 'error', inputs: [], name: 'UnknownContract' },
-  { type: 'error', inputs: [], name: 'UnknownInteraction' },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// PressInteractionFacet
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const pressInteractionFacetAbi = [
-  { type: 'fallback', stateMutability: 'nonpayable' },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'contentTypeDenominator',
-    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
-    stateMutability: 'pure',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'articleId',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: true,
-      },
-      {
-        name: 'user',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'ArticleOpened',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'articleId',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: true,
-      },
-      {
-        name: 'user',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-    ],
-    name: 'ArticleRead',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'referrer',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'UserReferred',
-  },
-  { type: 'error', inputs: [], name: 'UnknownInteraction' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1245,7 +1196,7 @@ export const referralFeatureFacetAbi = [
   {
     type: 'function',
     inputs: [],
-    name: 'contentTypeDenominator',
+    name: 'productTypeDenominator',
     outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
     stateMutability: 'pure',
   },

@@ -44,12 +44,12 @@ contract DeterminedAddress {
 
     function _getAddresses() internal pure returns (Addresses memory) {
         return Addresses({
-            productRegistry: 0x758F01B484212b38EAe264F75c0DD7842d510D9c,
-            referralRegistry: 0x66820744dBD98b24C05A1fd21809684647c6cC6E,
-            productAdministratorlRegistry: 0x35F3e191523C8701aD315551dCbDcC5708efD7ec,
-            productInteractionManager: 0xB3fc8bD4e71a15a674ed6BAb63e884720FC4A3B4,
-            facetFactory: 0xce9e06e2139Fc13079C778a172769c3333f33fC1,
-            campaignFactory: 0xB178c17AC5ad0455b1a10b05d25Fe4847567Ef1D,
+            productRegistry: 0x498796b3b26c9B1519d1E0b6E4927CEb85A05b75,
+            referralRegistry: 0xcf5855d9825578199969919F1696b80388111403,
+            productAdministratorlRegistry: 0x9eE2fB93cc0C74b540A34981EFE6e26231e75Bc7,
+            productInteractionManager: 0x499E46DAB24BAF9b1Ab330fc9B4E3275b902990a,
+            facetFactory: 0x5c53407569aaF663b5E22E84956459B2Bd97eE1A,
+            campaignFactory: 0x0E2d197B9079A5128D4d2728EFFFf234934162B1,
             mUSDToken: 0x56039fa1a804F614eBD714139F29a3ff4DB57ad6
         });
     }
@@ -61,7 +61,7 @@ contract DeterminedAddress {
             webAuthNRecoveryAction: 0x8b29229515D3e5b829D59617A791b5B3a2c32ff1,
             interactionDelegator: 0x4b8350E6291063bF14ca1E4379147a3bd23714CB,
             interactionDelegatorValidator: 0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C,
-            interactionDelegatorAction: 0xF9aC3355363a1F3b501Df411cA4d08e8F854bF76
+            interactionDelegatorAction: 0x0e88C66979Fd2EA55D0E09012196D4f2BcB71a76
         });
     }
 

@@ -17,16 +17,17 @@ export default defineConfig(
         {
             out: "abi/frak-registry-abis.ts",
             plugins: foundryPlugin([
-                'ContentRegistry.json',
+                'ProductRegistry.json',
                 'ReferralRegistry.json',
+                'ProductAdministratorRegistry.json',
             ]),
         },
         // Frak interaction abis
         {
             out: "abi/frak-interaction-abis.ts",
             plugins: foundryPlugin([
-                'ContentInteractionManager.json',
-                'ContentInteractionDiamond.json',
+                'ProductInteractionManager.json',
+                'ProductInteractionDiamond.json',
                 'PressInteractionFacet.json',
                 'ReferralFeatureFacet.json',
                 'DappInteractionFacet.json',

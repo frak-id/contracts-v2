@@ -11,6 +11,11 @@ export const campaignFactoryAbi = [
         internalType: 'contract ReferralRegistry',
         type: 'address',
       },
+      {
+        name: '_productAdministratorRegistry',
+        internalType: 'contract ProductAdministratorRegistry',
+        type: 'address',
+      },
       { name: '_frakCampaignWallet', internalType: 'address', type: 'address' },
     ],
     stateMutability: 'nonpayable',
@@ -20,10 +25,9 @@ export const campaignFactoryAbi = [
     inputs: [
       {
         name: '_interaction',
-        internalType: 'contract ContentInteractionDiamond',
+        internalType: 'contract ProductInteractionDiamond',
         type: 'address',
       },
-      { name: '_owner', internalType: 'address', type: 'address' },
       { name: '_identifier', internalType: 'bytes4', type: 'bytes4' },
       { name: '_initData', internalType: 'bytes', type: 'bytes' },
     ],
@@ -59,29 +63,6 @@ export const interactionCampaignAbi = [
   {
     type: 'function',
     inputs: [],
-    name: 'cancelOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'completeOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'disallowMe',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
     name: 'getMetadata',
     outputs: [
       { name: '_type', internalType: 'string', type: 'string' },
@@ -91,40 +72,10 @@ export const interactionCampaignAbi = [
   },
   {
     type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'grantRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
     inputs: [{ name: '_data', internalType: 'bytes', type: 'bytes' }],
     name: 'handleInteraction',
     outputs: [],
     stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAllRoles',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAnyRole',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -142,60 +93,6 @@ export const interactionCampaignAbi = [
   },
   {
     type: 'function',
-    inputs: [],
-    name: 'owner',
-    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'ownershipHandoverExpiresAt',
-    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'renounceOwnership',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    name: 'renounceRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'requestOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'revokeRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
-    name: 'rolesOf',
-    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
     inputs: [{ name: '_isRunning', internalType: 'bool', type: 'bool' }],
     name: 'setRunningStatus',
     outputs: [],
@@ -204,81 +101,13 @@ export const interactionCampaignAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentType', internalType: 'ContentTypes', type: 'uint256' },
+      { name: '_productType', internalType: 'ProductTypes', type: 'uint256' },
     ],
-    name: 'supportContentType',
+    name: 'supportProductType',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
     stateMutability: 'view',
   },
-  {
-    type: 'function',
-    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
-    name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverCanceled',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverRequested',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'oldOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'newOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipTransferred',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'roles',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'RolesUpdated',
-  },
-  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
-  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
-  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
+  { type: 'error', inputs: [], name: 'InactiveCampaign' },
   { type: 'error', inputs: [], name: 'Reentrancy' },
   { type: 'error', inputs: [], name: 'Unauthorized' },
 ] as const
@@ -319,37 +148,18 @@ export const referralCampaignAbi = [
         internalType: 'contract ReferralRegistry',
         type: 'address',
       },
-      { name: '_owner', internalType: 'address', type: 'address' },
+      {
+        name: '_productAdministratorRegistry',
+        internalType: 'contract ProductAdministratorRegistry',
+        type: 'address',
+      },
       { name: '_frakCampaignWallet', internalType: 'address', type: 'address' },
       {
         name: '_interaction',
-        internalType: 'contract ContentInteractionDiamond',
+        internalType: 'contract ProductInteractionDiamond',
         type: 'address',
       },
     ],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'cancelOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'completeOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'disallowMe',
-    outputs: [],
     stateMutability: 'nonpayable',
   },
   {
@@ -419,40 +229,10 @@ export const referralCampaignAbi = [
   },
   {
     type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'grantRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
     inputs: [{ name: '_data', internalType: 'bytes', type: 'bytes' }],
     name: 'handleInteraction',
     outputs: [],
     stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAllRoles',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'hasAnyRole',
-    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
-    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -470,64 +250,10 @@ export const referralCampaignAbi = [
   },
   {
     type: 'function',
-    inputs: [],
-    name: 'owner',
-    outputs: [{ name: 'result', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'pendingOwner', internalType: 'address', type: 'address' },
-    ],
-    name: 'ownershipHandoverExpiresAt',
-    outputs: [{ name: 'result', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
     inputs: [{ name: '_user', internalType: 'address', type: 'address' }],
     name: 'pullReward',
     outputs: [],
     stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'renounceOwnership',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    name: 'renounceRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'requestOwnershipHandover',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address' },
-      { name: 'roles', internalType: 'uint256', type: 'uint256' },
-    ],
-    name: 'revokeRoles',
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
-    name: 'rolesOf',
-    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -549,18 +275,11 @@ export const referralCampaignAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentType', internalType: 'ContentTypes', type: 'uint256' },
+      { name: '_productType', internalType: 'ProductTypes', type: 'uint256' },
     ],
-    name: 'supportContentType',
+    name: 'supportProductType',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
     stateMutability: 'pure',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: 'newOwner', internalType: 'address', type: 'address' }],
-    name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'payable',
   },
   {
     type: 'function',
@@ -592,51 +311,6 @@ export const referralCampaignAbi = [
     type: 'event',
     anonymous: false,
     inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverCanceled',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'pendingOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipHandoverRequested',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'oldOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'newOwner',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'OwnershipTransferred',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
       { name: 'user', internalType: 'address', type: 'address', indexed: true },
       {
         name: 'amount',
@@ -661,26 +335,9 @@ export const referralCampaignAbi = [
     ],
     name: 'RewardClaimed',
   },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'roles',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-    ],
-    name: 'RolesUpdated',
-  },
-  { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'DistributionCapReached' },
   { type: 'error', inputs: [], name: 'InactiveCampaign' },
   { type: 'error', inputs: [], name: 'InvalidConfig' },
-  { type: 'error', inputs: [], name: 'NewOwnerIsZeroAddress' },
-  { type: 'error', inputs: [], name: 'NoHandoverRequest' },
   { type: 'error', inputs: [], name: 'NotEnoughToken' },
   { type: 'error', inputs: [], name: 'Reentrancy' },
   { type: 'error', inputs: [], name: 'Unauthorized' },

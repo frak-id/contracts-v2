@@ -1,8 +1,132 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContentRegistry
+// ProductAdministratorRegistry
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const contentRegistryAbi = [
+export const productAdministratorRegistryAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      {
+        name: '_productRegistry',
+        internalType: 'contract ProductRegistry',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'grantRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRoles',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAllRolesOrAdmin',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'hasAnyRole',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: '_productId', internalType: 'uint256', type: 'uint256' },
+      { name: '_caller', internalType: 'address', type: 'address' },
+    ],
+    name: 'isAuthorizedAdmin',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'renounceRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'roles', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'revokeRoles',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'user', internalType: 'address', type: 'address' },
+    ],
+    name: 'rolesOf',
+    outputs: [{ name: 'roles', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'product',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'roles',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ProductRolesUpdated',
+  },
+  { type: 'error', inputs: [], name: 'Unauthorized' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ProductRegistry
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const productRegistryAbi = [
   {
     type: 'constructor',
     inputs: [{ name: '_owner', internalType: 'address', type: 'address' }],
@@ -50,14 +174,7 @@ export const contentRegistryAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
-    name: 'getContentTypes',
-    outputs: [{ name: '', internalType: 'ContentTypes', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
+    inputs: [{ name: '_productId', internalType: 'uint256', type: 'uint256' }],
     name: 'getMetadata',
     outputs: [
       {
@@ -66,8 +183,8 @@ export const contentRegistryAbi = [
         type: 'tuple',
         components: [
           {
-            name: 'contentTypes',
-            internalType: 'ContentTypes',
+            name: 'productTypes',
+            internalType: 'ProductTypes',
             type: 'uint256',
           },
           { name: 'name', internalType: 'string', type: 'string' },
@@ -75,6 +192,13 @@ export const contentRegistryAbi = [
         ],
       },
     ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_productId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getProductTypes',
+    outputs: [{ name: '', internalType: 'ProductTypes', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
@@ -120,7 +244,7 @@ export const contentRegistryAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
+      { name: '_productId', internalType: 'uint256', type: 'uint256' },
       { name: '_caller', internalType: 'address', type: 'address' },
     ],
     name: 'isAuthorized',
@@ -129,15 +253,15 @@ export const contentRegistryAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: '_contentId', internalType: 'uint256', type: 'uint256' }],
-    name: 'isExistingContent',
+    inputs: [{ name: '_productId', internalType: 'uint256', type: 'uint256' }],
+    name: 'isExistingProduct',
     outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [
-      { name: '_contentTypes', internalType: 'ContentTypes', type: 'uint256' },
+      { name: '_productTypes', internalType: 'ProductTypes', type: 'uint256' },
       { name: '_name', internalType: 'string', type: 'string' },
       { name: '_domain', internalType: 'string', type: 'string' },
       { name: '_owner', internalType: 'address', type: 'address' },
@@ -289,8 +413,8 @@ export const contentRegistryAbi = [
   {
     type: 'function',
     inputs: [
-      { name: '_contentId', internalType: 'uint256', type: 'uint256' },
-      { name: '_contentTypes', internalType: 'ContentTypes', type: 'uint256' },
+      { name: '_productId', internalType: 'uint256', type: 'uint256' },
+      { name: '_productTypes', internalType: 'ProductTypes', type: 'uint256' },
       { name: '_name', internalType: 'string', type: 'string' },
     ],
     name: 'updateMetadata',
@@ -347,52 +471,6 @@ export const contentRegistryAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'contentId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'domain',
-        internalType: 'string',
-        type: 'string',
-        indexed: false,
-      },
-      {
-        name: 'contentTypes',
-        internalType: 'ContentTypes',
-        type: 'uint256',
-        indexed: false,
-      },
-      { name: 'name', internalType: 'string', type: 'string', indexed: false },
-    ],
-    name: 'ContentMinted',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'contentId',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: true,
-      },
-      {
-        name: 'contentTypes',
-        internalType: 'ContentTypes',
-        type: 'uint256',
-        indexed: false,
-      },
-      { name: 'name', internalType: 'string', type: 'string', indexed: false },
-    ],
-    name: 'ContentUpdated',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
         name: 'pendingOwner',
         internalType: 'address',
         type: 'address',
@@ -437,6 +515,52 @@ export const contentRegistryAbi = [
     type: 'event',
     anonymous: false,
     inputs: [
+      {
+        name: 'productId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'domain',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+      {
+        name: 'productTypes',
+        internalType: 'ProductTypes',
+        type: 'uint256',
+        indexed: false,
+      },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+    ],
+    name: 'ProductMinted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'productId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'productTypes',
+        internalType: 'ProductTypes',
+        type: 'uint256',
+        indexed: false,
+      },
+      { name: 'name', internalType: 'string', type: 'string', indexed: false },
+    ],
+    name: 'ProductUpdated',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
       { name: 'user', internalType: 'address', type: 'address', indexed: true },
       {
         name: 'roles',
@@ -458,7 +582,7 @@ export const contentRegistryAbi = [
     name: 'Transfer',
   },
   { type: 'error', inputs: [], name: 'AccountBalanceOverflow' },
-  { type: 'error', inputs: [], name: 'AlreadyExistingContent' },
+  { type: 'error', inputs: [], name: 'AlreadyExistingProduct' },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'BalanceQueryForZeroAddress' },
   { type: 'error', inputs: [], name: 'InvalidNameOrDomain' },

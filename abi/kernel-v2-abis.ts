@@ -40,7 +40,7 @@ export const interactionDelegatorAbi = [
             internalType: 'struct Interaction',
             type: 'tuple',
             components: [
-              { name: 'contentId', internalType: 'uint256', type: 'uint256' },
+              { name: 'productId', internalType: 'uint256', type: 'uint256' },
               { name: 'data', internalType: 'bytes', type: 'bytes' },
             ],
           },
@@ -66,7 +66,7 @@ export const interactionDelegatorAbi = [
             internalType: 'struct Interaction[]',
             type: 'tuple[]',
             components: [
-              { name: 'contentId', internalType: 'uint256', type: 'uint256' },
+              { name: 'productId', internalType: 'uint256', type: 'uint256' },
               { name: 'data', internalType: 'bytes', type: 'bytes' },
             ],
           },
@@ -243,7 +243,7 @@ export const interactionDelegatorActionAbi = [
     inputs: [
       {
         name: '_interactionManager',
-        internalType: 'contract ContentInteractionManager',
+        internalType: 'contract ProductInteractionManager',
         type: 'address',
       },
     ],
@@ -257,7 +257,7 @@ export const interactionDelegatorActionAbi = [
         internalType: 'struct Interaction',
         type: 'tuple',
         components: [
-          { name: 'contentId', internalType: 'uint256', type: 'uint256' },
+          { name: 'productId', internalType: 'uint256', type: 'uint256' },
           { name: 'data', internalType: 'bytes', type: 'bytes' },
         ],
       },
@@ -274,7 +274,7 @@ export const interactionDelegatorActionAbi = [
         internalType: 'struct Interaction[]',
         type: 'tuple[]',
         components: [
-          { name: 'contentId', internalType: 'uint256', type: 'uint256' },
+          { name: 'productId', internalType: 'uint256', type: 'uint256' },
           { name: 'data', internalType: 'bytes', type: 'bytes' },
         ],
       },

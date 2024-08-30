@@ -38,6 +38,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log("Addresses:");
         console.log(" - ProductRegistry: %s", addresses.productRegistry);
         console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
+        console.log(" - ProductAdministratorRegistry: %s", addresses.productAdministratorlRegistry);
         console.log(" - ProductInteractionManager: %s", addresses.productInteractionManager);
         console.log(" - FacetFactory: %s", addresses.facetFactory);
         console.log(" - CampaignFactory: %s", addresses.campaignFactory);
