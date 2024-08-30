@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentTypes} from "../constants/ContentTypes.sol";
 import {InteractionType} from "../constants/InteractionType.sol";
+import {ProductTypes} from "../constants/ProductTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
-import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
+import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 
@@ -17,8 +17,8 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     /// @dev The interaction contract linked to this campaign
     address internal immutable INTERACTION_CONTRACT;
 
-    /// @dev Content id linked to this campaign
-    uint256 internal immutable CONTENT_ID;
+    /// @dev Product id linked to this campaign
+    uint256 internal immutable PRODUCT_ID;
 
     /// @dev The product administrator registry
     ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
@@ -54,10 +54,10 @@ abstract contract InteractionCampaign is ReentrancyGuard {
 
     constructor(
         ProductAdministratorRegistry _productAdministratorRegistry,
-        ContentInteractionDiamond _interaction,
+        ProductInteractionDiamond _interaction,
         bytes32 _name
     ) {
-        CONTENT_ID = _interaction.getContentId();
+        PRODUCT_ID = _interaction.getProductId();
         INTERACTION_CONTRACT = address(_interaction);
         PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
 
@@ -80,8 +80,8 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     /// @dev Check if the campaign is active or not
     function isActive() public view virtual returns (bool);
 
-    /// @dev Check if the given campaign support the `_contentType`
-    function supportContentType(ContentTypes _contentType) public view virtual returns (bool);
+    /// @dev Check if the given campaign support the `_productType`
+    function supportProductType(ProductTypes _productType) public view virtual returns (bool);
 
     /// @dev Handle the interaction logic within the campaign
     function innerHandleInteraction(bytes calldata _data) internal virtual;
@@ -116,7 +116,7 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     /// @dev Only allow the call for an authorised mananger
     modifier onlyAllowedManager() {
         bool isAllowed =
-            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(CONTENT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
+            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
         if (!isAllowed) revert Unauthorized();
         _;
     }

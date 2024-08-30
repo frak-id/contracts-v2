@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {Addresses, ContentIds, DeterminedAddress} from "../DeterminedAddress.sol";
+import {Addresses, DeterminedAddress, ProductIds} from "../DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {MINTER_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
-import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract AddOperator is Script, DeterminedAddress {
@@ -20,32 +20,32 @@ contract AddOperator is Script, DeterminedAddress {
     function run() public {
         Addresses memory addresses = _getAddresses();
 
-        // _addContentMinter(ContentRegistry(addresses.contentRegistry));
+        // _addProductMinter(ProductRegistry(addresses.productRegistry));
 
         // _addMinter(mUSDToken(addresses.mUSDToken));
 
-        ContentInteractionManager contentInteractionManager =
-            ContentInteractionManager(addresses.contentInteractionManager);
+        ProductInteractionManager productInteractionManager =
+            ProductInteractionManager(addresses.productInteractionManager);
 
         // Iterate over each content ids, and clean the attached campaigns
-        uint256[] memory contentIds = _getContentIdsArr();
-        for (uint256 i = 0; i < contentIds.length; i++) {
-            uint256 cId = contentIds[i];
+        uint256[] memory productIds = _getProductIdsArr();
+        for (uint256 i = 0; i < productIds.length; i++) {
+            uint256 cId = productIds[i];
 
             // Get the interaction contract and the active campaigns
-            // _addOperator(contentInteractionManager, cId);
+            // _addOperator(productInteractionManager, cId);
         }
     }
 
-    /*function _addOperator(ContentInteractionManager _contentInteractionManager, uint256 _cId) internal {
+    /*function _addOperator(ProductInteractionManager _productInteractionManager, uint256 _cId) internal {
         vm.startBroadcast();
-        _contentInteractionManager.addOperator(_cId, operator);
+        _productInteractionManager.addOperator(_cId, operator);
         vm.stopBroadcast();
     }*/
 
-    function _addContentMinter(ContentRegistry _contentRegistry) internal {
+    function _addProductMinter(ProductRegistry _productRegistry) internal {
         vm.startBroadcast();
-        _contentRegistry.grantRoles(contentMinter, MINTER_ROLE);
+        _productRegistry.grantRoles(contentMinter, MINTER_ROLE);
         vm.stopBroadcast();
     }
 

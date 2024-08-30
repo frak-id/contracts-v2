@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 
 /// @dev representation of an interaction
 struct Interaction {
-    uint256 contentId;
+    uint256 productId;
     bytes data;
 }
 
@@ -16,9 +16,9 @@ contract InteractionDelegatorAction {
     error InteractionFailed();
 
     /// @dev The content registry
-    ContentInteractionManager internal immutable _INTERACTION_MANAGER;
+    ProductInteractionManager internal immutable _INTERACTION_MANAGER;
 
-    constructor(ContentInteractionManager _interactionManager) {
+    constructor(ProductInteractionManager _interactionManager) {
         _INTERACTION_MANAGER = _interactionManager;
     }
 
@@ -39,12 +39,12 @@ contract InteractionDelegatorAction {
     /// @dev Send the given interaction
     function _sendInteraction(Interaction calldata _interaction) internal returns (bool success) {
         // If no content id, directly call the interaction manager with the given data
-        if (_interaction.contentId == 0) {
+        if (_interaction.productId == 0) {
             (success,) = address(_INTERACTION_MANAGER).call(_interaction.data);
         } else {
             // Call the interaction contract of the given content
             (success,) =
-                address(_INTERACTION_MANAGER.getInteractionContract(_interaction.contentId)).call(_interaction.data);
+                address(_INTERACTION_MANAGER.getInteractionContract(_interaction.productId)).call(_interaction.data);
         }
     }
 }

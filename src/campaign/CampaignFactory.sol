@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
+import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
@@ -57,7 +57,7 @@ contract CampaignFactory is ICampaignFactory {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Entry point to create a new campaign
-    function createCampaign(ContentInteractionDiamond _interaction, bytes4 _identifier, bytes calldata _initData)
+    function createCampaign(ProductInteractionDiamond _interaction, bytes4 _identifier, bytes calldata _initData)
         public
         override
         returns (address)
@@ -78,7 +78,7 @@ contract CampaignFactory is ICampaignFactory {
     }
 
     /// @dev Create a new referral campaign
-    function _createReferralCampaign(ContentInteractionDiamond _interaction, bytes calldata _initData)
+    function _createReferralCampaign(ProductInteractionDiamond _interaction, bytes calldata _initData)
         internal
         returns (address)
     {

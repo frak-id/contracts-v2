@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../constants/InteractionType.sol";
+import {PRODUCT_TYPE_PRESS, ProductTypes} from "../constants/ProductTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
-import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
+import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
@@ -121,7 +121,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         ReferralRegistry _referralRegistry,
         ProductAdministratorRegistry _productAdministratorRegistry,
         address _frakCampaignWallet,
-        ContentInteractionDiamond _interaction
+        ProductInteractionDiamond _interaction
     ) InteractionCampaign(_productAdministratorRegistry, _interaction, _config.name) PushPullModule(_config.token) {
         if (_config.token == address(0)) {
             revert InvalidConfig();
@@ -196,10 +196,10 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         return TOKEN.balanceOf(address(this)) > BASE_REWARD * 2;
     }
 
-    /// @dev Check if the given campaign support the `_contentType`
-    function supportContentType(ContentTypes _contentType) public pure override returns (bool) {
+    /// @dev Check if the given campaign support the `_productType`
+    function supportProductType(ProductTypes _productType) public pure override returns (bool) {
         // Only supporting press content
-        return _contentType.hasReferralFeature();
+        return _productType.hasReferralFeature();
     }
 
     /* -------------------------------------------------------------------------- */

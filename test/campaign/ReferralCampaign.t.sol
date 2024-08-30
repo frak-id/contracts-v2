@@ -7,15 +7,16 @@ import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {
-    CONTENT_TYPE_DAPP,
-    CONTENT_TYPE_FEATURE_REFERRAL,
-    CONTENT_TYPE_PRESS,
-    ContentTypes
-} from "src/constants/ContentTypes.sol";
+
 import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
+import {
+    PRODUCT_TYPE_DAPP,
+    PRODUCT_TYPE_FEATURE_REFERRAL,
+    PRODUCT_TYPE_PRESS,
+    ProductTypes
+} from "src/constants/ProductTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
+import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ReferralCampaignTest is InteractionTest {
@@ -34,10 +35,10 @@ contract ReferralCampaignTest is InteractionTest {
 
     function setUp() public {
         vm.prank(owner);
-        contentId =
-            contentRegistry.mint(CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL, "name", "press-domain", owner);
+        productId =
+            productRegistry.mint(PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "name", "press-domain", owner);
         vm.prank(owner);
-        contentRegistry.setApprovalForAll(operator, true);
+        productRegistry.setApprovalForAll(operator, true);
 
         _initInteractionTest();
 
@@ -58,12 +59,12 @@ contract ReferralCampaignTest is InteractionTest {
             endDate: uint48(0),
             name: "test"
         });
-        referralCampaign = new ReferralCampaign(config, referralRegistry, adminRegistry, owner, contentInteraction);
+        referralCampaign = new ReferralCampaign(config, referralRegistry, adminRegistry, owner, productInteraction);
 
         // Mint a few test tokens to the campaign
         token.mint(address(referralCampaign), 1_000 ether);
 
-        emitter = address(contentInteraction);
+        emitter = address(productInteraction);
 
         // Fake the timestamp
         vm.warp(100);
@@ -93,7 +94,7 @@ contract ReferralCampaignTest is InteractionTest {
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, adminRegistry, owner, contentInteraction);
+        new ReferralCampaign(config, referralRegistry, adminRegistry, owner, productInteraction);
     }
 
     function test_metadata() public view {
@@ -132,13 +133,13 @@ contract ReferralCampaignTest is InteractionTest {
         assertEq(referralCampaign.isActive(), false);
     }
 
-    function test_supportContentType() public view {
-        assertEq(referralCampaign.supportContentType(CONTENT_TYPE_DAPP), false);
-        assertEq(referralCampaign.supportContentType(ContentTypes.wrap(uint256(1 << 9))), false);
-        assertEq(referralCampaign.supportContentType(CONTENT_TYPE_PRESS), false);
-        assertEq(referralCampaign.supportContentType(CONTENT_TYPE_FEATURE_REFERRAL), true);
+    function test_supportProductType() public view {
+        assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_DAPP), false);
+        assertEq(referralCampaign.supportProductType(ProductTypes.wrap(uint256(1 << 9))), false);
+        assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_PRESS), false);
+        assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_FEATURE_REFERRAL), true);
         assertEq(
-            referralCampaign.supportContentType(CONTENT_TYPE_FEATURE_REFERRAL | CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS),
+            referralCampaign.supportProductType(PRODUCT_TYPE_FEATURE_REFERRAL | PRODUCT_TYPE_DAPP | PRODUCT_TYPE_PRESS),
             true
         );
     }

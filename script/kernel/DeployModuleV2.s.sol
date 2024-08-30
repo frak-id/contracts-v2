@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {DeterminedAddress, KernelAddresses} from "../DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 import {InteractionDelegator} from "src/kernel/v2/InteractionDelegator.sol";
 import {InteractionDelegatorAction} from "src/kernel/v2/InteractionDelegatorAction.sol";
@@ -87,7 +87,7 @@ contract DeployModuleV2 is Script, DeterminedAddress {
         if (addresses.interactionDelegatorAction.code.length == 0 || forceDeploy) {
             console.log("Deploying InteractionDelegatorAction");
             interactionDelegatorAction = new InteractionDelegatorAction{salt: 0}(
-                ContentInteractionManager(_getAddresses().contentInteractionManager)
+                ProductInteractionManager(_getAddresses().productInteractionManager)
             );
         } else {
             interactionDelegatorAction = InteractionDelegatorAction(addresses.interactionDelegatorAction);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentRegistry} from "./ContentRegistry.sol";
+import {ProductRegistry} from "./ProductRegistry.sol";
 
 /// @author @KONFeature
 /// @title ProductAdministratorRegistry
@@ -44,10 +44,10 @@ contract ProductAdministratorRegistry {
     /* -------------------------------------------------------------------------- */
 
     /// @dev The content registry
-    ContentRegistry internal immutable CONTENT_REGISTRY;
+    ProductRegistry internal immutable PRODUCT_REGISTRY;
 
-    constructor(ContentRegistry _contentRegistry) {
-        CONTENT_REGISTRY = _contentRegistry;
+    constructor(ProductRegistry _productRegistry) {
+        PRODUCT_REGISTRY = _productRegistry;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -164,7 +164,7 @@ contract ProductAdministratorRegistry {
 
     /// @dev Check if the `_caller` is authorized to manage the `_productId` (basically if he have the admin right on the product)
     function isAuthorizedAdmin(uint256 _productId, address _caller) public view returns (bool) {
-        return CONTENT_REGISTRY.isAuthorized(_productId, _caller);
+        return PRODUCT_REGISTRY.isAuthorized(_productId, _caller);
     }
 
     /// @dev Returns the roles of `user`.

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {DENOMINATOR_FEATURE_REFERRAL} from "../../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../../constants/InteractionType.sol";
+import {DENOMINATOR_FEATURE_REFERRAL} from "../../constants/ProductTypes.sol";
 import {ReferralRegistry} from "../../registry/ReferralRegistry.sol";
-import {ContentInteractionStorageLib} from "../lib/ContentInteractionStorageLib.sol";
+import {ProductInteractionStorageLib} from "../lib/ProductInteractionStorageLib.sol";
 import {IInteractionFacet} from "./IInteractionFacet.sol";
 
 /// @title ReferralFeatureFacet
 /// @author @KONFeature
 /// @notice Contract managing the referral user interaction
 /// @custom:security-contact contact@frak.id
-contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet {
+contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet {
     using InteractionTypeLib for bytes;
 
     /* -------------------------------------------------------------------------- */
@@ -46,7 +46,7 @@ contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet
     }
 
     /// @dev Get the handled content type of this facet
-    function contentTypeDenominator() public pure override returns (uint8) {
+    function productTypeDenominator() public pure override returns (uint8) {
         return DENOMINATOR_FEATURE_REFERRAL;
     }
 

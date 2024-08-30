@@ -11,5 +11,5 @@ interface IInteractionFacet {
     error UnknownInteraction();
 
     /// @dev Get the handled content type of this facet
-    function contentTypeDenominator() external pure returns (uint8);
+    function productTypeDenominator() external pure returns (uint8);
 }

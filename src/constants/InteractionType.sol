@@ -24,15 +24,15 @@ library InteractionTypeLib {
     function unpackForManager(bytes calldata _data)
         internal
         pure
-        returns (uint8 contentTypeDenominator, bytes calldata facetData)
+        returns (uint8 productTypeDenominator, bytes calldata facetData)
     {
         unchecked {
             if (_data.length < 5) {
                 facetData = _data;
-                return (contentTypeDenominator, facetData);
+                return (productTypeDenominator, facetData);
             }
 
-            contentTypeDenominator = uint8(_data[0]);
+            productTypeDenominator = uint8(_data[0]);
             // Facet data contain everything after the content type denominator
             facetData = _data[1:];
         }

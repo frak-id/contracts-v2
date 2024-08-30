@@ -7,8 +7,8 @@ import "forge-std/console.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {MINTER_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {DELEGATION_EXECUTOR_ROLE, InteractionDelegator} from "src/kernel/v2/InteractionDelegator.sol";
 
 contract AddInteractionExecutor is Script, DeterminedAddress {

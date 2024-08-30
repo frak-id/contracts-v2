@@ -9,60 +9,62 @@ import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
-    CONTENT_TYPE_DAPP,
-    CONTENT_TYPE_PRESS,
-    ContentTypes,
     DENOMINATOR_DAPP,
-    DENOMINATOR_PRESS
-} from "src/constants/ContentTypes.sol";
+    DENOMINATOR_PRESS,
+    PRODUCT_TYPE_DAPP,
+    PRODUCT_TYPE_PRESS,
+    ProductTypes
+} from "src/constants/ProductTypes.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
-import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
+import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
-contract ContentInteractionManagerTest is Test {
+contract ProductInteractionManagerTest is Test {
     address private owner = makeAddr("owner");
     address private operator = makeAddr("operator");
 
-    ContentRegistry private contentRegistry;
+    ProductRegistry private productRegistry;
     ReferralRegistry private referralRegistry;
     ProductAdministratorRegistry private adminRegistry;
     InteractionFacetsFactory private facetFactory;
     CampaignFactory private campaignFactory;
 
-    uint256 private contentIdDapp;
-    uint256 private contentIdPress;
-    uint256 private contentIdMulti;
-    uint256 private contentIdUnknown;
+    uint256 private productIdDapp;
+    uint256 private productIdPress;
+    uint256 private productIdMulti;
+    uint256 private productIdUnknown;
 
-    ContentInteractionManager private contentInteractionManager;
+    ProductInteractionManager private productInteractionManager;
 
     function setUp() public {
-        contentRegistry = new ContentRegistry(owner);
+        productRegistry = new ProductRegistry(owner);
         referralRegistry = new ReferralRegistry(owner);
-        adminRegistry = new ProductAdministratorRegistry(contentRegistry);
+        adminRegistry = new ProductAdministratorRegistry(productRegistry);
 
-        facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry, adminRegistry);
+        facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry);
         campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
 
-        address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry, adminRegistry));
+        address implem = address(new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry));
         address proxy = LibClone.deployERC1967(implem);
-        contentInteractionManager = ContentInteractionManager(proxy);
-        contentInteractionManager.init(owner, facetFactory, campaignFactory);
+        productInteractionManager = ProductInteractionManager(proxy);
+        productInteractionManager.init(owner, facetFactory, campaignFactory);
 
         // Grant the right roles to the content interaction manager
         vm.prank(owner);
-        referralRegistry.grantRoles(address(contentInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
+        referralRegistry.grantRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
 
         vm.startPrank(owner);
-        contentIdDapp = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-domain", owner);
-        contentIdPress = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain", owner);
-        contentIdMulti = contentRegistry.mint(CONTENT_TYPE_DAPP | CONTENT_TYPE_PRESS, "name", "multi-domain", owner);
-        contentIdUnknown = contentRegistry.mint(ContentTypes.wrap(uint256(1 << 99)), "name", "unknown-domain", owner);
-        contentRegistry.setApprovalForAll(operator, true);
+        productIdDapp = productRegistry.mint(PRODUCT_TYPE_DAPP, "name", "dapp-domain", owner);
+        productIdPress = productRegistry.mint(PRODUCT_TYPE_PRESS, "name", "press-domain", owner);
+        productIdMulti = productRegistry.mint(PRODUCT_TYPE_DAPP | PRODUCT_TYPE_PRESS, "name", "multi-domain", owner);
+        productIdUnknown = productRegistry.mint(ProductTypes.wrap(uint256(1 << 99)), "name", "unknown-domain", owner);
+        productRegistry.setApprovalForAll(operator, true);
         vm.stopPrank();
     }
 
@@ -76,25 +78,25 @@ contract ContentInteractionManagerTest is Test {
 
         // Ensure only admin can do it
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.addOperator(contentIdPress, testOperator);
+        productInteractionManager.addOperator(productIdPress, testOperator);
 
         // Add it
         vm.prank(owner);
-        contentInteractionManager.addOperator(contentIdPress, testOperator);
+        productInteractionManager.addOperator(productIdPress, testOperator);
 
-        assertTrue(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator));
+        assertTrue(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator));
 
         // Ensure it can't add other operator
         vm.prank(testOperator);
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.addOperator(contentIdPress, testOperator2);
+        productInteractionManager.addOperator(productIdPress, testOperator2);
 
-        assertFalse(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator2));
+        assertFalse(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator2));
 
         // Ensure the operator can deploy stuff
         vm.prank(testOperator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
-        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdPress)), address(0));
+        productInteractionManager.deployInteractionContract(productIdPress);
+        assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
     }
 
     function test_deleteOperator() public {
@@ -102,21 +104,21 @@ contract ContentInteractionManagerTest is Test {
         address testOperator2 = makeAddr("testOperator2");
 
         vm.startPrank(owner);
-        contentInteractionManager.addOperator(contentIdPress, testOperator1);
-        contentInteractionManager.addOperator(contentIdPress, testOperator2);
+        productInteractionManager.addOperator(productIdPress, testOperator1);
+        productInteractionManager.addOperator(productIdPress, testOperator2);
         vm.stopPrank();
 
         // Admin doing a remove
         vm.prank(owner);
-        contentInteractionManager.deleteOperator(contentIdPress, testOperator1);
+        productInteractionManager.deleteOperator(productIdPress, testOperator1);
 
-        assertFalse(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator1));
+        assertFalse(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator1));
 
         // Self removing
         vm.prank(testOperator2);
-        contentInteractionManager.deleteOperator(contentIdPress, testOperator2);
+        productInteractionManager.deleteOperator(productIdPress, testOperator2);
 
-        assertFalse(contentInteractionManager.isAllowedOnContent(contentIdPress, testOperator2));
+        assertFalse(productInteractionManager.isAllowedOnProduct(productIdPress, testOperator2));
     }*/
 
     /* -------------------------------------------------------------------------- */
@@ -125,37 +127,37 @@ contract ContentInteractionManagerTest is Test {
 
     function test_deployInteractionContract_Unauthorized() public {
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.deployInteractionContract(contentIdDapp);
+        productInteractionManager.deployInteractionContract(productIdDapp);
     }
 
-    function test_deployInteractionContract_CantHandleContentTypes() public {
+    function test_deployInteractionContract_CantHandleProductTypes() public {
         vm.prank(operator);
-        vm.expectRevert(ContentInteractionManager.CantHandleContentTypes.selector);
-        contentInteractionManager.deployInteractionContract(contentIdUnknown);
+        vm.expectRevert(ProductInteractionManager.CantHandleProductTypes.selector);
+        productInteractionManager.deployInteractionContract(productIdUnknown);
     }
 
     function test_deployInteractionContract_InteractionContractAlreadyDeployed() public {
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
-        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdPress)), address(0));
+        productInteractionManager.deployInteractionContract(productIdPress);
+        assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
 
         vm.prank(operator);
-        vm.expectRevert(ContentInteractionManager.InteractionContractAlreadyDeployed.selector);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
+        vm.expectRevert(ProductInteractionManager.InteractionContractAlreadyDeployed.selector);
+        productInteractionManager.deployInteractionContract(productIdPress);
     }
 
     function test_deployInteractionContract() public {
         // Deploy the interaction contract
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
+        productInteractionManager.deployInteractionContract(productIdPress);
 
         // Assert it's deployed
-        assertNotEq(address(contentInteractionManager.getInteractionContract(contentIdPress)), address(0));
+        assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
 
         // Deploy the interaction contract for a content with multiple types
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdMulti);
-        ContentInteractionDiamond interaction = contentInteractionManager.getInteractionContract(contentIdMulti);
+        productInteractionManager.deployInteractionContract(productIdMulti);
+        ProductInteractionDiamond interaction = productInteractionManager.getInteractionContract(productIdMulti);
         assertNotEq(address(interaction), address(0));
 
         // Get the facet, and ensure it's not 0 for each content denomination
@@ -164,68 +166,68 @@ contract ContentInteractionManagerTest is Test {
     }
 
     function test_getInteractionContract() public {
-        vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
-        contentInteractionManager.getInteractionContract(contentIdPress);
+        vm.expectRevert(ProductInteractionManager.NoInteractionContractFound.selector);
+        productInteractionManager.getInteractionContract(productIdPress);
 
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
-        address deployedAddress = address(contentInteractionManager.getInteractionContract(contentIdPress));
+        productInteractionManager.deployInteractionContract(productIdPress);
+        address deployedAddress = address(productInteractionManager.getInteractionContract(productIdPress));
         assertNotEq(deployedAddress, address(0));
     }
 
     function test_updateInteractionContract_Unauthorized() public {
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.updateInteractionContract(contentIdDapp);
+        productInteractionManager.updateInteractionContract(productIdDapp);
     }
 
     function test_updateInteractionContract_NoInteractionContractFound() public {
-        vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
+        vm.expectRevert(ProductInteractionManager.NoInteractionContractFound.selector);
         vm.prank(operator);
-        contentInteractionManager.updateInteractionContract(contentIdDapp);
+        productInteractionManager.updateInteractionContract(productIdDapp);
     }
 
     function test_updateInteractionContract() public {
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
+        productInteractionManager.deployInteractionContract(productIdPress);
         vm.prank(operator);
-        contentInteractionManager.updateInteractionContract(contentIdPress);
+        productInteractionManager.updateInteractionContract(productIdPress);
     }
 
     function test_deleteInteractionContract() public {
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
+        productInteractionManager.deployInteractionContract(productIdPress);
 
-        ContentInteractionDiamond interactionContract =
-            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
+        ProductInteractionDiamond interactionContract =
+            ProductInteractionDiamond(productInteractionManager.getInteractionContract(productIdPress));
         bytes32 tree = interactionContract.getReferralTree();
         assertTrue(referralRegistry.isAllowedOnTree(tree, address(interactionContract)));
 
         vm.prank(operator);
-        contentInteractionManager.deleteInteractionContract(contentIdPress);
+        productInteractionManager.deleteInteractionContract(productIdPress);
 
         assertFalse(referralRegistry.isAllowedOnTree(tree, address(interactionContract)));
         assertEq(address(interactionContract.getFacet(DENOMINATOR_PRESS)), address(0));
 
-        vm.expectRevert(ContentInteractionManager.NoInteractionContractFound.selector);
-        ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
+        vm.expectRevert(ProductInteractionManager.NoInteractionContractFound.selector);
+        ProductInteractionDiamond(productInteractionManager.getInteractionContract(productIdPress));
     }
 
     function test_deleteInteractionContract_Unauthorized() public {
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
+        productInteractionManager.deployInteractionContract(productIdPress);
 
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.deleteInteractionContract(contentIdPress);
+        productInteractionManager.deleteInteractionContract(productIdPress);
     }
 
     function test_updateFacetsFactory_Unauthorized() public {
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.updateFacetsFactory(facetFactory);
+        productInteractionManager.updateFacetsFactory(facetFactory);
     }
 
     function test_updateFacetsFactory() public {
         vm.prank(owner);
-        contentInteractionManager.updateFacetsFactory(facetFactory);
+        productInteractionManager.updateFacetsFactory(facetFactory);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -248,14 +250,14 @@ contract ContentInteractionManagerTest is Test {
 
         // Deploy interaction and add campaign
         vm.startPrank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
-        ContentInteractionDiamond interactionContract =
-            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
+        productInteractionManager.deployInteractionContract(productIdPress);
+        ProductInteractionDiamond interactionContract =
+            ProductInteractionDiamond(productInteractionManager.getInteractionContract(productIdPress));
 
-        address campaign1 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
-        address campaign2 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
-        address campaign3 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
-        address campaign4 = contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+        address campaign1 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
+        address campaign2 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
+        address campaign3 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
+        address campaign4 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
         vm.stopPrank();
 
         InteractionCampaign[] memory toRemove = new InteractionCampaign[](1);
@@ -263,7 +265,7 @@ contract ContentInteractionManagerTest is Test {
 
         // Test ok with reordering
         vm.prank(operator);
-        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
+        productInteractionManager.detachCampaigns(productIdPress, toRemove);
         assertEq(interactionContract.getCampaigns().length, 3);
         assertEq(address(interactionContract.getCampaigns()[0]), campaign4);
         assertEq(address(interactionContract.getCampaigns()[1]), campaign2);
@@ -277,7 +279,7 @@ contract ContentInteractionManagerTest is Test {
         toRemove[3] = InteractionCampaign(campaign4);
 
         vm.prank(operator);
-        contentInteractionManager.detachCampaigns(contentIdPress, toRemove);
+        productInteractionManager.detachCampaigns(productIdPress, toRemove);
 
         assertEq(interactionContract.getCampaigns().length, 0);
     }
@@ -298,17 +300,17 @@ contract ContentInteractionManagerTest is Test {
 
         // Deploy interaction
         vm.prank(operator);
-        contentInteractionManager.deployInteractionContract(contentIdPress);
-        ContentInteractionDiamond interactionContract =
-            ContentInteractionDiamond(contentInteractionManager.getInteractionContract(contentIdPress));
+        productInteractionManager.deployInteractionContract(productIdPress);
+        ProductInteractionDiamond interactionContract =
+            ProductInteractionDiamond(productInteractionManager.getInteractionContract(productIdPress));
 
         // Test role required
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+        productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
 
         // Test ok
         vm.prank(operator);
-        contentInteractionManager.deployCampaign(contentIdPress, campaignId, initData);
+        productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
 
         assertEq(interactionContract.getCampaigns().length, 1);
     }
@@ -318,10 +320,10 @@ contract ContentInteractionManagerTest is Test {
         address bob = makeAddr("bob");
 
         vm.expectEmit(true, true, true, true);
-        emit ContentInteractionManager.WalletLinked(alice, bob);
+        emit ProductInteractionManager.WalletLinked(alice, bob);
 
         vm.prank(alice);
-        contentInteractionManager.walletLinked(bob);
+        productInteractionManager.walletLinked(bob);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -330,22 +332,22 @@ contract ContentInteractionManagerTest is Test {
 
     function test_reinit() public {
         vm.expectRevert();
-        contentInteractionManager.init(address(1), facetFactory, campaignFactory);
+        productInteractionManager.init(address(1), facetFactory, campaignFactory);
 
         // Ensure we can't init raw instance
-        ContentInteractionManager rawImplem =
-            new ContentInteractionManager(contentRegistry, referralRegistry, adminRegistry);
+        ProductInteractionManager rawImplem =
+            new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry);
         vm.expectRevert();
         rawImplem.init(owner, facetFactory, campaignFactory);
     }
 
     function test_upgrade() public {
-        address newImplem = address(new ContentInteractionManager(contentRegistry, referralRegistry, adminRegistry));
+        address newImplem = address(new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry));
 
         vm.expectRevert(Ownable.Unauthorized.selector);
-        contentInteractionManager.upgradeToAndCall(newImplem, "");
+        productInteractionManager.upgradeToAndCall(newImplem, "");
 
         vm.prank(owner);
-        contentInteractionManager.upgradeToAndCall(newImplem, "");
+        productInteractionManager.upgradeToAndCall(newImplem, "");
     }
 }

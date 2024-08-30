@@ -2,45 +2,45 @@
 pragma solidity 0.8.23;
 
 /// @dev Global type for a bytes32 olding multiple content types
-type ContentTypes is uint256;
+type ProductTypes is uint256;
 
-using {contentTypesOr as |} for ContentTypes global;
+using {productTypesOr as |} for ProductTypes global;
 
 /// @dev Simple wrapper to pack / unpack content types
-function contentTypesOr(ContentTypes self, ContentTypes other) pure returns (ContentTypes result) {
-    return ContentTypes.wrap(ContentTypes.unwrap(self) | ContentTypes.unwrap(other));
+function productTypesOr(ProductTypes self, ProductTypes other) pure returns (ProductTypes result) {
+    return ProductTypes.wrap(ProductTypes.unwrap(self) | ProductTypes.unwrap(other));
 }
 
-using ContentTypesLib for ContentTypes global;
+using ProductTypesLib for ProductTypes global;
 
 /// @dev Set of helper functions for content types
-library ContentTypesLib {
-    function isEmpty(ContentTypes self) internal pure returns (bool isType) {
-        return ContentTypes.unwrap(self) == 0;
+library ProductTypesLib {
+    function isEmpty(ProductTypes self) internal pure returns (bool isType) {
+        return ProductTypes.unwrap(self) == 0;
     }
 
-    function isDappType(ContentTypes self) internal pure returns (bool isType) {
-        return self.containType(CONTENT_TYPE_DAPP);
+    function isDappType(ProductTypes self) internal pure returns (bool isType) {
+        return self.containType(PRODUCT_TYPE_DAPP);
     }
 
-    function isPressType(ContentTypes self) internal pure returns (bool isType) {
-        return self.containType(CONTENT_TYPE_PRESS);
+    function isPressType(ProductTypes self) internal pure returns (bool isType) {
+        return self.containType(PRODUCT_TYPE_PRESS);
     }
 
-    function hasReferralFeature(ContentTypes self) internal pure returns (bool isType) {
-        return self.containType(CONTENT_TYPE_FEATURE_REFERRAL);
+    function hasReferralFeature(ProductTypes self) internal pure returns (bool isType) {
+        return self.containType(PRODUCT_TYPE_FEATURE_REFERRAL);
     }
 
-    function containType(ContentTypes self, ContentTypes typeToCheck) internal pure returns (bool containsType) {
-        return ContentTypes.unwrap(self) & ContentTypes.unwrap(typeToCheck) != 0;
+    function containType(ProductTypes self, ProductTypes typeToCheck) internal pure returns (bool containsType) {
+        return ProductTypes.unwrap(self) & ProductTypes.unwrap(typeToCheck) != 0;
     }
 
     /// @dev Unwrap the list of cotnent types to each denominators
-    function unwrapToDenominators(ContentTypes self) internal pure returns (uint8[] memory denominators) {
+    function unwrapToDenominators(ProductTypes self) internal pure returns (uint8[] memory denominators) {
         unchecked {
             // Initial array to 256, the maximum amount of content types
             denominators = new uint8[](256);
-            uint256 unwrapped = ContentTypes.unwrap(self);
+            uint256 unwrapped = ProductTypes.unwrap(self);
             uint256 index = 0;
 
             // Iterate over each possible bit of the array
@@ -75,7 +75,7 @@ uint8 constant DENOMINATOR_FEATURE_REFERRAL = 30;
 /*                          All of our content types                          */
 /* -------------------------------------------------------------------------- */
 
-ContentTypes constant CONTENT_TYPE_DAPP = ContentTypes.wrap(uint256(1 << DENOMINATOR_DAPP));
-ContentTypes constant CONTENT_TYPE_PRESS = ContentTypes.wrap(uint256(1 << DENOMINATOR_PRESS));
+ProductTypes constant PRODUCT_TYPE_DAPP = ProductTypes.wrap(uint256(1 << DENOMINATOR_DAPP));
+ProductTypes constant PRODUCT_TYPE_PRESS = ProductTypes.wrap(uint256(1 << DENOMINATOR_PRESS));
 
-ContentTypes constant CONTENT_TYPE_FEATURE_REFERRAL = ContentTypes.wrap(uint256(1 << DENOMINATOR_FEATURE_REFERRAL));
+ProductTypes constant PRODUCT_TYPE_FEATURE_REFERRAL = ProductTypes.wrap(uint256(1 << DENOMINATOR_FEATURE_REFERRAL));
