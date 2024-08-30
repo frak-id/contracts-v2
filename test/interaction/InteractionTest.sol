@@ -13,6 +13,7 @@ import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamo
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 /// @dev Generic contract to test interaction
@@ -24,6 +25,7 @@ abstract contract InteractionTest is Test {
 
     ContentRegistry internal contentRegistry = new ContentRegistry(owner);
     ReferralRegistry internal referralRegistry = new ReferralRegistry(owner);
+    ProductAdministratorRegistry internal adminRegistry = new ProductAdministratorRegistry(contentRegistry);
     ContentInteractionManager internal contentInteractionManager;
     InteractionFacetsFactory internal facetFactory;
     CampaignFactory internal campaignFactory;
@@ -39,11 +41,11 @@ abstract contract InteractionTest is Test {
         // Create our validator ECDSA
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
 
-        facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
-        campaignFactory = new CampaignFactory(referralRegistry, owner);
+        facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry, adminRegistry);
+        campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
 
         // Create our content interaction
-        address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
+        address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry, adminRegistry));
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
         contentInteractionManager.init(owner, facetFactory, campaignFactory);

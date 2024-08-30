@@ -5,9 +5,12 @@ struct Addresses {
     // Core
     address contentRegistry;
     address referralRegistry;
+    address productAdministratorlRegistry;
+    // Interactions
     address facetFactory;
-    address campaignFactory;
     address contentInteractionManager;
+    // Campaigns
+    address campaignFactory;
     // Token
     address mUSDToken;
 }
@@ -43,6 +46,7 @@ contract DeterminedAddress {
         return Addresses({
             contentRegistry: 0x758F01B484212b38EAe264F75c0DD7842d510D9c,
             referralRegistry: 0x66820744dBD98b24C05A1fd21809684647c6cC6E,
+            productAdministratorlRegistry: 0x35F3e191523C8701aD315551dCbDcC5708efD7ec,
             contentInteractionManager: 0xB3fc8bD4e71a15a674ed6BAb63e884720FC4A3B4,
             facetFactory: 0xce9e06e2139Fc13079C778a172769c3333f33fC1,
             campaignFactory: 0xB178c17AC5ad0455b1a10b05d25Fe4847567Ef1D,

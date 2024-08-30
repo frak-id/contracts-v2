@@ -90,10 +90,15 @@ contract ContentInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         }
     }
 
-    constructor(ContentRegistry _contentRegistry, ReferralRegistry _referralRegistry) {
+    constructor(
+        ContentRegistry _contentRegistry,
+        ReferralRegistry _referralRegistry,
+        ProductAdministratorRegistry _productAdministratorRegistry
+    ) {
         // Set immutable variable (since embeded inside the bytecode)
         CONTENT_REGISTRY = _contentRegistry;
         REFERRAL_REGISTRY = _referralRegistry;
+        PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
 
         // Disable init on deployed raw instance
         _disableInitializers();

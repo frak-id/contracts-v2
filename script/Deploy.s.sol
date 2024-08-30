@@ -10,6 +10,7 @@ import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} fro
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
@@ -56,12 +57,20 @@ contract Deploy is Script, DeterminedAddress {
             ReferralRegistry referralRegistry = new ReferralRegistry{salt: 0}(msg.sender);
             addresses.referralRegistry = address(referralRegistry);
         }
+        if (addresses.productAdministratorlRegistry.code.length == 0 || forceDeploy) {
+            console.log("Deploying ProductAdministratorRegistry");
+            ProductAdministratorRegistry adminRegistry =
+                new ProductAdministratorRegistry{salt: 0}(ContentRegistry(addresses.contentRegistry));
+            addresses.productAdministratorlRegistry = address(adminRegistry);
+        }
 
         // Deploy the facet factory
         if (addresses.facetFactory.code.length == 0 || forceDeploy) {
             console.log("Deploying InteractionFacetsFactory");
             InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{salt: 0}(
-                ReferralRegistry(addresses.referralRegistry), ContentRegistry(addresses.contentRegistry)
+                ReferralRegistry(addresses.referralRegistry),
+                ContentRegistry(addresses.contentRegistry),
+                ProductAdministratorRegistry(addresses.productAdministratorlRegistry)
             );
             addresses.facetFactory = address(facetFactory);
         }
@@ -69,8 +78,11 @@ contract Deploy is Script, DeterminedAddress {
         // Deploy the campaign factory
         if (addresses.campaignFactory.code.length == 0 || forceDeploy) {
             console.log("Deploying CampaignFactory");
-            CampaignFactory campaignFactory =
-                new CampaignFactory{salt: 0}(ReferralRegistry(addresses.referralRegistry), airdropper);
+            CampaignFactory campaignFactory = new CampaignFactory{salt: 0}(
+                ReferralRegistry(addresses.referralRegistry),
+                ProductAdministratorRegistry(addresses.productAdministratorlRegistry),
+                airdropper
+            );
             addresses.campaignFactory = address(campaignFactory);
         }
 
@@ -80,7 +92,9 @@ contract Deploy is Script, DeterminedAddress {
             // Dpeloy implem
             address implem = address(
                 new ContentInteractionManager{salt: 0}(
-                    ContentRegistry(addresses.contentRegistry), ReferralRegistry(addresses.referralRegistry)
+                    ContentRegistry(addresses.contentRegistry),
+                    ReferralRegistry(addresses.referralRegistry),
+                    ProductAdministratorRegistry(addresses.productAdministratorlRegistry)
                 )
             );
             // Deploy and register proxy

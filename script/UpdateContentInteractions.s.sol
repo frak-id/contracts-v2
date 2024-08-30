@@ -15,6 +15,7 @@ import {ContentInteractionManager} from "src/interaction/ContentInteractionManag
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
 import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 /// todo: Should be refacto to update the faucet factory, set it on the contentInteractionManager, and then call the update function
@@ -35,7 +36,9 @@ contract UpdateContentInteractions is Script, DeterminedAddress {
 
         address newImplem = address(
             new ContentInteractionManager{salt: 0}(
-                ContentRegistry(addresses.contentRegistry), ReferralRegistry(addresses.referralRegistry)
+                ContentRegistry(addresses.contentRegistry),
+                ReferralRegistry(addresses.referralRegistry),
+                ProductAdministratorRegistry(addresses.productAdministratorlRegistry)
             )
         );
         currentManager.upgradeToAndCall(newImplem, "");

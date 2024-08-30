@@ -21,6 +21,7 @@ import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamo
 import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ContentRegistry, Metadata} from "src/registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ContentInteractionManagerTest is Test {
@@ -29,6 +30,7 @@ contract ContentInteractionManagerTest is Test {
 
     ContentRegistry private contentRegistry;
     ReferralRegistry private referralRegistry;
+    ProductAdministratorRegistry private adminRegistry;
     InteractionFacetsFactory private facetFactory;
     CampaignFactory private campaignFactory;
 
@@ -42,11 +44,12 @@ contract ContentInteractionManagerTest is Test {
     function setUp() public {
         contentRegistry = new ContentRegistry(owner);
         referralRegistry = new ReferralRegistry(owner);
+        adminRegistry = new ProductAdministratorRegistry(contentRegistry);
 
-        facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry);
-        campaignFactory = new CampaignFactory(referralRegistry, owner);
+        facetFactory = new InteractionFacetsFactory(referralRegistry, contentRegistry, adminRegistry);
+        campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
 
-        address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
+        address implem = address(new ContentInteractionManager(contentRegistry, referralRegistry, adminRegistry));
         address proxy = LibClone.deployERC1967(implem);
         contentInteractionManager = ContentInteractionManager(proxy);
         contentInteractionManager.init(owner, facetFactory, campaignFactory);
@@ -343,13 +346,14 @@ contract ContentInteractionManagerTest is Test {
         contentInteractionManager.init(address(1), facetFactory, campaignFactory);
 
         // Ensure we can't init raw instance
-        ContentInteractionManager rawImplem = new ContentInteractionManager(contentRegistry, referralRegistry);
+        ContentInteractionManager rawImplem =
+            new ContentInteractionManager(contentRegistry, referralRegistry, adminRegistry);
         vm.expectRevert();
         rawImplem.init(owner, facetFactory, campaignFactory);
     }
 
     function test_upgrade() public {
-        address newImplem = address(new ContentInteractionManager(contentRegistry, referralRegistry));
+        address newImplem = address(new ContentInteractionManager(contentRegistry, referralRegistry, adminRegistry));
 
         vm.expectRevert(Ownable.Unauthorized.selector);
         contentInteractionManager.upgradeToAndCall(newImplem, "");

@@ -2,6 +2,11 @@
 
 This repo hosts the smart contracts related to the Nexus dApp, inside the [Frak](https://frak.id/) ecosystem.
 
+## TODO:
+ - Lifebuoy from solady a bit everywhere
+ - P256 from vectorised for passkey verification? https://github.com/Vectorized/solady/blob/main/src/utils/P256.sol
+ - Content -> Product
+
 ## Addresses
 
 ### Frak ecosystem

@@ -73,13 +73,14 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
     constructor(
         uint256 _contentId,
         ReferralRegistry _referralRegistry,
+        ProductAdministratorRegistry _productAdministratorRegistry,
         address _interactionManager,
-        address _interactionManagerOwner,
-        address _contentOwner
+        address _interactionManagerOwner
     ) {
         // Set immutable variable (since embeded inside the bytecode)
         CONTENT_ID = _contentId;
         REFERRAL_REGISTRY = _referralRegistry;
+        PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
 
         // Disable init on deployed raw instance
         _disableInitializers();
@@ -89,8 +90,6 @@ contract ContentInteractionDiamond is ContentInteractionStorageLib, OwnableRoles
         _setRoles(_interactionManagerOwner, UPGRADE_ROLE);
         // The interaction manager can trigger updates
         _setRoles(_interactionManager, UPGRADE_ROLE);
-        // The content owner can manage almost everything
-        _setRoles(_contentOwner, INTERCATION_VALIDATOR_ROLE | UPGRADE_ROLE);
 
         // Compute and store the referral tree
         bytes32 tree;

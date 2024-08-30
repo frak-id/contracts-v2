@@ -59,7 +59,7 @@ contract ReferralCampaignTest is InteractionTest {
             endDate: uint48(0),
             name: "test"
         });
-        referralCampaign = new ReferralCampaign(config, referralRegistry, owner, owner, contentInteraction);
+        referralCampaign = new ReferralCampaign(config, referralRegistry, adminRegistry, owner, contentInteraction);
 
         // Mint a few test tokens to the campaign
         token.mint(address(referralCampaign), 1_000 ether);
@@ -94,7 +94,7 @@ contract ReferralCampaignTest is InteractionTest {
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, owner, owner, contentInteraction);
+        new ReferralCampaign(config, referralRegistry, adminRegistry, owner, contentInteraction);
     }
 
     function test_metadata() public view {

@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {ContentTypes} from "../constants/ContentTypes.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
 import {ContentRegistry} from "../registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
 import {DappInteractionFacet} from "./facets/DappInteractionFacet.sol";
@@ -18,9 +19,10 @@ import {ReferralFeatureFacet} from "./facets/ReferralFeatureFacet.sol";
 contract InteractionFacetsFactory is IFacetsFactory {
     error CantHandleContentTypes();
 
-    /// @dev The press facet address
+    /// @dev The different registries
     ReferralRegistry private immutable REFERRAL_REGISTRY;
     ContentRegistry private immutable CONTENT_REGISTRY;
+    ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
     /// @dev The facets addresses
     IInteractionFacet private immutable PRESS_FACET;
@@ -28,10 +30,15 @@ contract InteractionFacetsFactory is IFacetsFactory {
     IInteractionFacet private immutable REFERRAL_FEATURE_FACET;
 
     /// @dev Constructor, will deploy all the known facets
-    constructor(ReferralRegistry _referralRegistry, ContentRegistry _contentRegistry) {
+    constructor(
+        ReferralRegistry _referralRegistry,
+        ContentRegistry _contentRegistry,
+        ProductAdministratorRegistry _productAdministratorRegistry
+    ) {
         // Save the registries
         REFERRAL_REGISTRY = _referralRegistry;
         CONTENT_REGISTRY = _contentRegistry;
+        PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
 
         // Our facets
         PRESS_FACET = new PressInteractionFacet();
@@ -49,11 +56,10 @@ contract InteractionFacetsFactory is IFacetsFactory {
         public
         returns (ContentInteractionDiamond diamond)
     {
-        // Retreive the owner of this content
-        address contentOwner = CONTENT_REGISTRY.ownerOf(_contentId);
-
         // Deploy the interaction contract
-        diamond = new ContentInteractionDiamond(_contentId, REFERRAL_REGISTRY, address(this), _owner, contentOwner);
+        diamond = new ContentInteractionDiamond(
+            _contentId, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, address(this), _owner
+        );
 
         // Get the facets for it
         IInteractionFacet[] memory facets = getFacets(CONTENT_REGISTRY.getContentTypes(_contentId));
