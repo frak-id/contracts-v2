@@ -6,16 +6,14 @@ import {Base64Url} from "FreshCryptoLib/utils/Base64Url.sol";
 import {IEntryPoint} from "I4337/interfaces/IEntryPoint.sol";
 import "forge-std/Test.sol";
 import "kernel-v2/Kernel.sol";
-
 import {IKernel} from "kernel-v2/interfaces/IKernel.sol";
 import {TestExecutor} from "kernel-v2/mock/TestExecutor.sol";
 import {TestValidator} from "kernel-v2/mock/TestValidator.sol";
 import {ERC4337Utils} from "kernel-v2/utils/ERC4337Utils.sol";
 import {KernelTestBase} from "kernel-v2/utils/KernelTestBase.sol";
-
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 import {WebAuthnVerifier} from "src/kernel/utils/WebAuthnVerifier.sol";
-import {MultiWebAuthNValidatorV2, WebAuthNPubKey} from "src/kernel/v2/MultiWebAuthNValidator.sol";
+import {MultiWebAuthNValidatorV2, WebAuthNPubKey} from "src/kernel/webauthn/MultiWebAuthNValidator.sol";
 
 using ERC4337Utils for IEntryPoint;
 

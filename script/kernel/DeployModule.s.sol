@@ -5,14 +5,14 @@ import {DeterminedAddress, KernelAddresses} from "../DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+import {InteractionDelegator} from "src/kernel/interaction/InteractionDelegator.sol";
+import {InteractionDelegatorAction} from "src/kernel/interaction/InteractionDelegatorAction.sol";
+import {InteractionDelegatorValidator} from "src/kernel/interaction/InteractionDelegatorValidator.sol";
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
-import {InteractionDelegator} from "src/kernel/v2/InteractionDelegator.sol";
-import {InteractionDelegatorAction} from "src/kernel/v2/InteractionDelegatorAction.sol";
-import {InteractionDelegatorValidator} from "src/kernel/v2/InteractionDelegatorValidator.sol";
-import {MultiWebAuthNRecoveryAction} from "src/kernel/v2/MultiWebAuthNRecoveryAction.sol";
-import {MultiWebAuthNValidatorV2} from "src/kernel/v2/MultiWebAuthNValidator.sol";
+import {MultiWebAuthNRecoveryAction} from "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol";
+import {MultiWebAuthNValidatorV2} from "src/kernel/webauthn/MultiWebAuthNValidator.sol";
 
-contract DeployModuleV2 is Script, DeterminedAddress {
+contract DeployModule is Script, DeterminedAddress {
     bool internal forceDeploy = vm.envOr("FORCE_DEPLOY", false);
 
     function run() public {

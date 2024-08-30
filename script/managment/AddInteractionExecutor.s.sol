@@ -9,7 +9,7 @@ import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {MINTER_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
-import {DELEGATION_EXECUTOR_ROLE, InteractionDelegator} from "src/kernel/v2/InteractionDelegator.sol";
+import {DELEGATION_EXECUTOR_ROLE, InteractionDelegator} from "src/kernel/interaction/InteractionDelegator.sol";
 
 contract AddInteractionExecutor is Script, DeterminedAddress {
     address private operator = airdropper;
