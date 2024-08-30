@@ -11,7 +11,7 @@ import {IInteractionFacet} from "../interaction/facets/IInteractionFacet.sol";
 /// @notice Interface for facets factory
 /// @custom:security-contact contact@frak.id
 interface IFacetsFactory {
-    /// @dev Deploy a new content interaction diamond
+    /// @dev Deploy a new product interaction diamond
     /// @dev Should only be called with delegate call, otherwise the manager would be the caller
     function createProductInteractionDiamond(uint256 _productId, address _owner)
         external

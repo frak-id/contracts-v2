@@ -43,7 +43,7 @@ contract ProductAdministratorRegistry {
     /*                                  Constants                                 */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev The content registry
+    /// @dev The product registry
     ProductRegistry internal immutable PRODUCT_REGISTRY;
 
     constructor(ProductRegistry _productRegistry) {

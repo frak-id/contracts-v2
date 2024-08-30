@@ -19,7 +19,7 @@ abstract contract ProductInteractionStorageLib {
 
     /// @custom:storage-location erc7201:frak.product.interaction
     struct ProductInteractionStorage {
-        /// @dev The referral tree for this content
+        /// @dev The referral tree for this product
         bytes32 referralTree;
         /// @dev Nonce for the validation of the interaction
         mapping(bytes32 nonceKey => uint256 nonce) nonces;

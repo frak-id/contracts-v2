@@ -17,9 +17,9 @@ import {Initializable} from "solady/utils/Initializable.sol";
 
 /// @title ProductInteractionDiamond
 /// @author @KONFeature
-/// @notice Interface for a top level content interaction contract
-/// @dev This interface is meant to be implemented by a contract that represents a content platform
-/// @dev It's act a bit like the diamond operator, having multiple logic contract per content type.
+/// @notice Interface for a top level product interaction contract
+/// @dev This interface is meant to be implemented by a contract that represents a product platform
+/// @dev It's act a bit like the diamond operator, having multiple logic contract per product type.
 /// @custom:security-contact contact@frak.id
 contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles, EIP712, Initializable {
     using InteractionTypeLib for bytes;
@@ -32,7 +32,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     error WrongInteractionSigner();
     /// @dev error throwned when a campaign is already present
     error CampaignAlreadyPresent();
-    /// @dev Error when a content type is unhandled
+    /// @dev Error when a product type is unhandled
     error UnandledProductType();
     /// @dev Error when we failed to handle an interaction
     error InteractionHandlingFailed();
@@ -41,10 +41,10 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Event when a campaign is attached to a content
+    /// @dev Event when a campaign is attached to a product
     event CampaignAttached(InteractionCampaign campaign);
 
-    /// @dev Event when a campaign is attached to a content
+    /// @dev Event when a campaign is attached to a product
     event CampaignDetached(InteractionCampaign campaign);
 
     /* -------------------------------------------------------------------------- */
@@ -55,10 +55,10 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     bytes32 private constant VALIDATE_INTERACTION_TYPEHASH =
         keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user,uint256 nonce)");
 
-    /// @dev The base content referral tree: `keccak256("product-referral-tree")`
+    /// @dev The base product referral tree: `keccak256("product-referral-tree")`
     bytes32 private constant BASE_PRODUCT_TREE = 0x256d49b597bf37ff9c8c4e75b5975d725441598c9cc7249f4726439b6b7971bb;
 
-    /// @dev The content id
+    /// @dev The product id
     uint256 internal immutable PRODUCT_ID;
 
     /// @dev The referral registry
@@ -67,7 +67,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /// @dev The product administrator registry
     ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
-    /// @dev The content interaction manager address
+    /// @dev The product interaction manager address
     address internal immutable INTERACTION_MANAGER;
 
     /* -------------------------------------------------------------------------- */
@@ -110,20 +110,20 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /*                             Facets managements                             */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Set the facets for the given content types
+    /// @dev Set the facets for the given product types
     function setFacets(IInteractionFacet[] calldata facets) external onlyRoles(UPGRADE_ROLE) {
         for (uint256 i = 0; i < facets.length; i++) {
             _setFacet(facets[i]);
         }
     }
 
-    /// @dev Set the facets for the given content types
+    /// @dev Set the facets for the given product types
     function _setFacet(IInteractionFacet _facet) private {
         uint8 denominator = _facet.productTypeDenominator();
         _productInteractionStorage().facets[uint256(denominator)] = _facet;
     }
 
-    /// @dev Delete all the facets matching the given content types
+    /// @dev Delete all the facets matching the given product types
     function deleteFacets(ProductTypes _productTypes) external onlyRoles(UPGRADE_ROLE) {
         uint8[] memory denominators = _productTypes.unwrapToDenominators();
         for (uint256 i = 0; i < denominators.length; i++) {
@@ -131,14 +131,14 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         }
     }
 
-    /// @dev Get the facet for the given content type
+    /// @dev Get the facet for the given product type
     function getFacet(uint8 _denominator) external view returns (IInteractionFacet) {
         return _productInteractionStorage().facets[uint256(_denominator)];
     }
 
     /// @dev Handle an interaction
     function delegateToFacet(uint8 _productTypeDenominator, bytes calldata _call) external {
-        // Get the facet matching the content type
+        // Get the facet matching the product type
         IInteractionFacet facet = _getFacetForDenominator(_productTypeDenominator);
 
         // Transmit the interaction to the facet
@@ -148,7 +148,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         }
     }
 
-    /// @dev Get the facet for the given content type
+    /// @dev Get the facet for the given product type
     function _getFacetForDenominator(uint8 _denominator) internal view returns (IInteractionFacet facet) {
         facet = _productInteractionStorage().facets[uint256(_denominator)];
         if (facet == IInteractionFacet(address(0))) {
@@ -165,7 +165,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         // Unpack the interaction
         (uint8 _productTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
-        // Get the facet matching the content type
+        // Get the facet matching the product type
         IInteractionFacet facet = _getFacetForDenominator(_productTypeDenominator);
 
         // Validate the interaction
@@ -247,12 +247,12 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /*                            Some metadata reader                            */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Get the id for the current content
+    /// @dev Get the id for the current product
     function getProductId() public view returns (uint256) {
         return PRODUCT_ID;
     }
 
-    /// @dev Get the referral tree for the current content
+    /// @dev Get the referral tree for the current product
     function getReferralTree() public view returns (bytes32 tree) {
         return _referralTree();
     }

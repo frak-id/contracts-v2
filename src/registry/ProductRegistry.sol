@@ -7,7 +7,7 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 
-/// @notice Metadata defination of a content
+/// @notice Metadata defination of a product
 struct Metadata {
     ProductTypes productTypes;
     string name;
@@ -16,7 +16,7 @@ struct Metadata {
 
 /// @author @KONFeature
 /// @title ProductRegistry
-/// @notice Registery for content usable by the Nexus wallet
+/// @notice Registery for product usable by the Nexus wallet
 contract ProductRegistry is ERC721, OwnableRoles {
     error InvalidNameOrDomain();
 
@@ -28,17 +28,17 @@ contract ProductRegistry is ERC721, OwnableRoles {
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Event emitted when a content is minted
+    /// @dev Event emitted when a product is minted
     event ProductMinted(uint256 indexed productId, string domain, ProductTypes productTypes, string name);
 
-    /// @dev Event emitted when a content is updated
+    /// @dev Event emitted when a product is updated
     event ProductUpdated(uint256 indexed productId, ProductTypes productTypes, string name);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Storage for the content registry
+    /// @notice Storage for the product registry
     /// @custom:storage-location erc7201:frak.registry.product
     struct ProductRegistryStorage {
         /// @dev Metadata of the each products
@@ -75,14 +75,14 @@ contract ProductRegistry is ERC721, OwnableRoles {
     }
 
     function tokenURI(uint256 tokenId) public pure override returns (string memory) {
-        return string.concat("https://content.frak.id/metadata/", LibString.toString(tokenId), ".json");
+        return string.concat("https://product.frak.id/metadata/", LibString.toString(tokenId), ".json");
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                             Mint a new content                             */
+    /*                             Mint a new product                             */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Mint a new content with the given metadata
+    /// @dev Mint a new product with the given metadata
     function mint(ProductTypes _productTypes, string calldata _name, string calldata _domain, address _owner)
         public
         onlyRoles(MINTER_ROLE)
@@ -94,10 +94,10 @@ contract ProductRegistry is ERC721, OwnableRoles {
         // Compute the id (keccak of domain)
         id = uint256(keccak256(abi.encodePacked(_domain)));
 
-        // Ensure the content doesn't already exist
+        // Ensure the product doesn't already exist
         if (isExistingProduct(id)) revert AlreadyExistingProduct();
 
-        // Store the metadata and mint the content
+        // Store the metadata and mint the product
         _getStorage()._metadata[id] = Metadata({productTypes: _productTypes, name: _name, domain: _domain});
 
         // Emit the event
@@ -111,22 +111,22 @@ contract ProductRegistry is ERC721, OwnableRoles {
     /*                         Metadata related operaitons                        */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Get the metadata of a content
+    /// @notice Get the metadata of a product
     function getMetadata(uint256 _productId) public view returns (Metadata memory) {
         return _getStorage()._metadata[_productId];
     }
 
-    /// @notice Get the types of a content
+    /// @notice Get the types of a product
     function getProductTypes(uint256 _productId) public view returns (ProductTypes) {
         return _getStorage()._metadata[_productId].productTypes;
     }
 
-    /// @notice Check if a content exists
+    /// @notice Check if a product exists
     function isExistingProduct(uint256 _productId) public view returns (bool) {
         return _exists(_productId);
     }
 
-    /// @notice Update the metadata of a content
+    /// @notice Update the metadata of a product
     function updateMetadata(uint256 _productId, ProductTypes _productTypes, string calldata _name) public {
         // Ensure it's an approved user doing the call
         if (!_isApprovedOrOwner(msg.sender, _productId)) revert ERC721.NotOwnerNorApproved();

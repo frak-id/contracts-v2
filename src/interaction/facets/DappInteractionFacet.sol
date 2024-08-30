@@ -83,7 +83,7 @@ contract DappInteractionFacet is ProductInteractionStorageLib, IInteractionFacet
         revert UnknownInteraction();
     }
 
-    /// @dev Get the handled content type of this facet
+    /// @dev Get the handled product type of this facet
     function productTypeDenominator() public pure override returns (uint8) {
         return DENOMINATOR_DAPP;
     }
@@ -92,7 +92,7 @@ contract DappInteractionFacet is ProductInteractionStorageLib, IInteractionFacet
     /*                                Admin methods                               */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Set a content contract address, will be used for update check and comparaison
+    /// @dev Set a product contract address, will be used for update check and comparaison
     function setProductContract(address _contractAddress, bytes4 _storageCheckSelector)
         external
         onlyRoles(UPGRADE_ROLE)
@@ -102,7 +102,7 @@ contract DappInteractionFacet is ProductInteractionStorageLib, IInteractionFacet
         emit ContractRegistered(contractId, _contractAddress, _storageCheckSelector);
     }
 
-    /// @dev Set a content contract address, will be used for update check and comparaison
+    /// @dev Set a product contract address, will be used for update check and comparaison
     function deleteProductContract(bytes4 id) external onlyRoles(UPGRADE_ROLE) {
         delete _facetStorage().contracts[id];
         emit ContractUnRegistered(id);

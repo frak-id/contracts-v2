@@ -64,7 +64,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev The distribution period
     uint256 private immutable DISTRIBUTION_CAP_PERIOD;
 
-    /// @dev The referral tree for the current content id
+    /// @dev The referral tree for the current product id
     bytes32 private immutable REFERRAL_TREE;
 
     /// @dev The accounting wallet of frak that will receive the rewards
@@ -198,7 +198,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
     /// @dev Check if the given campaign support the `_productType`
     function supportProductType(ProductTypes _productType) public pure override returns (bool) {
-        // Only supporting press content
+        // Only supporting press product
         return _productType.hasReferralFeature();
     }
 

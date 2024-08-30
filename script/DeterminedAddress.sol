@@ -40,7 +40,7 @@ struct DeploymentBlocks {
 contract DeterminedAddress {
     // Config
     address internal airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
-    address internal contentOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
+    address internal productOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
 
     function _getAddresses() internal pure returns (Addresses memory) {
         return Addresses({

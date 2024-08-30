@@ -55,7 +55,7 @@ contract ProductInteractionManagerTest is Test {
         productInteractionManager = ProductInteractionManager(proxy);
         productInteractionManager.init(owner, facetFactory, campaignFactory);
 
-        // Grant the right roles to the content interaction manager
+        // Grant the right roles to the product interaction manager
         vm.prank(owner);
         referralRegistry.grantRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
 
@@ -154,13 +154,13 @@ contract ProductInteractionManagerTest is Test {
         // Assert it's deployed
         assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
 
-        // Deploy the interaction contract for a content with multiple types
+        // Deploy the interaction contract for a product with multiple types
         vm.prank(operator);
         productInteractionManager.deployInteractionContract(productIdMulti);
         ProductInteractionDiamond interaction = productInteractionManager.getInteractionContract(productIdMulti);
         assertNotEq(address(interaction), address(0));
 
-        // Get the facet, and ensure it's not 0 for each content denomination
+        // Get the facet, and ensure it's not 0 for each product denomination
         assertNotEq(address(interaction.getFacet(DENOMINATOR_DAPP)), address(0));
         assertNotEq(address(interaction.getFacet(DENOMINATOR_PRESS)), address(0));
     }

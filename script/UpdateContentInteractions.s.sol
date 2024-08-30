@@ -89,7 +89,7 @@ contract UpdateProductInteractions is Script, DeterminedAddress {
 
         vm.startBroadcast();
 
-        // Update each contents
+        // Update each products
         productRegistry.updateMetadata(
             _getProductIds().cNewsPaper, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "A Positivie World"
         );

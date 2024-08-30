@@ -15,7 +15,7 @@ import {mUSDToken} from "src/tokens/mUSDToken.sol";
 contract AddOperator is Script, DeterminedAddress {
     address private operator = 0xB875AAD94cd568CE0359A73b62Af1614E4ff0901;
 
-    address private contentMinter = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
+    address private productMinter = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
 
     function run() public {
         Addresses memory addresses = _getAddresses();
@@ -27,7 +27,7 @@ contract AddOperator is Script, DeterminedAddress {
         ProductInteractionManager productInteractionManager =
             ProductInteractionManager(addresses.productInteractionManager);
 
-        // Iterate over each content ids, and clean the attached campaigns
+        // Iterate over each product ids, and clean the attached campaigns
         uint256[] memory productIds = _getProductIdsArr();
         for (uint256 i = 0; i < productIds.length; i++) {
             uint256 cId = productIds[i];
@@ -45,7 +45,7 @@ contract AddOperator is Script, DeterminedAddress {
 
     function _addProductMinter(ProductRegistry _productRegistry) internal {
         vm.startBroadcast();
-        _productRegistry.grantRoles(contentMinter, MINTER_ROLE);
+        _productRegistry.grantRoles(productMinter, MINTER_ROLE);
         vm.stopBroadcast();
     }
 

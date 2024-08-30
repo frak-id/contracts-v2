@@ -42,7 +42,7 @@ contract ReferralCampaignTest is InteractionTest {
 
         _initInteractionTest();
 
-        // Grant the right roles to the content interaction manager
+        // Grant the right roles to the product interaction manager
         vm.prank(owner);
         referralRegistry.grantRoles(owner, REFERRAL_ALLOWANCE_MANAGER_ROLE);
         vm.prank(owner);

@@ -30,7 +30,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /// @dev The referral registry
     ReferralRegistry internal immutable REFERRAL_REGISTRY;
 
-    /// @dev The content registry
+    /// @dev The product registry
     ProductRegistry internal immutable PRODUCT_REGISTRY;
 
     /// @dev The product administrator registry
@@ -73,13 +73,13 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     /// @custom:storage-location erc7201:frak.interaction.manager
     struct ProductStorage {
-        /// @dev The diamond responsible for the interaction of the content
+        /// @dev The diamond responsible for the interaction of the product
         ProductInteractionDiamond diamond;
     }
 
     struct InteractionManagerStorage {
-        /// @dev Mapping of content id to the contents
-        mapping(uint256 productId => ProductStorage) contents;
+        /// @dev Mapping of product id to the products
+        mapping(uint256 productId => ProductStorage) products;
         /// @dev The facets factory we will be using
         IFacetsFactory facetsFactory;
         /// @dev The campaign factory we will be using
@@ -140,8 +140,8 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     /// @dev Deploy a new interaction contract for the given `_productId`
     function deployInteractionContract(uint256 _productId) external _onlyAllowedOnProduct(_productId) {
-        // Check if we already have an interaction contract for this content
-        if (_storage().contents[_productId].diamond != ProductInteractionDiamond(address(0))) {
+        // Check if we already have an interaction contract for this product
+        if (_storage().products[_productId].diamond != ProductInteractionDiamond(address(0))) {
             revert InteractionContractAlreadyDeployed();
         }
 
@@ -166,7 +166,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         emit InteractionContractDeployed(_productId, diamond);
 
         // Save the interaction contract
-        _storage().contents[_productId].diamond = diamond;
+        _storage().products[_productId].diamond = diamond;
     }
 
     /// @dev Deploy a new interaction contract for the given `_productId`
@@ -190,7 +190,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         // Fetch the current interaction contract
         ProductInteractionDiamond interactionContract = getInteractionContract(_productId);
 
-        // Retreive the content types
+        // Retreive the product types
         ProductTypes productTypes = PRODUCT_REGISTRY.getProductTypes(_productId);
 
         // Delete the facets
@@ -207,7 +207,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         emit InteractionContractDeleted(_productId, interactionContract);
 
         // Delete the interaction contract
-        delete _storage().contents[_productId].diamond;
+        delete _storage().products[_productId].diamond;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -245,14 +245,14 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /*                            Top level interaction                           */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Retreive the interaction contract for the given content id
+    /// @dev Retreive the interaction contract for the given product id
     function getInteractionContract(uint256 _productId)
         public
         view
         returns (ProductInteractionDiamond interactionContract)
     {
         // Retreive the interaction contract
-        interactionContract = _storage().contents[_productId].diamond;
+        interactionContract = _storage().products[_productId].diamond;
         if (interactionContract == ProductInteractionDiamond(address(0))) revert NoInteractionContractFound();
     }
 

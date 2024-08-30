@@ -8,7 +8,7 @@ import {IInteractionFacet} from "./IInteractionFacet.sol";
 
 /// @title PressInteractionFacet
 /// @author @KONFeature
-/// @notice Contract managing a press content platform user interaction
+/// @notice Contract managing a press product platform user interaction
 /// @custom:security-contact contact@frak.id
 contract PressInteractionFacet is ProductInteractionStorageLib, IInteractionFacet {
     using InteractionTypeLib for bytes;
@@ -40,7 +40,7 @@ contract PressInteractionFacet is ProductInteractionStorageLib, IInteractionFace
         revert UnknownInteraction();
     }
 
-    /// @dev Get the handled content type of this facet
+    /// @dev Get the handled product type of this facet
     function productTypeDenominator() public pure override returns (uint8) {
         return DENOMINATOR_PRESS;
     }

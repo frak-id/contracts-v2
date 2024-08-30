@@ -15,7 +15,7 @@ import {ReferralFeatureFacet} from "./facets/ReferralFeatureFacet.sol";
 
 /// @title InteractionFacetsFactory
 /// @author @KONFeature
-/// @notice Contract used to fetch the facets logics for the list of content types
+/// @notice Contract used to fetch the facets logics for the list of product types
 /// @custom:security-contact contact@frak.id
 contract InteractionFacetsFactory is IFacetsFactory {
     error CantHandleProductTypes();
@@ -48,10 +48,10 @@ contract InteractionFacetsFactory is IFacetsFactory {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                  Deploy a new content interaction diamond                  */
+    /*                  Deploy a new product interaction diamond                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Deploy a new content interaction diamond
+    /// @dev Deploy a new product interaction diamond
     /// @dev Should only be called with delegate call, otherwise the manager would be the caller
     function createProductInteractionDiamond(uint256 _productId, address _owner)
         public
@@ -75,16 +75,16 @@ contract InteractionFacetsFactory is IFacetsFactory {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*           Get all the facets possible for the given content types          */
+    /*           Get all the facets possible for the given product types          */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the facet for the given `productTypes`
     function getFacets(ProductTypes productTypes) public view returns (IInteractionFacet[] memory facets) {
-        // Allocate 256 items for our initial array (max amount of content type possibles)
+        // Allocate 256 items for our initial array (max amount of product type possibles)
         facets = new IInteractionFacet[](256);
         uint256 index = 0;
 
-        // Check if we have a press content type
+        // Check if we have a press product type
         if (productTypes.isPressType()) {
             facets[index] = PRESS_FACET;
             index++;

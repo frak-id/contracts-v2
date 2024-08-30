@@ -27,7 +27,7 @@ contract SetupTestProducts is Script, DeterminedAddress {
         ProductInteractionManager productInteractionManager =
             ProductInteractionManager(addresses.productInteractionManager);
 
-        // Mint the contents
+        // Mint the products
         // uint256[] memory productIds = _mintProducts(productRegistry);
         uint256[] memory productIds = _getProductIdsArr();
 
@@ -37,12 +37,12 @@ contract SetupTestProducts is Script, DeterminedAddress {
         _setupCampaigns(productInteractionManager, addresses, productIds);
     }
 
-    /// @dev Mint the test contents
+    /// @dev Mint the test products
     function _mintProducts(ProductRegistry productRegistry) internal returns (uint256[] memory productIds) {
         productIds = new uint256[](2);
         vm.startBroadcast();
 
-        // Mint the tests contents
+        // Mint the tests products
         uint256 cEthccDemo = _mintProduct(
             productRegistry,
             PRODUCT_TYPE_PRESS | PRODUCT_TYPE_DAPP | PRODUCT_TYPE_FEATURE_REFERRAL,
@@ -70,17 +70,17 @@ contract SetupTestProducts is Script, DeterminedAddress {
         productIds[2] = cNewsPaper;
     }
 
-    /// @dev Mint a content with the given name and domain
+    /// @dev Mint a product with the given name and domain
     function _mintProduct(
         ProductRegistry _productRegistry,
         ProductTypes _productTypes,
         string memory _name,
         string memory _domain
     ) internal returns (uint256) {
-        return _productRegistry.mint(_productTypes, _name, _domain, contentOwner);
+        return _productRegistry.mint(_productTypes, _name, _domain, productOwner);
     }
 
-    /// @dev Setup the interaction contracts for the given contents
+    /// @dev Setup the interaction contracts for the given products
     function _setupInteractions(ProductInteractionManager _interactionManager, uint256[] memory _productIds) internal {
         console.log("Setting up interactions");
         vm.startBroadcast();
@@ -93,7 +93,7 @@ contract SetupTestProducts is Script, DeterminedAddress {
         vm.stopBroadcast();
     }
 
-    /// @dev Mint a content with the given name and domain
+    /// @dev Mint a product with the given name and domain
     function _grantValidatorRole(ProductInteractionManager _interactionManager, uint256 _productId) internal {
         ProductInteractionDiamond interactionContract = _interactionManager.getInteractionContract(_productId);
         interactionContract.grantRoles(interactionValidator, INTERCATION_VALIDATOR_ROLE);
@@ -101,7 +101,7 @@ contract SetupTestProducts is Script, DeterminedAddress {
 
     bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = bytes4(keccak256("frak.campaign.referral"));
 
-    /// @dev Setup the itneraction campaigns for the given contents
+    /// @dev Setup the itneraction campaigns for the given products
     function _setupCampaigns(
         ProductInteractionManager _interactionManager,
         Addresses memory addresses,

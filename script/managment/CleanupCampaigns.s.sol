@@ -16,7 +16,7 @@ contract CleanupCampaigns is Script, DeterminedAddress {
         ProductInteractionManager productInteractionManager =
             ProductInteractionManager(addresses.productInteractionManager);
 
-        // Iterate over each content ids, and clean the attached campaigns
+        // Iterate over each product ids, and clean the attached campaigns
         uint256[] memory productIds = _getProductIdsArr();
         for (uint256 i = 0; i < productIds.length; i++) {
             uint256 cId = productIds[i];
@@ -33,7 +33,7 @@ contract CleanupCampaigns is Script, DeterminedAddress {
         }
     }
 
-    /// @dev Mint a content with the given name and domain
+    /// @dev Mint a product with the given name and domain
     function _cleanInteractionCampaigns(InteractionCampaign[] memory _campaigns) internal {
         bytes32 referralIdentifier = keccak256("frak.campaign.referral");
 

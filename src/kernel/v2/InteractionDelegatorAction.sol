@@ -11,11 +11,11 @@ struct Interaction {
 
 /// @author @KONFeature
 /// @title InteractionDelegatorAction
-/// @notice A kernel action used to interaction with content interactions
+/// @notice A kernel action used to interaction with product interactions
 contract InteractionDelegatorAction {
     error InteractionFailed();
 
-    /// @dev The content registry
+    /// @dev The product registry
     ProductInteractionManager internal immutable _INTERACTION_MANAGER;
 
     constructor(ProductInteractionManager _interactionManager) {
@@ -38,11 +38,11 @@ contract InteractionDelegatorAction {
 
     /// @dev Send the given interaction
     function _sendInteraction(Interaction calldata _interaction) internal returns (bool success) {
-        // If no content id, directly call the interaction manager with the given data
+        // If no product id, directly call the interaction manager with the given data
         if (_interaction.productId == 0) {
             (success,) = address(_INTERACTION_MANAGER).call(_interaction.data);
         } else {
-            // Call the interaction contract of the given content
+            // Call the interaction contract of the given product
             (success,) =
                 address(_INTERACTION_MANAGER.getInteractionContract(_interaction.productId)).call(_interaction.data);
         }

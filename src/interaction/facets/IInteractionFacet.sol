@@ -10,6 +10,6 @@ import {InteractionType} from "../../constants/InteractionType.sol";
 interface IInteractionFacet {
     error UnknownInteraction();
 
-    /// @dev Get the handled content type of this facet
+    /// @dev Get the handled product type of this facet
     function productTypeDenominator() external pure returns (uint8);
 }

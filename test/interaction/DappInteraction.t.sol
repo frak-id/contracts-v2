@@ -179,7 +179,7 @@ contract DappInteractionTest is InteractionTest {
         // Encode the call to add the stylus contract as id 0
         bytes memory setData =
             abi.encodeWithSelector(DappInteractionFacet.setProductContract.selector, stylusContract, bytes4(0xdeadbeef));
-        // Perform the call to register this content
+        // Perform the call to register this product
         vm.prank(owner);
         productInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
         // Also add the mock storage stuff

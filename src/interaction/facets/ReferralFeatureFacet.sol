@@ -45,7 +45,7 @@ contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
         revert UnknownInteraction();
     }
 
-    /// @dev Get the handled content type of this facet
+    /// @dev Get the handled product type of this facet
     function productTypeDenominator() public pure override returns (uint8) {
         return DENOMINATOR_FEATURE_REFERRAL;
     }

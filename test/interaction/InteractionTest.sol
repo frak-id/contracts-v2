@@ -47,13 +47,13 @@ abstract contract InteractionTest is Test {
         facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry);
         campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
 
-        // Create our content interaction
+        // Create our product interaction
         address implem = address(new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry));
         address proxy = LibClone.deployERC1967(implem);
         productInteractionManager = ProductInteractionManager(proxy);
         productInteractionManager.init(owner, facetFactory, campaignFactory);
 
-        // Grant the right roles to the content interaction manager
+        // Grant the right roles to the product interaction manager
         vm.prank(owner);
         referralRegistry.grantRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
 

@@ -14,7 +14,7 @@ function interactionEq(InteractionType self, InteractionType other) pure returns
     }
 }
 
-/// @dev Set of helper functions for content types
+/// @dev Set of helper functions for product types
 library InteractionTypeLib {
     /* -------------------------------------------------------------------------- */
     /*                         Global packing / unpacking                         */
@@ -33,7 +33,7 @@ library InteractionTypeLib {
             }
 
             productTypeDenominator = uint8(_data[0]);
-            // Facet data contain everything after the content type denominator
+            // Facet data contain everything after the product type denominator
             facetData = _data[1:];
         }
     }

@@ -30,12 +30,12 @@ contract ProductRegistryTest is Test {
         assertEq(productRegistry.name(), "ProductRegistry");
         assertEq(productRegistry.symbol(), "CR");
 
-        assertEq(productRegistry.tokenURI(0), "https://content.frak.id/metadata/0.json");
-        assertEq(productRegistry.tokenURI(13), "https://content.frak.id/metadata/13.json");
-        assertEq(productRegistry.tokenURI(420), "https://content.frak.id/metadata/420.json");
+        assertEq(productRegistry.tokenURI(0), "https://product.frak.id/metadata/0.json");
+        assertEq(productRegistry.tokenURI(13), "https://product.frak.id/metadata/13.json");
+        assertEq(productRegistry.tokenURI(420), "https://product.frak.id/metadata/420.json");
         assertEq(
             productRegistry.tokenURI(type(uint256).max),
-            "https://content.frak.id/metadata/115792089237316195423570985008687907853269984665640564039457584007913129639935.json"
+            "https://product.frak.id/metadata/115792089237316195423570985008687907853269984665640564039457584007913129639935.json"
         );
     }
 
