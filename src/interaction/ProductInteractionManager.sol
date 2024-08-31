@@ -6,11 +6,9 @@ import {ProductTypes} from "../constants/ProductTypes.sol";
 import {PRODUCT_MANAGER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
-
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "../registry/ProductRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-
 import {InteractionFacetsFactory} from "./InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "./ProductInteractionDiamond.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";

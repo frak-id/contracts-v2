@@ -2,21 +2,25 @@
 pragma solidity 0.8.23;
 
 import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
+
 import "forge-std/Script.sol";
+
+import {stdJson} from "forge-std/StdJson.sol";
+import "forge-std/Vm.sol";
 import "forge-std/console.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
-
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract Deploy is Script, DeterminedAddress {
+    using stdJson for string;
+
     bool internal forceDeploy = vm.envOr("FORCE_DEPLOY", false);
 
     function run() public {
@@ -43,6 +47,18 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - FacetFactory: %s", addresses.facetFactory);
         console.log(" - CampaignFactory: %s", addresses.campaignFactory);
         console.log(" - MUSDToken: %s", addresses.mUSDToken);
+
+        // Save the addresses in a json file
+        string memory jsonKey = "ADDRESSES_JSON";
+        vm.serializeAddress(jsonKey, "productRegistry", addresses.productRegistry);
+        vm.serializeAddress(jsonKey, "referralRegistry", addresses.referralRegistry);
+        vm.serializeAddress(jsonKey, "productAdministratorlRegistry", addresses.productAdministratorlRegistry);
+        vm.serializeAddress(jsonKey, "productInteractionManager", addresses.productInteractionManager);
+        vm.serializeAddress(jsonKey, "facetFactory", addresses.facetFactory);
+        vm.serializeAddress(jsonKey, "campaignFactory", addresses.campaignFactory);
+        string memory finalJson = vm.serializeAddress(jsonKey, "mUSDToken", addresses.mUSDToken);
+
+        vm.writeJson(finalJson, "./external/addresses.json");
     }
 
     /// @dev Deploy core ecosystem stuff (ProductRegistry, Community token)

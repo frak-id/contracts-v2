@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 import {ProductTypes} from "../constants/ProductTypes.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
-
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "../registry/ProductRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";

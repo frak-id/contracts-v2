@@ -6,7 +6,6 @@ import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibZip} from "solady/utils/LibZip.sol";
-
 import {DappInteractions, InteractionType, InteractionTypeLib} from "src/constants/InteractionType.sol";
 import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_DAPP, ProductTypes} from "src/constants/ProductTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";

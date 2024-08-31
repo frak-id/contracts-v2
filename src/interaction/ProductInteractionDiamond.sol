@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
-
 import {InteractionType, InteractionTypeLib} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";

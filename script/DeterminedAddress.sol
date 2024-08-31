@@ -27,9 +27,8 @@ struct KernelAddresses {
 }
 
 struct ProductIds {
-    uint256 cNewsPaper;
-    uint256 cNewsExample;
-    uint256 cEthccDemo;
+    uint256 pNewsPaper;
+    uint256 pEthccDemo;
 }
 
 struct DeploymentBlocks {
@@ -41,6 +40,10 @@ contract DeterminedAddress {
     // Config
     address internal airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
     address internal productOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
+
+    // news paper product
+    uint256 internal pNewsPaper = 20376791661718660580662410765070640284736320707848823176694931891585259913409;
+    uint256 internal pEthccWallet = 33953649417576654953995537313820306697747390492794311279756157547821320957282;
 
     function _getAddresses() internal pure returns (Addresses memory) {
         return Addresses({
@@ -65,20 +68,14 @@ contract DeterminedAddress {
         });
     }
 
-    function _getProductIds() internal pure returns (ProductIds memory) {
-        return ProductIds({
-            cNewsPaper: 20376791661718660580662410765070640284736320707848823176694931891585259913409,
-            cNewsExample: 8073960722007594212918575991467917289452723924551607525414094759273404023523,
-            cEthccDemo: 33953649417576654953995537313820306697747390492794311279756157547821320957282
-        });
+    function _getProductIds() internal view returns (ProductIds memory) {
+        return ProductIds({pNewsPaper: pNewsPaper, pEthccDemo: pEthccWallet});
     }
 
-    function _getProductIdsArr() internal pure returns (uint256[] memory arr) {
-        ProductIds memory productIds = _getProductIds();
-        arr = new uint256[](3);
-        arr[0] = productIds.cNewsPaper;
-        arr[1] = productIds.cNewsExample;
-        arr[2] = productIds.cEthccDemo;
+    function _getProductIdsArr() internal view returns (uint256[] memory arr) {
+        arr = new uint256[](2);
+        arr[0] = pNewsPaper;
+        arr[2] = pEthccWallet;
     }
 
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {

@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {ProductTypes} from "../constants/ProductTypes.sol";
-
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
 import {IInteractionFacet} from "../interaction/facets/IInteractionFacet.sol";
 

@@ -5,7 +5,6 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     DENOMINATOR_DAPP,

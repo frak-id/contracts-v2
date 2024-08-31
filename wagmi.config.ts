@@ -15,7 +15,7 @@ export default defineConfig(
     [
         // Frak registry abis
         {
-            out: "abi/frak-registry-abis.ts",
+            out: "external/abi/frak-registry-abis.ts",
             plugins: foundryPlugin([
                 'ProductRegistry.json',
                 'ReferralRegistry.json',
@@ -24,7 +24,7 @@ export default defineConfig(
         },
         // Frak interaction abis
         {
-            out: "abi/frak-interaction-abis.ts",
+            out: "external/abi/frak-interaction-abis.ts",
             plugins: foundryPlugin([
                 'ProductInteractionManager.json',
                 'ProductInteractionDiamond.json',
@@ -35,7 +35,7 @@ export default defineConfig(
         },
         // Frak campaign abi
         {
-            out: "abi/frak-campaign-abis.ts",
+            out: "external/abi/frak-campaign-abis.ts",
             plugins: foundryPlugin([
                 'CampaignFactory.json',
                 'InteractionCampaign.json',
@@ -44,27 +44,20 @@ export default defineConfig(
         },
         // Frak campaign abi
         {
-            out: "abi/stylus-abis.ts",
+            out: "external/abi/stylus-abis.ts",
             plugins: foundryPlugin([
                 'StylusFlattened.json',
             ]),
         },
         // Kernel v2 abis
         {
-            out: "abi/kernel-v2-abis.ts",
+            out: "external/abi/kernel-v2-abis.ts",
             plugins: foundryPlugin([
                 'MultiWebAuthNRecoveryAction.json',
                 'MultiWebAuthNValidatorV2.json',
                 'InteractionDelegatorValidator.json',
                 'InteractionDelegatorAction.json',
                 'InteractionDelegator.json'
-            ]),
-        },
-        // Kernel v3 abis
-        {
-            out: "abi/kernel-v3-abis.ts",
-            plugins: foundryPlugin([
-                'MultiWebAuthNValidatorV3.json'
             ]),
         },
     ]

@@ -28,8 +28,8 @@ contract SetupTestProducts is Script, DeterminedAddress {
             ProductInteractionManager(addresses.productInteractionManager);
 
         // Mint the products
-        // uint256[] memory productIds = _mintProducts(productRegistry);
-        uint256[] memory productIds = _getProductIdsArr();
+        uint256[] memory productIds = _mintProducts(productRegistry);
+        // uint256[] memory productIds = _getProductIdsArr();
 
         // Setup the interactions
         _setupInteractions(productInteractionManager, productIds);
@@ -43,31 +43,23 @@ contract SetupTestProducts is Script, DeterminedAddress {
         vm.startBroadcast();
 
         // Mint the tests products
-        uint256 cEthccDemo = _mintProduct(
+        uint256 pEthccDemo = _mintProduct(
             productRegistry,
             PRODUCT_TYPE_PRESS | PRODUCT_TYPE_DAPP | PRODUCT_TYPE_FEATURE_REFERRAL,
             "Frak - EthCC demo",
             "ethcc.news-paper.xyz"
         );
-        uint256 cNewsExample = _mintProduct(
-            productRegistry,
-            PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL,
-            "Frak - Gating Example",
-            "news-example.frak.id"
-        );
-        uint256 cNewsPaper = _mintProduct(
+        uint256 pNewsPaper = _mintProduct(
             productRegistry, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "A Positive World", "news-paper.xyz"
         );
         vm.stopBroadcast();
 
         console.log("Product id:");
-        console.log(" - News-Paper: %s", cNewsPaper); // 20376791661718660580662410765070640284736320707848823176694931891585259913409
-        console.log(" - News-Example: %s", cNewsExample); // 8073960722007594212918575991467917289452723924551607525414094759273404023523
-        console.log(" - EthCC demo: %s", cEthccDemo); // 33953649417576654953995537313820306697747390492794311279756157547821320957282
+        console.log(" - News-Paper: %s", pNewsPaper); // 20376791661718660580662410765070640284736320707848823176694931891585259913409
+        console.log(" - EthCC demo: %s", pEthccDemo); // 33953649417576654953995537313820306697747390492794311279756157547821320957282
 
-        productIds[0] = cNewsExample;
-        productIds[1] = cEthccDemo;
-        productIds[2] = cNewsPaper;
+        productIds[0] = pEthccDemo;
+        productIds[1] = pNewsPaper;
     }
 
     /// @dev Mint a product with the given name and domain

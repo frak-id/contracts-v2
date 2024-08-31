@@ -11,11 +11,9 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
-
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
@@ -61,9 +59,8 @@ contract UpdateProductInteractions is Script, DeterminedAddress {
         productInteractionManager.updateFacetsFactory(InteractionFacetsFactory(addresses.facetFactory));
 
         // Update the interaction contracts
-        productInteractionManager.updateInteractionContract(productIds.cNewsPaper);
-        productInteractionManager.updateInteractionContract(productIds.cNewsExample);
-        productInteractionManager.updateInteractionContract(productIds.cEthccDemo);
+        productInteractionManager.updateInteractionContract(productIds.pNewsPaper);
+        productInteractionManager.updateInteractionContract(productIds.pEthccDemo);
 
         vm.stopBroadcast();
     }
@@ -91,13 +88,10 @@ contract UpdateProductInteractions is Script, DeterminedAddress {
 
         // Update each products
         productRegistry.updateMetadata(
-            _getProductIds().cNewsPaper, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "A Positivie World"
+            _getProductIds().pNewsPaper, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "A Positive World"
         );
         productRegistry.updateMetadata(
-            _getProductIds().cNewsExample, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "Frak - Gating Example"
-        );
-        productRegistry.updateMetadata(
-            _getProductIds().cEthccDemo,
+            _getProductIds().pEthccDemo,
             PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL | PRODUCT_TYPE_DAPP,
             "Frak - EthCC demo"
         );

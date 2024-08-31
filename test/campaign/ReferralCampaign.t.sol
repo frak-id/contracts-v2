@@ -7,7 +7,6 @@ import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-
 import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     PRODUCT_TYPE_DAPP,

@@ -6,9 +6,10 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {MINTER_ROLE} from "src/constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
@@ -20,12 +21,9 @@ contract AddOperator is Script, DeterminedAddress {
     function run() public {
         Addresses memory addresses = _getAddresses();
 
-        // _addProductMinter(ProductRegistry(addresses.productRegistry));
+        _addProductMinter(ProductRegistry(addresses.productRegistry));
 
-        // _addMinter(mUSDToken(addresses.mUSDToken));
-
-        ProductInteractionManager productInteractionManager =
-            ProductInteractionManager(addresses.productInteractionManager);
+        _addMinter(mUSDToken(addresses.mUSDToken));
 
         // Iterate over each product ids, and clean the attached campaigns
         uint256[] memory productIds = _getProductIdsArr();
@@ -33,15 +31,15 @@ contract AddOperator is Script, DeterminedAddress {
             uint256 cId = productIds[i];
 
             // Get the interaction contract and the active campaigns
-            // _addOperator(productInteractionManager, cId);
+            _addOperator(ProductAdministratorRegistry(addresses.productAdministratorlRegistry), cId);
         }
     }
 
-    /*function _addOperator(ProductInteractionManager _productInteractionManager, uint256 _cId) internal {
+    function _addOperator(ProductAdministratorRegistry _adminRegistry, uint256 _cId) internal {
         vm.startBroadcast();
-        _productInteractionManager.addOperator(_cId, operator);
+        _adminRegistry.grantRoles(_cId, operator, CAMPAIGN_MANAGER_ROLE);
         vm.stopBroadcast();
-    }*/
+    }
 
     function _addProductMinter(ProductRegistry _productRegistry) internal {
         vm.startBroadcast();

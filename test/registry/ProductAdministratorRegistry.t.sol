@@ -7,7 +7,6 @@ import {Ownable} from "solady/auth/Ownable.sol";
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {PRODUCT_TYPE_DAPP, PRODUCT_TYPE_PRESS, ProductTypes} from "src/constants/ProductTypes.sol";
 import {MINTER_ROLE} from "src/constants/Roles.sol";
-
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 
