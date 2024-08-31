@@ -6,7 +6,7 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
@@ -21,9 +21,9 @@ contract AddOperator is Script, DeterminedAddress {
     function run() public {
         Addresses memory addresses = _getAddresses();
 
-        _addProductMinter(ProductRegistry(addresses.productRegistry));
+        // _addProductMinter(ProductRegistry(addresses.productRegistry));
 
-        _addMinter(mUSDToken(addresses.mUSDToken));
+        // _addMinter(mUSDToken(addresses.mUSDToken));
 
         // Iterate over each product ids, and clean the attached campaigns
         uint256[] memory productIds = _getProductIdsArr();
@@ -37,7 +37,7 @@ contract AddOperator is Script, DeterminedAddress {
 
     function _addOperator(ProductAdministratorRegistry _adminRegistry, uint256 _cId) internal {
         vm.startBroadcast();
-        _adminRegistry.grantRoles(_cId, operator, CAMPAIGN_MANAGER_ROLE);
+        _adminRegistry.grantRoles(_cId, operator, CAMPAIGN_MANAGER_ROLE | PRODUCT_MANAGER_ROLE);
         vm.stopBroadcast();
     }
 

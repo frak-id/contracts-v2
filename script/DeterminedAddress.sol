@@ -52,7 +52,7 @@ contract DeterminedAddress {
             productAdministratorlRegistry: 0x62254d732C078BF0484EA7dBd61f7F620184F95e,
             productInteractionManager: 0x5c449C1777Fa729C4136DDF81585FDd7512Ae8bb,
             facetFactory: 0x66B1a8614464C840e552F6804E79a1AB0888cB48,
-            campaignFactory: 0xBE461b8Eb39050cd1c41aaa2f686C93Ec4a5958E,
+            campaignFactory: 0xB375B53C13eE2664DD9bD16f5624fE5097870543,
             mUSDToken: 0x56039fa1a804F614eBD714139F29a3ff4DB57ad6
         });
     }
@@ -75,7 +75,7 @@ contract DeterminedAddress {
     function _getProductIdsArr() internal view returns (uint256[] memory arr) {
         arr = new uint256[](2);
         arr[0] = pNewsPaper;
-        arr[2] = pEthccWallet;
+        arr[1] = pEthccWallet;
     }
 
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {

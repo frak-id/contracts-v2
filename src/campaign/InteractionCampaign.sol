@@ -71,7 +71,11 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     /*                               Metadata reader                              */
     /* -------------------------------------------------------------------------- */
 
-    function getMetadata() public pure virtual returns (string memory _type, string memory version);
+    function getMetadata() public view virtual returns (string memory _type, string memory version, bytes32 name);
+
+    function getLink() public view returns (uint256 productId, address interactionContract) {
+        return (PRODUCT_ID, INTERACTION_CONTRACT);
+    }
 
     /* -------------------------------------------------------------------------- */
     /*                              Campaign related                              */

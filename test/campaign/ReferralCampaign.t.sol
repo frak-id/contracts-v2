@@ -97,7 +97,7 @@ contract ReferralCampaignTest is InteractionTest {
     }
 
     function test_metadata() public view {
-        (string memory name, string memory version) = referralCampaign.getMetadata();
+        (string memory name, string memory version,) = referralCampaign.getMetadata();
         assertEq(name, "frak.campaign.referral");
         assertEq(version, "0.0.1");
     }

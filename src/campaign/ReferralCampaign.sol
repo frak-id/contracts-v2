@@ -154,9 +154,10 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the campaign metadata
-    function getMetadata() public pure override returns (string memory _type, string memory version) {
+    function getMetadata() public view override returns (string memory _type, string memory version, bytes32 name) {
         _type = "frak.campaign.referral";
         version = "0.0.1";
+        name = _interactionCampaignStorage().name;
     }
 
     /// @dev Get the campaign config

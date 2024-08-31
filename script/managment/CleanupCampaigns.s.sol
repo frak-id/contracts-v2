@@ -40,7 +40,7 @@ contract CleanupCampaigns is Script, DeterminedAddress {
         // Iterate over each campaign
         for (uint256 i = 0; i < _campaigns.length; i++) {
             InteractionCampaign campaign = _campaigns[i];
-            (string memory name,) = campaign.getMetadata();
+            (string memory name,,) = campaign.getMetadata();
 
             // If it's a referral campaign, clean it up
             if (keccak256(bytes(name)) == referralIdentifier) {

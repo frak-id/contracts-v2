@@ -16,9 +16,10 @@ contract MockCampaign is InteractionCampaign {
     {}
 
     /// @dev Get the campaign metadata
-    function getMetadata() public pure override returns (string memory name, string memory version) {
-        name = "mock";
+    function getMetadata() public pure override returns (string memory _type, string memory version, bytes32 name) {
+        _type = "mock";
         version = "0.0.1";
+        name = "mock";
     }
 
     /// @dev Check if the campaign is active or not

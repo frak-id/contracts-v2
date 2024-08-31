@@ -63,12 +63,23 @@ export const interactionCampaignAbi = [
   {
     type: 'function',
     inputs: [],
+    name: 'getLink',
+    outputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'interactionContract', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
     name: 'getMetadata',
     outputs: [
       { name: '_type', internalType: 'string', type: 'string' },
       { name: 'version', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'bytes32', type: 'bytes32' },
     ],
-    stateMutability: 'pure',
+    stateMutability: 'view',
   },
   {
     type: 'function',
@@ -206,12 +217,23 @@ export const referralCampaignAbi = [
   {
     type: 'function',
     inputs: [],
+    name: 'getLink',
+    outputs: [
+      { name: 'productId', internalType: 'uint256', type: 'uint256' },
+      { name: 'interactionContract', internalType: 'address', type: 'address' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
     name: 'getMetadata',
     outputs: [
       { name: '_type', internalType: 'string', type: 'string' },
       { name: 'version', internalType: 'string', type: 'string' },
+      { name: 'name', internalType: 'bytes32', type: 'bytes32' },
     ],
-    stateMutability: 'pure',
+    stateMutability: 'view',
   },
   {
     type: 'function',
