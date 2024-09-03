@@ -4,7 +4,12 @@ pragma solidity 0.8.23;
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {InteractionType, InteractionTypeLib} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
-import {CAMPAIGN_MANAGER_ROLE, INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {
+    CAMPAIGN_MANAGER_ROLE,
+    INTERCATION_VALIDATOR_ROLE,
+    PRODUCT_MANAGER_ROLE,
+    UPGRADE_ROLE
+} from "../constants/Roles.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
@@ -337,8 +342,29 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                              Roles management                              */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Grant roles to a user (only or product manager can do that)
+    function grantRoles(address user, uint256 roles) public payable override onlyProductManager {
+        _grantRoles(user, roles);
+    }
+
+    /// @dev Revoke roles to a user (only or product manager can do that)
+    function revokeRoles(address user, uint256 roles) public payable override onlyProductManager {
+        _removeRoles(user, roles);
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                              Helper modifiers                              */
     /* -------------------------------------------------------------------------- */
+
+    /// @dev Restrict the execution to the campaign manager or an approved manager
+    modifier onlyProductManager() {
+        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, PRODUCT_MANAGER_ROLE);
+        if (!isAllowed) revert Unauthorized();
+        _;
+    }
 
     /// @dev Restrict the execution to the campaign manager or an approved manager
     modifier onlyAllowedCampaignManager() {

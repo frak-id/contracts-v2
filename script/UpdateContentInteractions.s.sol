@@ -22,9 +22,9 @@ import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 contract UpdateProductInteractions is Script, DeterminedAddress {
     function run() public {
         // _updateManager();
-        //_updateProducts();
-        //_updateInteractions();
-        _updateCampaigns();
+        // _updateProducts();
+        _updateInteractions();
+        // _updateCampaigns();
     }
 
     function _updateManager() internal {
