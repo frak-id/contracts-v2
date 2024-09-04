@@ -17,7 +17,7 @@ Addresses of the Frak contracts, deployed on Arbitrum and Arbitrum Sepolia.
 | Product Administrator Registry | `0x62254d732C078BF0484EA7dBd61f7F620184F95e`  |
 | Product Interaction Manager    | `0xC9d1BAB1B9A07c11AB0C264B13AFfD500DD4c2ee`  |
 | Facet Factory                  | `0xAC09E547d3f21F1E0aCbe76dde44BB1BcFFb9D7D`  |
-| Campaign Factory               | `0xBE461b8Eb39050cd1c41aaa2f686C93Ec4a5958E`  |
+| Campaign Factory               | `0xB375B53C13eE2664DD9bD16f5624fE5097870543`  |
 | mUSD Token                     | `0x56039fa1a804F614eBD714139F29a3ff4DB57ad6`  |
 
 ### Kernel plugins
@@ -32,7 +32,7 @@ Plugins for the Kernel smart accounts. They can be deployed on any chain via the
 | MultiWebAuthN Recovery - Kernel v2    | `0x8b29229515D3e5b829D59617A791b5B3a2c32ff1`  |
 | Interaction delegator                 | `0x4b8350E6291063bF14ca1E4379147a3bd23714CB`  |
 | Interaction delegator validator       | `0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C`  |
-| Interaction delegator action          | `0xD46171ae153dc69b1A2A1a8dF75Ea92e99234afA`  |
+| Interaction delegator action          | `0xaAF9c01fe6193d6226003B233A68f6EDD807bAb0`  |
 
 
 ## Folder Structure

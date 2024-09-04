@@ -64,7 +64,7 @@ contract DeterminedAddress {
             webAuthNRecoveryAction: 0x8b29229515D3e5b829D59617A791b5B3a2c32ff1,
             interactionDelegator: 0x4b8350E6291063bF14ca1E4379147a3bd23714CB,
             interactionDelegatorValidator: 0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C,
-            interactionDelegatorAction: 0xD46171ae153dc69b1A2A1a8dF75Ea92e99234afA
+            interactionDelegatorAction: 0xaAF9c01fe6193d6226003B233A68f6EDD807bAb0
         });
     }
 
