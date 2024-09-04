@@ -52,13 +52,16 @@ contract InteractionFacetsFactory is IFacetsFactory {
 
     /// @dev Deploy a new product interaction diamond
     /// @dev Should only be called with delegate call, otherwise the manager would be the caller
-    function createProductInteractionDiamond(uint256 _productId, address _owner)
+    function createProductInteractionDiamond(uint256 _productId, bytes32 _salt)
         public
         returns (ProductInteractionDiamond diamond)
     {
+        // Mix product id and salt for a more unique diamond
+        _salt = keccak256(abi.encodePacked(_productId, _salt));
+
         // Deploy the interaction contract
-        diamond = new ProductInteractionDiamond(
-            _productId, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, address(this), _owner
+        diamond = new ProductInteractionDiamond{salt: _salt}(
+            _productId, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, address(this)
         );
 
         // Get the facets for it

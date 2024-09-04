@@ -82,8 +82,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         uint256 _productId,
         ReferralRegistry _referralRegistry,
         ProductAdministratorRegistry _productAdministratorRegistry,
-        address _interactionManager,
-        address _interactionManagerOwner
+        address _interactionManager
     ) {
         // Set immutable variable (since embeded inside the bytecode)
         PRODUCT_ID = _productId;
@@ -94,10 +93,8 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         // Disable init on deployed raw instance
         _disableInitializers();
 
-        // Global owner is the same as the interaction manager owner
-        _initializeOwner(_interactionManagerOwner);
-        _setRoles(_interactionManagerOwner, UPGRADE_ROLE);
-        // The interaction manager can trigger updates
+        // The interaction manager is the owner and can trigger updates
+        _initializeOwner(_interactionManager);
         _setRoles(_interactionManager, UPGRADE_ROLE);
 
         // Compute and store the referral tree

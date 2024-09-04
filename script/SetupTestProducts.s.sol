@@ -23,13 +23,12 @@ contract SetupTestProducts is Script, DeterminedAddress {
 
     function run() public {
         Addresses memory addresses = _getAddresses();
-        ProductRegistry productRegistry = ProductRegistry(addresses.productRegistry);
         ProductInteractionManager productInteractionManager =
             ProductInteractionManager(addresses.productInteractionManager);
 
         // Mint the products
-        uint256[] memory productIds = _mintProducts(productRegistry);
-        // uint256[] memory productIds = _getProductIdsArr();
+        // uint256[] memory productIds = _mintProducts(ProductRegistry(addresses.productRegistry));
+        uint256[] memory productIds = _getProductIdsArr();
 
         // Setup the interactions
         _setupInteractions(productInteractionManager, productIds);
@@ -79,18 +78,10 @@ contract SetupTestProducts is Script, DeterminedAddress {
         for (uint256 i = 0; i < _productIds.length; i++) {
             // Deploy the interaction contract
             _interactionManager.deployInteractionContract(_productIds[i]);
-            // Grant the right roles
-            _grantValidatorRole(_interactionManager, _productIds[i]);
         }
         vm.stopBroadcast();
     }
-
-    /// @dev Mint a product with the given name and domain
-    function _grantValidatorRole(ProductInteractionManager _interactionManager, uint256 _productId) internal {
-        ProductInteractionDiamond interactionContract = _interactionManager.getInteractionContract(_productId);
-        interactionContract.grantRoles(interactionValidator, INTERCATION_VALIDATOR_ROLE);
-    }
-
+    
     bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = bytes4(keccak256("frak.campaign.referral"));
 
     /// @dev Setup the itneraction campaigns for the given products

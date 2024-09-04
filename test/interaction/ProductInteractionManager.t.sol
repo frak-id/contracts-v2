@@ -15,7 +15,12 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {PRODUCT_MANAGER_ROLE, PRODUCT_MANAGER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
+import {
+    CAMPAIGN_MANAGER_ROLE,
+    PRODUCT_MANAGER_ROLE,
+    PRODUCT_MANAGER_ROLE,
+    REFERRAL_ALLOWANCE_MANAGER_ROLE
+} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
@@ -64,10 +69,10 @@ contract ProductInteractionManagerTest is Test {
         productIdUnknown = productRegistry.mint(ProductTypes.wrap(uint256(1 << 99)), "name", "unknown-domain", owner);
 
         // Grant the roles
-        adminRegistry.grantRoles(productIdDapp, operator, PRODUCT_MANAGER_ROLE);
-        adminRegistry.grantRoles(productIdPress, operator, PRODUCT_MANAGER_ROLE);
-        adminRegistry.grantRoles(productIdMulti, operator, PRODUCT_MANAGER_ROLE);
-        adminRegistry.grantRoles(productIdUnknown, operator, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdDapp, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdMulti, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdUnknown, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
         vm.stopPrank();
     }
 
@@ -147,6 +152,24 @@ contract ProductInteractionManagerTest is Test {
         vm.prank(operator);
         vm.expectRevert(ProductInteractionManager.InteractionContractAlreadyDeployed.selector);
         productInteractionManager.deployInteractionContract(productIdPress);
+    }
+
+    function test_deployInteractionContract_SaltClash() public {
+        // Deploy and delete the interaction contract
+        vm.prank(operator);
+        productInteractionManager.deployInteractionContract(productIdPress);
+        vm.prank(operator);
+        productInteractionManager.deleteInteractionContract(productIdPress);
+
+        // Try to redeploy it
+        vm.prank(operator);
+        vm.expectRevert();
+        productInteractionManager.deployInteractionContract(productIdPress);
+
+        // Try to redeploy it using another salt
+        bytes32 _salt = keccak256(abi.encodePacked("salt"));
+        vm.prank(operator);
+        productInteractionManager.deployInteractionContract(productIdPress, _salt);
     }
 
     function test_deployInteractionContract() public {

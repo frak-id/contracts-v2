@@ -50,8 +50,8 @@ contract DeterminedAddress {
             productRegistry: 0xdA7fBD02eb048bDf6f1607122eEe071e44f0b9F2,
             referralRegistry: 0xcf5855d9825578199969919F1696b80388111403,
             productAdministratorlRegistry: 0x62254d732C078BF0484EA7dBd61f7F620184F95e,
-            productInteractionManager: 0x5c449C1777Fa729C4136DDF81585FDd7512Ae8bb,
-            facetFactory: 0x2f22e1EF391E744be68bB5Ac4D2f3024F2d6A9b8,
+            productInteractionManager: 0xC9d1BAB1B9A07c11AB0C264B13AFfD500DD4c2ee,
+            facetFactory: 0xAC09E547d3f21F1E0aCbe76dde44BB1BcFFb9D7D,
             campaignFactory: 0xB375B53C13eE2664DD9bD16f5624fE5097870543,
             mUSDToken: 0x56039fa1a804F614eBD714139F29a3ff4DB57ad6
         });

@@ -138,7 +138,7 @@ contract DappInteractionTest is InteractionTest {
         // Derigister the stylus contract
         bytes memory deleteData =
             abi.encodeWithSelector(DappInteractionFacet.deleteProductContract.selector, stylusCcuContractId);
-        vm.prank(owner);
+        vm.prank(address(productInteractionManager));
         productInteraction.delegateToFacet(DENOMINATOR_DAPP, deleteData);
         // Pack the interaction
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
@@ -179,7 +179,7 @@ contract DappInteractionTest is InteractionTest {
         bytes memory setData =
             abi.encodeWithSelector(DappInteractionFacet.setProductContract.selector, stylusContract, bytes4(0xdeadbeef));
         // Perform the call to register this product
-        vm.prank(owner);
+        vm.prank(address(productInteractionManager));
         productInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
         // Also add the mock storage stuff
         setData = abi.encodeWithSelector(
@@ -187,7 +187,7 @@ contract DappInteractionTest is InteractionTest {
             address(mockStorage),
             MockStorageContract.getMockedForUser.selector
         );
-        vm.prank(owner);
+        vm.prank(address(productInteractionManager));
         productInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
         _;
     }

@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
-import {PRODUCT_MANAGER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
@@ -137,7 +137,20 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Deploy a new interaction contract for the given `_productId`
-    function deployInteractionContract(uint256 _productId) external _onlyAllowedOnProduct(_productId) {
+    function deployInteractionContract(uint256 _productId)
+        public
+        _onlyProductManager(_productId)
+        returns (ProductInteractionDiamond diamond)
+    {
+        return deployInteractionContract(_productId, bytes32(0));
+    }
+
+    /// @dev Deploy a new interaction contract for the given `_productId`
+    function deployInteractionContract(uint256 _productId, bytes32 _salt)
+        public
+        _onlyProductManager(_productId)
+        returns (ProductInteractionDiamond diamond)
+    {
         // Check if we already have an interaction contract for this product
         if (_storage().products[_productId].diamond != ProductInteractionDiamond(address(0))) {
             revert InteractionContractAlreadyDeployed();
@@ -145,16 +158,17 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
         // Deploy the interaction contract
         (bool success, bytes memory data) = address(_storage().facetsFactory).delegatecall(
-            abi.encodeWithSelector(
-                InteractionFacetsFactory.createProductInteractionDiamond.selector, _productId, owner()
-            )
+            abi.encodeWithSelector(InteractionFacetsFactory.createProductInteractionDiamond.selector, _productId, _salt)
         );
         if (!success) {
-            revert(string(data));
+            if (data.length == 0) revert();
+            assembly {
+                revert(add(32, data), mload(data))
+            }
         }
 
         // Get the deployed interaction contract
-        ProductInteractionDiamond diamond = abi.decode(data, (ProductInteractionDiamond));
+        diamond = abi.decode(data, (ProductInteractionDiamond));
 
         // Grant the allowance manager role to the referral registry
         bytes32 referralTree = diamond.getReferralTree();
@@ -168,7 +182,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Deploy a new interaction contract for the given `_productId`
-    function updateInteractionContract(uint256 _productId) external _onlyAllowedOnProduct(_productId) {
+    function updateInteractionContract(uint256 _productId) external _onlyProductManager(_productId) {
         // Fetch the current interaction contract
         ProductInteractionDiamond interactionContract = getInteractionContract(_productId);
 
@@ -184,7 +198,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Delete the interaction contract for the given `_productId`
-    function deleteInteractionContract(uint256 _productId) external _onlyAllowedOnProduct(_productId) {
+    function deleteInteractionContract(uint256 _productId) external _onlyProductManager(_productId) {
         // Fetch the current interaction contract
         ProductInteractionDiamond interactionContract = getInteractionContract(_productId);
 
@@ -215,7 +229,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /// @dev Attach a new campaign to the given `_productId`
     function deployCampaign(uint256 _productId, bytes4 _campaignIdentifier, bytes calldata _initData)
         public
-        _onlyAllowedOnProduct(_productId)
+        _onlyCampaignManager(_productId)
         returns (address campaign)
     {
         // Retreive the interaction contract
@@ -230,7 +244,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     function detachCampaigns(uint256 _productId, InteractionCampaign[] calldata _campaigns)
         public
-        _onlyAllowedOnProduct(_productId)
+        _onlyCampaignManager(_productId)
     {
         // Retreive the interaction contract
         ProductInteractionDiamond interactionContract = getInteractionContract(_productId);
@@ -267,9 +281,17 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /// @dev Upgrade check
     function _authorizeUpgrade(address newImplementation) internal override onlyRoles(UPGRADE_ROLE) {}
 
-    /// @dev Modifier to only allow call from an allowed operator
-    modifier _onlyAllowedOnProduct(uint256 _productId) {
+    /// @dev Modifier to only allow call from an allowed product manager
+    modifier _onlyProductManager(uint256 _productId) {
         bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(_productId, msg.sender, PRODUCT_MANAGER_ROLE);
+        if (!isAllowed) revert Unauthorized();
+        _;
+    }
+
+    /// @dev Modifier to only allow call from an allowed campaign manager
+    modifier _onlyCampaignManager(uint256 _productId) {
+        bool isAllowed =
+            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(_productId, msg.sender, CAMPAIGN_MANAGER_ROLE);
         if (!isAllowed) revert Unauthorized();
         _;
     }
