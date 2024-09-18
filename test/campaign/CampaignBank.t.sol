@@ -1,46 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {InteractionTest} from "../interaction/InteractionTest.sol";
+import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import {MockErc20} from "../utils/MockErc20.sol";
-import {Test} from "forge-std/Test.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
-import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {PushPullModule, Reward} from "src/modules/PushPullModule.sol";
-import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
-import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 
-contract CampaignBankTest is Test {
+contract CampaignBankTest is EcosystemAwareTest {
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
-    address internal owner = makeAddr("owner");
-    address internal productOwner = makeAddr("productOwner");
-    address internal productManager = makeAddr("productManager");
-    address internal campaignManager = makeAddr("campaignManager");
     address internal campaign = makeAddr("campaign");
-
-    /// @dev Comnponent required to test the bank
-    ProductRegistry private productRegistry = new ProductRegistry(owner);
-    ProductAdministratorRegistry private adminRegistry = new ProductAdministratorRegistry(productRegistry);
-
-    /// @dev A mocked erc20 token
-    MockErc20 private token = new MockErc20();
 
     /// @dev The bank we will test
     CampaignBank private campaignBank;
 
     function setUp() public {
-        // Setup content with allowance for the operator
-        vm.prank(owner);
-        uint256 productId = productRegistry.mint(PRODUCT_TYPE_PRESS, "name", "press-domain", productOwner);
+        _initEcosystemAwareTest();
 
-        // Grant the right roles to the product interaction manager
-        vm.startPrank(productOwner);
-        adminRegistry.grantRoles(productId, productManager, PRODUCT_MANAGER_ROLE);
-        adminRegistry.grantRoles(productId, campaignManager, CAMPAIGN_MANAGER_ROLE);
-        vm.stopPrank();
+        // Setup content with allowance for the operator
+        uint256 productId = _mintProduct(PRODUCT_TYPE_PRESS, "name", "press-domain");
 
         // Deploy the bank
         campaignBank = new CampaignBank(adminRegistry, productId, address(token));
