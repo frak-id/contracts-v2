@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {InteractionTest} from "../interaction/InteractionTest.sol";
 import {MockErc20} from "../utils/MockErc20.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
@@ -14,7 +13,7 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
+import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ReferralCampaignTest is InteractionTest {

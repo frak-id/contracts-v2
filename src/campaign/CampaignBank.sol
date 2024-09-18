@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "../constants/Roles.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
@@ -18,7 +18,8 @@ contract CampaignBank is PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     error Unauthorized();
-    error BankIsStillRunning();
+    error BankIsntOpen();
+    error BankIsStillOpen();
 
     /// @dev The distribution period
     uint256 private immutable PRODUCT_ID;
@@ -63,6 +64,8 @@ contract CampaignBank is PushPullModule {
     /// @notice Push multiple rewards
     /// @param _rewards Rewards to be pushed
     function pushRewards(PushPullModule.Reward[] calldata _rewards) external onlyApprovedCampaign {
+        if (!_campaignBankStorage().isDistributionEnable) revert BankIsntOpen();
+
         _pushRewardsCd(_rewards);
     }
 
@@ -76,14 +79,24 @@ contract CampaignBank is PushPullModule {
         _campaignBankStorage().allowedCampaign[_campaign] = _isAllowed;
     }
 
+    /// @notice Check if the campaign is allowed for distribution
+    function isCampaignAllowed(address _campaign) external view returns (bool) {
+        return _campaignBankStorage().allowedCampaign[_campaign];
+    }
+
     /// @notice Update the distribution state
     function updateDistributionState(bool _state) external onlyAllowedProductManager {
         _campaignBankStorage().isDistributionEnable = _state;
     }
 
+    /// @notice Check if the distribution is enabled
+    function isDistributionEnabled() external view returns (bool) {
+        return _campaignBankStorage().isDistributionEnable;
+    }
+
     /// @dev Withdraw the remaining token from the campaign
     function withdraw() external nonReentrant onlyAllowedProductManager {
-        if (_campaignBankStorage().isDistributionEnable) revert BankIsStillRunning();
+        if (_campaignBankStorage().isDistributionEnable) revert BankIsStillOpen();
 
         // Compute the amount withdrawable
         uint256 pendingAmount = getTotalPending();
@@ -107,8 +120,7 @@ contract CampaignBank is PushPullModule {
 
     /// @dev Only allow the call for an authorised mananger
     modifier onlyAllowedProductManager() {
-        bool isAllowed =
-            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
+        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, PRODUCT_MANAGER_ROLE);
         if (!isAllowed) revert Unauthorized();
         _;
     }
