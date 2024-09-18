@@ -102,7 +102,37 @@ abstract contract PushPullModule is ReentrancyGuard {
             Reward memory reward = _rewards[i];
 
             // Compute the new pending total amount
-            newTotalPending += _rewards[i].amount;
+            newTotalPending += reward.amount;
+            if (newTotalPending > currentBalance) {
+                revert NotEnoughToken();
+            }
+
+            // Set the reward for the user
+            tokenStorage.pendingAmount[reward.user] += reward.amount;
+
+            // Emit the event
+            emit RewardAdded(reward.user, reward.amount);
+        }
+
+        // Update the total pending amount
+        tokenStorage.totalPending = newTotalPending;
+    }
+
+    /// @notice Add multiple rewards for the given `_user` with the given `_amount` via calldata
+    function _pushRewardsCd(Reward[] calldata _rewards) internal nonReentrant {
+        // Get the given storage for the token
+        PushPullModuleStorage storage tokenStorage = _pushPullStorage();
+
+        // Get our control var
+        uint256 newTotalPending = tokenStorage.totalPending;
+        uint256 currentBalance = TOKEN.balanceOf(address(this));
+
+        // Iterate over each rewards
+        for (uint256 i = 0; i < _rewards.length; i++) {
+            Reward memory reward = _rewards[i];
+
+            // Compute the new pending total amount
+            newTotalPending += reward.amount;
             if (newTotalPending > currentBalance) {
                 revert NotEnoughToken();
             }
@@ -153,8 +183,13 @@ abstract contract PushPullModule is ReentrancyGuard {
         return _pushPullStorage().pendingAmount[_user];
     }
 
-    /// @notice Get the pending amount for the given `_user`
-    function getTotalPending() external view returns (uint256) {
+    /// @notice Get the total pending amount
+    function getTotalPending() public view returns (uint256) {
         return _pushPullStorage().totalPending;
+    }
+
+    /// @notice Get the token linked to this push pull reward
+    function getToken() public view returns (address) {
+        return TOKEN;
     }
 }

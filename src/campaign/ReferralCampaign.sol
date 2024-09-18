@@ -11,6 +11,38 @@ import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {InteractionCampaign} from "./InteractionCampaign.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
+/*
+
+What do we want in our new referral based campain?
+
+ - Distribution cap is global
+ - Multi trigger setup 
+    - Trigger is a interaction made by a user
+ - Each trigger has it's own rules
+    - Repartiations between referree and referrer
+    - Base reward (min/max will come in the later term, with a coefficient depending on if we come close to the cap and the amount distributed)
+    - Max count per user
+ - Trigger could be any of the interaction type, identified by the interaction identifier
+
+ - Some deploy time stuff:
+    - referral registry
+    - banking solution
+
+- In case of a purchase
+    - The interactions is pushed by the delegation validator directly on the reception of the webhook on the behalf of the user
+    - The interaction only check with the oracle that this purchase is validated
+
+So it would be smth like that:
+struct TriggerConfig {
+    InteractionType interactionType;
+    uint256 baseReward;
+    uint256 userPercent;
+    uint256 maxCountPerUser;
+}
+
+
+*/
+
 /// @author @KONFeature
 /// @title ReferralCampaign
 /// @notice Smart contract for a referral based compagn
