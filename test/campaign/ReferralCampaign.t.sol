@@ -14,9 +14,8 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
-import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
+import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ReferralCampaignTest is InteractionTest {
     address private emitter;

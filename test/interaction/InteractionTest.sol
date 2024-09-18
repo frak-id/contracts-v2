@@ -8,15 +8,13 @@ import {LibClone} from "solady/utils/LibClone.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
 import {PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
-import {
-    INTERCATION_VALIDATOR_ROLE, PRODUCT_MANAGER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE
-} from "src/constants/Roles.sol";
+import {INTERCATION_VALIDATOR_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
-import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
+import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 /// @dev Generic contract to test interaction
 abstract contract InteractionTest is Test {

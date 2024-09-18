@@ -135,10 +135,20 @@ library PressInteractions {
     InteractionType constant READ_ARTICLE = InteractionType.wrap(0xd5bd0fbe);
 }
 
+library WebShopInteractions {}
+
 library ReferralInteractions {
     /// @dev `bytes4(keccak256("frak.referral.interaction.referred"))`
     InteractionType constant REFERRED = InteractionType.wrap(0x010cc3b9);
 
     /// @dev `bytes4(keccak256("frak.referral.interaction.link_creation"))`
     InteractionType constant REFERRAL_LINK_CREATION = InteractionType.wrap(0xb2c0f17c);
+}
+
+library PurchaseInteractions {
+    /// @dev `bytes4(keccak256("frak.purchase.interaction.purchase_started"))`
+    InteractionType constant PURCHASE_STARTED = InteractionType.wrap(0xd87e90c3);
+
+    /// @dev `bytes4(keccak256("frak.purchase.interaction.purchase_confirmed"))`
+    InteractionType constant PURCHASE_CONFIRMED = InteractionType.wrap(0xff153a38);
 }

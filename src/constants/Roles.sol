@@ -19,10 +19,3 @@ uint256 constant CAMPAIGN_MANAGER_ROLE = 1 << 3;
 
 /// @dev The role that can validate a user interaction
 uint256 constant INTERCATION_VALIDATOR_ROLE = 1 << 4;
-
-/* -------------------------------------------------------------------------- */
-/*                              Referral related                              */
-/* -------------------------------------------------------------------------- */
-
-/// @dev The role for the referral allowance manager
-uint256 constant REFERRAL_ALLOWANCE_MANAGER_ROLE = 1 << 5;

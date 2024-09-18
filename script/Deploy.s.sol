@@ -8,7 +8,7 @@ import "forge-std/Vm.sol";
 import "forge-std/console.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
-import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {InteractionDelegator} from "src/kernel/interaction/InteractionDelegator.sol";
@@ -19,7 +19,7 @@ import {MultiWebAuthNRecoveryAction} from "src/kernel/webauthn/MultiWebAuthNReco
 import {MultiWebAuthNValidatorV2} from "src/kernel/webauthn/MultiWebAuthNValidator.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
-import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
+import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract Deploy is Script, DeterminedAddress {

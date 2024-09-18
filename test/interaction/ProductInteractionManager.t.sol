@@ -15,18 +15,13 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {
-    CAMPAIGN_MANAGER_ROLE,
-    PRODUCT_MANAGER_ROLE,
-    PRODUCT_MANAGER_ROLE,
-    REFERRAL_ALLOWANCE_MANAGER_ROLE
-} from "src/constants/Roles.sol";
+import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
-import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
+import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ProductInteractionManagerTest is Test {
     address private owner = makeAddr("owner");

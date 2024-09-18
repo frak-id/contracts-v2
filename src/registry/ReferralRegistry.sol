@@ -2,8 +2,10 @@
 pragma solidity 0.8.23;
 
 import {InvalidSignature} from "../constants/Errors.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "../constants/Roles.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+
+/// @dev The role for the referral allowance manager
+uint256 constant REFERRAL_ALLOWANCE_MANAGER_ROLE = 1 << 1;
 
 /// @author @KONFeature
 /// @title ReferralRegistry
