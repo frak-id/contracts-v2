@@ -1,7 +1,7 @@
 {
-  "name": "@frak-id/poc-paywall",
+  "name": "@frak-id/nexus-contracts",
   "version": "1.0.0",
-  "description": "All the smart contracts used for the paywall POC",
+  "description": "All the smart contracts used for Nexus",
   "license": "GNU GPL 3.0",
   "private": true,
   "scripts": {

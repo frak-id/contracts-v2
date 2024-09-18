@@ -81,7 +81,7 @@ contract SetupTestProducts is Script, DeterminedAddress {
         }
         vm.stopBroadcast();
     }
-    
+
     bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = bytes4(keccak256("frak.campaign.referral"));
 
     /// @dev Setup the itneraction campaigns for the given products
