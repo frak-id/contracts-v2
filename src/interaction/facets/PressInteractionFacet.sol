@@ -23,9 +23,6 @@ contract PressInteractionFacet is ProductInteractionStorageLib, IInteractionFace
     /// @dev Event when an article is read by the given `user`
     event ArticleRead(bytes32 indexed articleId, address user);
 
-    /// @dev Event emitted when a `user` was referred by `referrer`
-    event UserReferred(address indexed user, address indexed referrer);
-
     /// @dev High level interaction router
     fallback(bytes calldata _data) external returns (bytes memory) {
         // Parse the interaction

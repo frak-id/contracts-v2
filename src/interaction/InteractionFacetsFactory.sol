@@ -10,7 +10,10 @@ import {ProductInteractionDiamond} from "./ProductInteractionDiamond.sol";
 import {DappInteractionFacet} from "./facets/DappInteractionFacet.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
+
+import {PurchaseFeatureFacet} from "./facets/PurchaseFeatureFacet.sol";
 import {ReferralFeatureFacet} from "./facets/ReferralFeatureFacet.sol";
+import {WebShopInteractionFacet} from "./facets/WebShopInteractionFacet.sol";
 
 /// @title InteractionFacetsFactory
 /// @author @KONFeature
@@ -24,10 +27,14 @@ contract InteractionFacetsFactory is IFacetsFactory {
     ProductRegistry private immutable PRODUCT_REGISTRY;
     ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
-    /// @dev The facets addresses
+    /// @dev The core facets addresses
     IInteractionFacet private immutable PRESS_FACET;
     IInteractionFacet private immutable DAPP_FACET;
+    IInteractionFacet private immutable WEB_SHOP_FACET;
+
+    /// @dev The feature facets addresses
     IInteractionFacet private immutable REFERRAL_FEATURE_FACET;
+    IInteractionFacet private immutable PURCHASE_FEATURE_FACET;
 
     /// @dev Constructor, will deploy all the known facets
     constructor(
@@ -40,10 +47,13 @@ contract InteractionFacetsFactory is IFacetsFactory {
         PRODUCT_REGISTRY = _productRegistry;
         PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
 
-        // Our facets
+        // Deploy the facets we will link
         PRESS_FACET = new PressInteractionFacet();
         DAPP_FACET = new DappInteractionFacet();
+        WEB_SHOP_FACET = new WebShopInteractionFacet();
+
         REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
+        PURCHASE_FEATURE_FACET = new PurchaseFeatureFacet();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -95,8 +105,17 @@ contract InteractionFacetsFactory is IFacetsFactory {
             facets[index] = DAPP_FACET;
             index++;
         }
+        if (productTypes.isWebShopType()) {
+            facets[index] = WEB_SHOP_FACET;
+            index++;
+        }
+
         if (productTypes.hasReferralFeature()) {
             facets[index] = REFERRAL_FEATURE_FACET;
+            index++;
+        }
+        if (productTypes.hasPurchaseFeature()) {
+            facets[index] = PURCHASE_FEATURE_FACET;
             index++;
         }
 
