@@ -1,41 +1,44 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {Addresses, ContentIds, DeterminedAddress} from "./DeterminedAddress.sol";
+import {Addresses, DeterminedAddress, ProductIds} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
-    CONTENT_TYPE_DAPP,
-    CONTENT_TYPE_FEATURE_REFERRAL,
-    CONTENT_TYPE_PRESS,
-    ContentTypes
-} from "src/constants/ContentTypes.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+    PRODUCT_TYPE_DAPP,
+    PRODUCT_TYPE_FEATURE_REFERRAL,
+    PRODUCT_TYPE_PRESS,
+    ProductTypes
+} from "src/constants/ProductTypes.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
-import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
+import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
-/// todo: Should be refacto to update the faucet factory, set it on the contentInteractionManager, and then call the update function
-contract UpdateContentInteractions is Script, DeterminedAddress {
+/// todo: Should be refacto to update the faucet factory, set it on the productInteractionManager, and then call the update function
+contract UpdateProductInteractions is Script, DeterminedAddress {
     function run() public {
         // _updateManager();
-        //_updateContents();
-        //_updateInteractions();
-        _updateCampaigns();
+        // _updateProducts();
+        _updateInteractions();
+        // _updateCampaigns();
     }
 
     function _updateManager() internal {
         Addresses memory addresses = _getAddresses();
 
-        ContentInteractionManager currentManager = ContentInteractionManager(addresses.contentInteractionManager);
+        ProductInteractionManager currentManager = ProductInteractionManager(addresses.productInteractionManager);
 
         vm.startBroadcast();
 
         address newImplem = address(
-            new ContentInteractionManager{salt: 0}(
-                ContentRegistry(addresses.contentRegistry), ReferralRegistry(addresses.referralRegistry)
+            new ProductInteractionManager{salt: 0}(
+                ProductRegistry(addresses.productRegistry),
+                ReferralRegistry(addresses.referralRegistry),
+                ProductAdministratorRegistry(addresses.productAdministratorlRegistry)
             )
         );
         currentManager.upgradeToAndCall(newImplem, "");
@@ -44,21 +47,20 @@ contract UpdateContentInteractions is Script, DeterminedAddress {
     }
 
     function _updateInteractions() internal {
-        ContentIds memory contentIds = _getContentIds();
+        ProductIds memory productIds = _getProductIds();
         Addresses memory addresses = _getAddresses();
 
-        ContentInteractionManager contentInteractionManager =
-            ContentInteractionManager(addresses.contentInteractionManager);
+        ProductInteractionManager productInteractionManager =
+            ProductInteractionManager(addresses.productInteractionManager);
 
         vm.startBroadcast();
 
         // update the facet factory
-        contentInteractionManager.updateFacetsFactory(InteractionFacetsFactory(addresses.facetFactory));
+        productInteractionManager.updateFacetsFactory(InteractionFacetsFactory(addresses.facetFactory));
 
         // Update the interaction contracts
-        contentInteractionManager.updateInteractionContract(contentIds.cNewsPaper);
-        contentInteractionManager.updateInteractionContract(contentIds.cNewsExample);
-        contentInteractionManager.updateInteractionContract(contentIds.cEthccDemo);
+        productInteractionManager.updateInteractionContract(productIds.pNewsPaper);
+        productInteractionManager.updateInteractionContract(productIds.pEthccDemo);
 
         vm.stopBroadcast();
     }
@@ -66,34 +68,31 @@ contract UpdateContentInteractions is Script, DeterminedAddress {
     function _updateCampaigns() internal {
         Addresses memory addresses = _getAddresses();
 
-        ContentInteractionManager contentInteractionManager =
-            ContentInteractionManager(addresses.contentInteractionManager);
+        ProductInteractionManager productInteractionManager =
+            ProductInteractionManager(addresses.productInteractionManager);
 
         vm.startBroadcast();
 
         // update the campaign factory
-        contentInteractionManager.updateCampaignFactory(ICampaignFactory(addresses.campaignFactory));
+        productInteractionManager.updateCampaignFactory(ICampaignFactory(addresses.campaignFactory));
 
         vm.stopBroadcast();
     }
 
-    function _updateContents() internal {
+    function _updateProducts() internal {
         Addresses memory addresses = _getAddresses();
 
-        ContentRegistry contentRegistry = ContentRegistry(addresses.contentRegistry);
+        ProductRegistry productRegistry = ProductRegistry(addresses.productRegistry);
 
         vm.startBroadcast();
 
-        // Update each contents
-        contentRegistry.updateMetadata(
-            _getContentIds().cNewsPaper, CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL, "A Positivie World"
+        // Update each products
+        productRegistry.updateMetadata(
+            _getProductIds().pNewsPaper, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "A Positive World"
         );
-        contentRegistry.updateMetadata(
-            _getContentIds().cNewsExample, CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL, "Frak - Gating Example"
-        );
-        contentRegistry.updateMetadata(
-            _getContentIds().cEthccDemo,
-            CONTENT_TYPE_PRESS | CONTENT_TYPE_FEATURE_REFERRAL | CONTENT_TYPE_DAPP,
+        productRegistry.updateMetadata(
+            _getProductIds().pEthccDemo,
+            PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL | PRODUCT_TYPE_DAPP,
             "Frak - EthCC demo"
         );
 

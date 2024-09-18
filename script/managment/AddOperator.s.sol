@@ -1,52 +1,49 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {Addresses, ContentIds, DeterminedAddress} from "../DeterminedAddress.sol";
+import {Addresses, DeterminedAddress, ProductIds} from "../DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
-import {MINTER_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
-import {ContentRegistry} from "src/registry/ContentRegistry.sol";
+import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
+import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract AddOperator is Script, DeterminedAddress {
-    address private operator = 0xE494946dc655e72Aa22F51628FC23B4f8921e7A8;
+    address private operator = 0x16300eAe310603BA80c537A7e2d514b69B8A015E;
 
-    address private contentMinter = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
+    address private productMinter = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
 
     function run() public {
         Addresses memory addresses = _getAddresses();
 
-        //_addContentMinter(ContentRegistry(addresses.contentRegistry));
+        // _addProductMinter(ProductRegistry(addresses.productRegistry));
 
         // _addMinter(mUSDToken(addresses.mUSDToken));
-        //return;
 
-        ContentInteractionManager contentInteractionManager =
-            ContentInteractionManager(addresses.contentInteractionManager);
-
-        // Iterate over each content ids, and clean the attached campaigns
-        uint256[] memory contentIds = _getContentIdsArr();
-        for (uint256 i = 0; i < contentIds.length; i++) {
-            uint256 cId = contentIds[i];
+        // Iterate over each product ids, and clean the attached campaigns
+        uint256[] memory productIds = _getProductIdsArr();
+        for (uint256 i = 0; i < productIds.length; i++) {
+            uint256 cId = productIds[i];
 
             // Get the interaction contract and the active campaigns
-            _addOperator(contentInteractionManager, cId);
+            _addOperator(ProductAdministratorRegistry(addresses.productAdministratorlRegistry), cId);
         }
     }
 
-    function _addOperator(ContentInteractionManager _contentInteractionManager, uint256 _cId) internal {
+    function _addOperator(ProductAdministratorRegistry _adminRegistry, uint256 _cId) internal {
         vm.startBroadcast();
-        _contentInteractionManager.addOperator(_cId, operator);
+        _adminRegistry.grantRoles(_cId, operator, CAMPAIGN_MANAGER_ROLE | PRODUCT_MANAGER_ROLE);
         vm.stopBroadcast();
     }
 
-    function _addContentMinter(ContentRegistry _contentRegistry) internal {
+    function _addProductMinter(ProductRegistry _productRegistry) internal {
         vm.startBroadcast();
-        _contentRegistry.grantRoles(contentMinter, MINTER_ROLE);
+        _productRegistry.grantRoles(productMinter, MINTER_ROLE);
         vm.stopBroadcast();
     }
 

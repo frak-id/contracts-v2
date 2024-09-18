@@ -5,10 +5,10 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-import {CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_DAPP, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
+import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_PRESS, ProductTypes} from "src/constants/ProductTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {PressInteractionFacet} from "src/interaction/facets/PressInteractionFacet.sol";
 
 contract PressInteractionTest is InteractionTest {
@@ -21,15 +21,15 @@ contract PressInteractionTest is InteractionTest {
     function setUp() public {
         // TODO: Setup with a more granular approach
         vm.prank(owner);
-        contentId = contentRegistry.mint(CONTENT_TYPE_PRESS, "name", "press-domain", owner);
+        productId = productRegistry.mint(PRODUCT_TYPE_PRESS, "name", "press-domain", owner);
         vm.prank(owner);
-        contentRegistry.setApprovalForAll(operator, true);
+        productRegistry.setApprovalForAll(operator, true);
 
         // Deploy the press interaction contract
         _initInteractionTest();
 
         // Extract the press facet
-        rawFacet = PressInteractionFacet(address(contentInteraction.getFacet(DENOMINATOR_PRESS)));
+        rawFacet = PressInteractionFacet(address(productInteraction.getFacet(DENOMINATOR_PRESS)));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -41,7 +41,7 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(0), alice);
         // Call the open article method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function getOutOfFacetScopeInteraction() internal override returns (bytes memory, bytes memory) {
@@ -55,31 +55,31 @@ contract PressInteractionTest is InteractionTest {
     function test_construct() public {
         // Can be built
         PressInteractionFacet tFacet = new PressInteractionFacet();
-        assertEq(tFacet.contentTypeDenominator(), DENOMINATOR_PRESS);
+        assertEq(tFacet.productTypeDenominator(), DENOMINATOR_PRESS);
     }
 
     function test_description() public view {
         // TODO: More specific test?
-        assertEq(contentInteraction.getContentId(), contentId);
-        assertEq(contentInteraction.getFacet(DENOMINATOR_PRESS).contentTypeDenominator(), DENOMINATOR_PRESS);
+        assertEq(productInteraction.getProductId(), productId);
+        assertEq(productInteraction.getFacet(DENOMINATOR_PRESS).productTypeDenominator(), DENOMINATOR_PRESS);
 
-        assertNotEq(contentInteraction.getReferralTree(), bytes32(0));
-        bytes32 computedReferralTree = keccak256(abi.encodePacked(keccak256("ContentReferralTree"), contentId));
-        assertEq(contentInteraction.getReferralTree(), computedReferralTree);
+        assertNotEq(productInteraction.getReferralTree(), bytes32(0));
+        bytes32 computedReferralTree = keccak256(abi.encodePacked(keccak256("product-referral-tree"), productId));
+        assertEq(productInteraction.getReferralTree(), computedReferralTree);
     }
 
     function test_domainSeparator() public view {
         // TODO: More specific test?
-        assertNotEq(contentInteraction.getDomainSeparator(), bytes32(0));
+        assertNotEq(productInteraction.getDomainSeparator(), bytes32(0));
     }
 
     function test_UnknownInteraction() public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, InteractionType.wrap(bytes4(0)), _readArticleData(0), alice);
 
-        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -91,11 +91,11 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(0), alice);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        vm.expectEmit(true, false, false, true, address(productInteraction));
         emit PressInteractionFacet.ArticleRead(0, alice);
         // Call the open article method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function test_articleRead(bytes32 _articleId, address _user) public {
@@ -103,11 +103,11 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(_articleId), _user);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        vm.expectEmit(true, false, false, true, address(productInteraction));
         emit PressInteractionFacet.ArticleRead(_articleId, _user);
         // Call the open article method
         vm.prank(_user);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function test_articleRead_InvalidValidation() public {
@@ -117,8 +117,8 @@ contract PressInteractionTest is InteractionTest {
 
         // Call the open article method
         vm.prank(alice);
-        vm.expectRevert(ContentInteractionDiamond.WrongInteractionSigner.selector);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        vm.expectRevert(ProductInteractionDiamond.WrongInteractionSigner.selector);
+        productInteraction.handleInteraction(packedInteraction, signature);
 
         (, signature) = _prepareInteraction(
             DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(bytes32(uint256(13))), alice
@@ -126,24 +126,24 @@ contract PressInteractionTest is InteractionTest {
 
         // Call the open article method
         vm.prank(alice);
-        vm.expectRevert(ContentInteractionDiamond.WrongInteractionSigner.selector);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        vm.expectRevert(ProductInteractionDiamond.WrongInteractionSigner.selector);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /* -------------------------------------------------------------------------- */
     /*                              Test open article                             */
     /* -------------------------------------------------------------------------- */
 
-    function test_articleOpened_simple() public {
+    function w() public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(0), alice);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        vm.expectEmit(true, false, false, true, address(productInteraction));
         emit PressInteractionFacet.ArticleOpened(0, alice);
         // Call the open article method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function test_articleOpened_simple(bytes32 _articleId, address _user) public {
@@ -151,11 +151,11 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(_articleId), _user);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        vm.expectEmit(true, false, false, true, address(productInteraction));
         emit PressInteractionFacet.ArticleOpened(_articleId, _user);
         // Call the open article method
         vm.prank(_user);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /* -------------------------------------------------------------------------- */

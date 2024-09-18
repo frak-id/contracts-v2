@@ -5,16 +5,16 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
+import {InteractionType, InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
-    CONTENT_TYPE_FEATURE_REFERRAL,
-    ContentTypes,
     DENOMINATOR_DAPP,
     DENOMINATOR_FEATURE_REFERRAL,
-    DENOMINATOR_PRESS
-} from "src/constants/ContentTypes.sol";
-import {InteractionType, InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
+    DENOMINATOR_PRESS,
+    PRODUCT_TYPE_FEATURE_REFERRAL,
+    ProductTypes
+} from "src/constants/ProductTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ReferralFeatureFacet} from "src/interaction/facets/ReferralFeatureFacet.sol";
 
 contract ReferralInteractionTest is InteractionTest {
@@ -27,15 +27,15 @@ contract ReferralInteractionTest is InteractionTest {
     function setUp() public {
         // TODO: Setup with a more granular approach
         vm.prank(owner);
-        contentId = contentRegistry.mint(CONTENT_TYPE_FEATURE_REFERRAL, "name", "referral-domain", owner);
+        productId = productRegistry.mint(PRODUCT_TYPE_FEATURE_REFERRAL, "name", "referral-domain", owner);
         vm.prank(owner);
-        contentRegistry.setApprovalForAll(operator, true);
+        productRegistry.setApprovalForAll(operator, true);
 
         // Deploy the press interaction contract
         _initInteractionTest();
 
         // Extract the press facet
-        rawFacet = ReferralFeatureFacet(address(contentInteraction.getFacet(DENOMINATOR_FEATURE_REFERRAL)));
+        rawFacet = ReferralFeatureFacet(address(productInteraction.getFacet(DENOMINATOR_FEATURE_REFERRAL)));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -48,7 +48,7 @@ contract ReferralInteractionTest is InteractionTest {
         );
         // Call the open article method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function getOutOfFacetScopeInteraction() internal override returns (bytes memory, bytes memory) {
@@ -67,11 +67,11 @@ contract ReferralInteractionTest is InteractionTest {
         );
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        vm.expectEmit(true, false, false, true, address(productInteraction));
         emit ReferralFeatureFacet.ReferralLinkCreation(alice);
         // Call the open referral method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -83,27 +83,27 @@ contract ReferralInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_FEATURE_REFERRAL, ReferralInteractions.REFERRED, _referredData(bob), alice);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        vm.expectEmit(true, false, false, true, address(productInteraction));
         emit ReferralFeatureFacet.UserReferred(alice, bob);
         // Call the open referral method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
 
         assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
     }
 
     function test_referred_simple(address _user, address _referrer) public {
-        vm.assume(_user != address(0) && _referrer != address(0));
+        vm.assume(_user != address(0) && _referrer != address(0) && _user != _referrer);
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
             DENOMINATOR_FEATURE_REFERRAL, ReferralInteractions.REFERRED, _referredData(_referrer), _user
         );
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(contentInteraction));
+        vm.expectEmit(true, false, false, true, address(productInteraction));
         emit ReferralFeatureFacet.UserReferred(_user, _referrer);
         // Call the open referral method
         vm.prank(_user);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
 
         assertEq(referralRegistry.getReferrer(referralTree, _user), _referrer);
     }
@@ -115,7 +115,7 @@ contract ReferralInteractionTest is InteractionTest {
 
         // Call the referral method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
 
         assertEq(referralRegistry.getReferrer(referralTree, alice), address(0));
     }
@@ -126,14 +126,14 @@ contract ReferralInteractionTest is InteractionTest {
 
         // Call the referral method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
         assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
 
         (packedInteraction, signature) = _prepareInteraction(
             DENOMINATOR_FEATURE_REFERRAL, ReferralInteractions.REFERRED, _referredData(charlie), alice
         );
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
 
         // Ensure it hasn't changed
         assertEq(referralRegistry.getReferrer(referralTree, alice), bob);

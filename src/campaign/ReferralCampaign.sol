@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {CONTENT_TYPE_PRESS, ContentTypes} from "../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../constants/InteractionType.sol";
-import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "../interaction/ContentInteractionManager.sol";
+import {PRODUCT_TYPE_PRESS, ProductTypes} from "../constants/ProductTypes.sol";
+import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
+import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {CAMPAIGN_EVENT_EMITTER_ROLE, CAMPAIGN_MANAGER_ROLE, InteractionCampaign} from "./InteractionCampaign.sol";
+import {InteractionCampaign} from "./InteractionCampaign.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
@@ -32,7 +34,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     error InvalidConfig();
-    error InactiveCampaign();
     error DistributionCapReached();
 
     /* -------------------------------------------------------------------------- */
@@ -63,7 +64,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev The distribution period
     uint256 private immutable DISTRIBUTION_CAP_PERIOD;
 
-    /// @dev The referral tree for the current content id
+    /// @dev The referral tree for the current product id
     bytes32 private immutable REFERRAL_TREE;
 
     /// @dev The accounting wallet of frak that will receive the rewards
@@ -80,6 +81,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     bytes32 private constant _REFERRAL_CAMPAIGN_STORAGE_SLOT =
         0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f;
 
+    /// @custom:storage-location erc7201:frak.campaign.referral
     struct ReferralCampaignStorage {
         /// @dev The start timestamp for the cap computation
         uint48 capStartTimestamp;
@@ -117,10 +119,10 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     constructor(
         CampaignConfig memory _config,
         ReferralRegistry _referralRegistry,
-        address _owner,
+        ProductAdministratorRegistry _productAdministratorRegistry,
         address _frakCampaignWallet,
-        ContentInteractionDiamond _interaction
-    ) InteractionCampaign(_owner, _interaction, _config.name) PushPullModule(_config.token) {
+        ProductInteractionDiamond _interaction
+    ) InteractionCampaign(_productAdministratorRegistry, _interaction, _config.name) PushPullModule(_config.token) {
         if (_config.token == address(0)) {
             revert InvalidConfig();
         }
@@ -152,9 +154,10 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Get the campaign metadata
-    function getMetadata() public pure override returns (string memory _type, string memory version) {
+    function getMetadata() public view override returns (string memory _type, string memory version, bytes32 name) {
         _type = "frak.campaign.referral";
         version = "0.0.1";
+        name = _interactionCampaignStorage().name;
     }
 
     /// @dev Get the campaign config
@@ -194,10 +197,10 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
         return TOKEN.balanceOf(address(this)) > BASE_REWARD * 2;
     }
 
-    /// @dev Check if the given campaign support the `_contentType`
-    function supportContentType(ContentTypes _contentType) public pure override returns (bool) {
-        // Only supporting press content
-        return _contentType.hasReferralFeature();
+    /// @dev Check if the given campaign support the `_productType`
+    function supportProductType(ProductTypes _productType) public pure override returns (bool) {
+        // Only supporting press product
+        return _productType.hasReferralFeature();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -205,12 +208,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Handle the given interaction
-    function handleInteraction(bytes calldata _data) public override onlyRoles(CAMPAIGN_EVENT_EMITTER_ROLE) {
-        // If the campaign isn't active, directly exit
-        if (!isActive()) {
-            revert InactiveCampaign();
-        }
-
+    function innerHandleInteraction(bytes calldata _data) internal override {
         // Extract the data
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
 
@@ -223,7 +221,8 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev External method callable by the manager, to distribute token to all the user referrers
     function distributeTokenToUserReferrers(address _user, uint256 _initialAmount)
         external
-        onlyRoles(CAMPAIGN_MANAGER_ROLE)
+        onlyAllowedManager
+        onlyActiveCampaign
     {
         // If the campaign isn't active, directly exit
         if (!isActive()) {
@@ -322,16 +321,12 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Withdraw the remaining token from the campaign
-    function withdraw() external nonReentrant onlyRoles(CAMPAIGN_MANAGER_ROLE) {
+    function withdraw() external nonReentrant onlyAllowedManager {
         TOKEN.safeTransfer(msg.sender, TOKEN.balanceOf(address(this)));
     }
 
     /// @dev Update the campaign activation date
-    function setActivationDate(uint48 _startDate, uint48 _endDate)
-        external
-        nonReentrant
-        onlyRoles(CAMPAIGN_MANAGER_ROLE)
-    {
+    function setActivationDate(uint48 _startDate, uint48 _endDate) external nonReentrant onlyAllowedManager {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
         campaignStorage.startDate = _startDate;
         campaignStorage.endDate = _endDate;

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {DENOMINATOR_FEATURE_REFERRAL} from "../../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../../constants/InteractionType.sol";
+import {DENOMINATOR_FEATURE_REFERRAL} from "../../constants/ProductTypes.sol";
 import {ReferralRegistry} from "../../registry/ReferralRegistry.sol";
-import {ContentInteractionStorageLib} from "../lib/ContentInteractionStorageLib.sol";
+import {ProductInteractionStorageLib} from "../lib/ProductInteractionStorageLib.sol";
 import {IInteractionFacet} from "./IInteractionFacet.sol";
 
 /// @title ReferralFeatureFacet
 /// @author @KONFeature
 /// @notice Contract managing the referral user interaction
 /// @custom:security-contact contact@frak.id
-contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet {
+contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet {
     using InteractionTypeLib for bytes;
 
     /* -------------------------------------------------------------------------- */
@@ -25,10 +25,10 @@ contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet
     event UserReferred(address indexed user, address indexed referrer);
 
     /// @dev The referral registry
-    ReferralRegistry internal immutable _REFERRAL_REGISTRY;
+    ReferralRegistry internal immutable REFERRAL_REGISTRY;
 
     constructor(ReferralRegistry _referralRegistry) {
-        _REFERRAL_REGISTRY = _referralRegistry;
+        REFERRAL_REGISTRY = _referralRegistry;
     }
 
     /// @dev High level interaction router
@@ -45,8 +45,8 @@ contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet
         revert UnknownInteraction();
     }
 
-    /// @dev Get the handled content type of this facet
-    function contentTypeDenominator() public pure override returns (uint8) {
+    /// @dev Get the handled product type of this facet
+    function productTypeDenominator() public pure override returns (uint8) {
         return DENOMINATOR_FEATURE_REFERRAL;
     }
 
@@ -107,11 +107,11 @@ contract ReferralFeatureFacet is ContentInteractionStorageLib, IInteractionFacet
 
     /// @dev Save on the registry level that `_user` has been referred by `_referrer`
     function _saveReferrer(bytes32 tree, address _user, address _referrer) internal {
-        _REFERRAL_REGISTRY.saveReferrer(tree, _user, _referrer);
+        REFERRAL_REGISTRY.saveReferrer(tree, _user, _referrer);
     }
 
     /// @dev Check on the registry if the `_user` has already a referrer
     function _isUserAlreadyReferred(bytes32 tree, address _user) internal view returns (bool) {
-        return _REFERRAL_REGISTRY.getReferrer(tree, _user) != address(0);
+        return REFERRAL_REGISTRY.getReferrer(tree, _user) != address(0);
     }
 }

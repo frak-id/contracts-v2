@@ -6,10 +6,10 @@ import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibZip} from "solady/utils/LibZip.sol";
-import {CONTENT_TYPE_DAPP, ContentTypes, DENOMINATOR_DAPP, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
 import {DappInteractions, InteractionType, InteractionTypeLib} from "src/constants/InteractionType.sol";
+import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_DAPP, ProductTypes} from "src/constants/ProductTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {DappInteractionFacet} from "src/interaction/facets/DappInteractionFacet.sol";
 import {PressInteractionFacet} from "src/interaction/facets/PressInteractionFacet.sol";
 import {MPT} from "src/utils/MPT.sol";
@@ -36,15 +36,15 @@ contract DappInteractionTest is InteractionTest {
     function setUp() public {
         // TODO: Setup with a more granular approach
         vm.prank(owner);
-        contentId = contentRegistry.mint(CONTENT_TYPE_DAPP, "name", "dapp-storage-domain", owner);
+        productId = productRegistry.mint(PRODUCT_TYPE_DAPP, "name", "dapp-storage-domain", owner);
         vm.prank(owner);
-        contentRegistry.setApprovalForAll(operator, true);
+        productRegistry.setApprovalForAll(operator, true);
 
         // Deploy the press interaction contract
         _initInteractionTest();
 
         // Extract the press facet
-        rawFacet = DappInteractionFacet(address(contentInteraction.getFacet(DENOMINATOR_DAPP)));
+        rawFacet = DappInteractionFacet(address(productInteraction.getFacet(DENOMINATOR_DAPP)));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -58,7 +58,7 @@ contract DappInteractionTest is InteractionTest {
         );
         // Call the method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function getOutOfFacetScopeInteraction() internal override returns (bytes memory, bytes memory) {
@@ -81,7 +81,7 @@ contract DappInteractionTest is InteractionTest {
         );
         // Call the method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function test_storageCallUpdate_CallVerificationFailed() public withStylusContext {
@@ -90,9 +90,9 @@ contract DappInteractionTest is InteractionTest {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_DAPP, DappInteractions.CALLABLE_VERIFIABLE_STORAGE_UPDATE, data, alice);
         // Call the method
-        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function test_storageCallUpdate_CallFailed() public withStylusContext {
@@ -101,9 +101,9 @@ contract DappInteractionTest is InteractionTest {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_DAPP, DappInteractions.CALLABLE_VERIFIABLE_STORAGE_UPDATE, data, alice);
         // Call the method
-        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -118,7 +118,7 @@ contract DappInteractionTest is InteractionTest {
         );
         // Call the method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /// @dev Simple test to check the success of a facet checkers
@@ -127,27 +127,27 @@ contract DappInteractionTest is InteractionTest {
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
             DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
         );
-        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
         // Call the method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /// @dev Simple test to check the success of a facet checkers
     function test_storageUpdate_deregister_UnknownContract() public withStylusContext {
         // Derigister the stylus contract
         bytes memory deleteData =
-            abi.encodeWithSelector(DappInteractionFacet.deleteContentContract.selector, stylusCcuContractId);
-        vm.prank(owner);
-        contentInteraction.delegateToFacet(DENOMINATOR_DAPP, deleteData);
+            abi.encodeWithSelector(DappInteractionFacet.deleteProductContract.selector, stylusCcuContractId);
+        vm.prank(address(productInteractionManager));
+        productInteraction.delegateToFacet(DENOMINATOR_DAPP, deleteData);
         // Pack the interaction
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
             DENOMINATOR_DAPP, DappInteractions.PROOF_VERIFIABLE_STORAGE_UPDATE, _stylusContractUpdateData(), alice
         );
-        vm.expectRevert(ContentInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
         // Call the method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     /// @dev Directly test the MPT lib
@@ -177,18 +177,18 @@ contract DappInteractionTest is InteractionTest {
     modifier withStylusContext() {
         // Encode the call to add the stylus contract as id 0
         bytes memory setData =
-            abi.encodeWithSelector(DappInteractionFacet.setContentContract.selector, stylusContract, bytes4(0xdeadbeef));
-        // Perform the call to register this content
-        vm.prank(owner);
-        contentInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
+            abi.encodeWithSelector(DappInteractionFacet.setProductContract.selector, stylusContract, bytes4(0xdeadbeef));
+        // Perform the call to register this product
+        vm.prank(address(productInteractionManager));
+        productInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
         // Also add the mock storage stuff
         setData = abi.encodeWithSelector(
-            DappInteractionFacet.setContentContract.selector,
+            DappInteractionFacet.setProductContract.selector,
             address(mockStorage),
             MockStorageContract.getMockedForUser.selector
         );
-        vm.prank(owner);
-        contentInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
+        vm.prank(address(productInteractionManager));
+        productInteraction.delegateToFacet(DENOMINATOR_DAPP, setData);
         _;
     }
 

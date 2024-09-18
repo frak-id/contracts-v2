@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {DENOMINATOR_DAPP} from "../../constants/ContentTypes.sol";
 import {DappInteractions, InteractionType, InteractionTypeLib} from "../../constants/InteractionType.sol";
+import {DENOMINATOR_DAPP} from "../../constants/ProductTypes.sol";
 import {UPGRADE_ROLE} from "../../constants/Roles.sol";
 import {MPT} from "../../utils/MPT.sol";
-import {ContentInteractionStorageLib} from "../lib/ContentInteractionStorageLib.sol";
+import {ProductInteractionStorageLib} from "../lib/ProductInteractionStorageLib.sol";
 import {IInteractionFacet} from "./IInteractionFacet.sol";
 import "forge-std/Console.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
@@ -15,7 +15,7 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 /// @notice Contract managing a user interacting with a dapp
 /// @notice This is usefull wshen Dapps are built on other chains, and the interaction can be verified by storage modification (using a merklee patricia tree verification)
 /// @custom:security-contact contact@frak.id
-contract DappInteractionFacet is ContentInteractionStorageLib, IInteractionFacet, OwnableRoles {
+contract DappInteractionFacet is ProductInteractionStorageLib, IInteractionFacet, OwnableRoles {
     using InteractionTypeLib for bytes;
 
     /* -------------------------------------------------------------------------- */
@@ -46,10 +46,11 @@ contract DappInteractionFacet is ContentInteractionStorageLib, IInteractionFacet
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev bytes32(uint256(keccak256('frak.content.interaction.dapp')) - 1)
+    /// @dev bytes32(uint256(keccak256('frak.product.interaction.dapp')) - 1)
     bytes32 private constant _DAPP_INTERACTION_STORAGE_SLOT =
-        0x1831a75cdd157a5149bc08d6d1704213f0fbce01629b8cae203f2eb6be59f94a;
+        0x43aba31b61ee7b53bc7d886cde0a33065b41ab8161e43a6ba307ffd2cd22dff4;
 
+    /// @custom:storage-location erc7201:frak.product.interaction.dapp
     struct DappContractDefinition {
         address contractAddr;
         bytes4 storageFn;
@@ -82,8 +83,8 @@ contract DappInteractionFacet is ContentInteractionStorageLib, IInteractionFacet
         revert UnknownInteraction();
     }
 
-    /// @dev Get the handled content type of this facet
-    function contentTypeDenominator() public pure override returns (uint8) {
+    /// @dev Get the handled product type of this facet
+    function productTypeDenominator() public pure override returns (uint8) {
         return DENOMINATOR_DAPP;
     }
 
@@ -91,8 +92,8 @@ contract DappInteractionFacet is ContentInteractionStorageLib, IInteractionFacet
     /*                                Admin methods                               */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Set a content contract address, will be used for update check and comparaison
-    function setContentContract(address _contractAddress, bytes4 _storageCheckSelector)
+    /// @dev Set a product contract address, will be used for update check and comparaison
+    function setProductContract(address _contractAddress, bytes4 _storageCheckSelector)
         external
         onlyRoles(UPGRADE_ROLE)
     {
@@ -101,8 +102,8 @@ contract DappInteractionFacet is ContentInteractionStorageLib, IInteractionFacet
         emit ContractRegistered(contractId, _contractAddress, _storageCheckSelector);
     }
 
-    /// @dev Set a content contract address, will be used for update check and comparaison
-    function deleteContentContract(bytes4 id) external onlyRoles(UPGRADE_ROLE) {
+    /// @dev Set a product contract address, will be used for update check and comparaison
+    function deleteProductContract(bytes4 id) external onlyRoles(UPGRADE_ROLE) {
         delete _facetStorage().contracts[id];
         emit ContractUnRegistered(id);
     }

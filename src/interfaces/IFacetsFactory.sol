@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentTypes} from "../constants/ContentTypes.sol";
-
-import {ContentInteractionDiamond} from "../interaction/ContentInteractionDiamond.sol";
+import {ProductTypes} from "../constants/ProductTypes.sol";
+import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
 import {IInteractionFacet} from "../interaction/facets/IInteractionFacet.sol";
 
 /// @author @KONFeature
@@ -11,12 +10,12 @@ import {IInteractionFacet} from "../interaction/facets/IInteractionFacet.sol";
 /// @notice Interface for facets factory
 /// @custom:security-contact contact@frak.id
 interface IFacetsFactory {
-    /// @dev Deploy a new content interaction diamond
+    /// @dev Deploy a new product interaction diamond
     /// @dev Should only be called with delegate call, otherwise the manager would be the caller
-    function createContentInteractionDiamond(uint256 _contentId, address _owner)
+    function createProductInteractionDiamond(uint256 _productId, bytes32 _salt)
         external
-        returns (ContentInteractionDiamond diamond);
+        returns (ProductInteractionDiamond diamond);
 
-    /// @dev Get the facet for the given `contentTypes`
-    function getFacets(ContentTypes contentTypes) external view returns (IInteractionFacet[] memory facets);
+    /// @dev Get the facet for the given `productTypes`
+    function getFacets(ProductTypes productTypes) external view returns (IInteractionFacet[] memory facets);
 }

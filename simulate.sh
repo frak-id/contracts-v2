@@ -11,4 +11,4 @@ echo "Testing contracts deployment"
 forge script script/Deploy.s.sol --sender 0x7caF754C934710D7C73bc453654552BEcA38223F 
 
 echo "Testing kernel contracts deployment"
-forge script script/kernel/DeployModuleV2.s.sol --sender 0x7caF754C934710D7C73bc453654552BEcA38223F 
+forge script script/kernel/DeployModule.s.sol --sender 0x7caF754C934710D7C73bc453654552BEcA38223F 

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {DENOMINATOR_PRESS} from "../../constants/ContentTypes.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "../../constants/InteractionType.sol";
-import {ContentInteractionStorageLib} from "../lib/ContentInteractionStorageLib.sol";
+import {DENOMINATOR_PRESS} from "../../constants/ProductTypes.sol";
+import {ProductInteractionStorageLib} from "../lib/ProductInteractionStorageLib.sol";
 import {IInteractionFacet} from "./IInteractionFacet.sol";
 
 /// @title PressInteractionFacet
 /// @author @KONFeature
-/// @notice Contract managing a press content platform user interaction
+/// @notice Contract managing a press product platform user interaction
 /// @custom:security-contact contact@frak.id
-contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFacet {
+contract PressInteractionFacet is ProductInteractionStorageLib, IInteractionFacet {
     using InteractionTypeLib for bytes;
 
     /* -------------------------------------------------------------------------- */
@@ -40,8 +40,8 @@ contract PressInteractionFacet is ContentInteractionStorageLib, IInteractionFace
         revert UnknownInteraction();
     }
 
-    /// @dev Get the handled content type of this facet
-    function contentTypeDenominator() public pure override returns (uint8) {
+    /// @dev Get the handled product type of this facet
+    function productTypeDenominator() public pure override returns (uint8) {
         return DENOMINATOR_PRESS;
     }
 

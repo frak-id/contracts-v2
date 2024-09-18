@@ -3,11 +3,14 @@ pragma solidity 0.8.23;
 
 struct Addresses {
     // Core
-    address contentRegistry;
+    address productRegistry;
     address referralRegistry;
+    address productAdministratorlRegistry;
+    // Interactions
     address facetFactory;
+    address productInteractionManager;
+    // Campaigns
     address campaignFactory;
-    address contentInteractionManager;
     // Token
     address mUSDToken;
 }
@@ -23,10 +26,9 @@ struct KernelAddresses {
     address interactionDelegatorAction;
 }
 
-struct ContentIds {
-    uint256 cNewsPaper;
-    uint256 cNewsExample;
-    uint256 cEthccDemo;
+struct ProductIds {
+    uint256 pNewsPaper;
+    uint256 pEthccDemo;
 }
 
 struct DeploymentBlocks {
@@ -37,16 +39,21 @@ struct DeploymentBlocks {
 contract DeterminedAddress {
     // Config
     address internal airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
-    address internal contentOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
+    address internal productOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
+
+    // news paper product
+    uint256 internal pNewsPaper = 20376791661718660580662410765070640284736320707848823176694931891585259913409;
+    uint256 internal pEthccWallet = 33953649417576654953995537313820306697747390492794311279756157547821320957282;
 
     function _getAddresses() internal pure returns (Addresses memory) {
         return Addresses({
-            contentRegistry: 0x758F01B484212b38EAe264F75c0DD7842d510D9c,
-            referralRegistry: 0x66820744dBD98b24C05A1fd21809684647c6cC6E,
-            contentInteractionManager: 0xB3fc8bD4e71a15a674ed6BAb63e884720FC4A3B4,
-            facetFactory: 0xce9e06e2139Fc13079C778a172769c3333f33fC1,
-            campaignFactory: 0xB178c17AC5ad0455b1a10b05d25Fe4847567Ef1D,
-            mUSDToken: 0x56039fa1a804F614eBD714139F29a3ff4DB57ad6
+            productRegistry: 0x33B856a553332998fbA771ce6D568eb818d537D3,
+            referralRegistry: 0xFFcde7Fbd0d868bf06B520020617fb74D927C639,
+            productAdministratorlRegistry: 0xE4B8348CAC195C37ee55DfD2faD232a3353E3d26,
+            productInteractionManager: 0x6c424867c89fE6e13b05468C4B5244E78b74bDff,
+            facetFactory: 0xd848068035cf62757cC458D349A9Fe549F5f6B60,
+            campaignFactory: 0xC94ae540F147B83C4D55A6a5870F468f8ee79367,
+            mUSDToken: 0x43838DCb58a61325eC5F31FD70aB8cd3540733d1
         });
     }
 
@@ -55,26 +62,20 @@ contract DeterminedAddress {
             p256Wrapper: 0x97A24c95E317c44c0694200dd0415dD6F556663D,
             webAuthNValidator: 0xF05f18D9312f10d1d417c45040B8497899f66A5E,
             webAuthNRecoveryAction: 0x8b29229515D3e5b829D59617A791b5B3a2c32ff1,
-            interactionDelegator: 0x4b8350E6291063bF14ca1E4379147a3bd23714CB,
-            interactionDelegatorValidator: 0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C,
-            interactionDelegatorAction: 0xF9aC3355363a1F3b501Df411cA4d08e8F854bF76
+            interactionDelegator: 0xF6728220A504c4e80Ffe6B7c9bc44B21f2D6FBaf,
+            interactionDelegatorValidator: 0x0A15995CA6C7a7a67a41e0EBff105326bbD55716,
+            interactionDelegatorAction: 0xaA554125622489B64734901dA15A2a5637398e5E
         });
     }
 
-    function _getContentIds() internal pure returns (ContentIds memory) {
-        return ContentIds({
-            cNewsPaper: 20376791661718660580662410765070640284736320707848823176694931891585259913409,
-            cNewsExample: 8073960722007594212918575991467917289452723924551607525414094759273404023523,
-            cEthccDemo: 33953649417576654953995537313820306697747390492794311279756157547821320957282
-        });
+    function _getProductIds() internal view returns (ProductIds memory) {
+        return ProductIds({pNewsPaper: pNewsPaper, pEthccDemo: pEthccWallet});
     }
 
-    function _getContentIdsArr() internal pure returns (uint256[] memory arr) {
-        ContentIds memory contentIds = _getContentIds();
-        arr = new uint256[](3);
-        arr[0] = contentIds.cNewsPaper;
-        arr[1] = contentIds.cNewsExample;
-        arr[2] = contentIds.cEthccDemo;
+    function _getProductIdsArr() internal view returns (uint256[] memory arr) {
+        arr = new uint256[](2);
+        arr[0] = pNewsPaper;
+        arr[1] = pEthccWallet;
     }
 
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {

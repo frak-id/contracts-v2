@@ -1,150 +1,188 @@
 # Frak - Contracts v2
 
-This repo hosts the smart contracts related to the Nexus dApp, inside the [Frak](https://frak.id/) ecosystem.
+This repository hosts the smart contracts related to the Nexus dApp, within the [Frak](https://frak.id/) ecosystem. 
+
+This project contains a suite of smart contracts that manage product registrations, user interactions, referral systems, and reward campaigns.
 
 ## Addresses
 
 ### Frak ecosystem
 
-Address of the Frak contracts, deployed on Arbitrum and arbitrum sepolia.
+Addresses of the Frak contracts, deployed on Arbitrum and Arbitrum Sepolia.
 
-
-| Name                      | Address                                       |
-|---------------------------|-----------------------------------------------|
-| Content Registry          | `0x758F01B484212b38EAe264F75c0DD7842d510D9c`  |
-| Referral Registry         | `0x66820744dBD98b24C05A1fd21809684647c6cC6E`  |
-| Content Interaction Mgr   | `0xB3fc8bD4e71a15a674ed6BAb63e884720FC4A3B4`  |
-| Content Facet Factory     | `0xce9e06e2139Fc13079C778a172769c3333f33fC1`  |
-| Content Campaign Factory  | `0xB178c17AC5ad0455b1a10b05d25Fe4847567Ef1D`  |
+| Name                           | Address                                       |
+|--------------------------------|-----------------------------------------------|
+| Product Registry               | `0xdA7fBD02eb048bDf6f1607122eEe071e44f0b9F2`  |
+| Referral Registry              | `0xcf5855d9825578199969919F1696b80388111403`  |
+| Product Administrator Registry | `0x62254d732C078BF0484EA7dBd61f7F620184F95e`  |
+| Product Interaction Manager    | `0xC9d1BAB1B9A07c11AB0C264B13AFfD500DD4c2ee`  |
+| Facet Factory                  | `0xAC09E547d3f21F1E0aCbe76dde44BB1BcFFb9D7D`  |
+| Campaign Factory               | `0xB375B53C13eE2664DD9bD16f5624fE5097870543`  |
+| mUSD Token                     | `0x56039fa1a804F614eBD714139F29a3ff4DB57ad6`  |
 
 ### Kernel plugins
 
-Plugin for the Kernel smart accounts plugins
-They can be deployed on any chain via the `deploy/` folder, using [orchestra](https://github.com/zerodevapp/orchestra)
+Plugins for the Kernel smart accounts. They can be deployed on any chain via the `deploy/` folder, using [orchestra](https://github.com/zerodevapp/orchestra).
 
 | Name                                  | Address                                       |
-|--                                     |--                                             |
+|---------------------------------------|-----------------------------------------------|
 | Generic                                                                               |
 | P256 Signature checker Wrapper        | `0x97A24c95E317c44c0694200dd0415dD6F556663D`  |
-| Kernel V3                                                                             |
-| SingleWebAuthN - Kernel v3            | `0x2563cEd40Af6f51A3dF0F1b58EF4Cf1B994fDe12`  |
-| MultiWebAuthN - Kernel v3             | `0x93228CA325349FC7d8C397bECc0515e370aa4555`  |
-| Nexus Factory                         | `0x304bf281a28e451FbCd53FeDb0672b6021E6C40D`  |
-| Recovery Policy                       | `0xD0b868A455d39be41f6f4bEb1efe3912966e8233`  |
-| Recovery Contract                     | `0x518B5EFB2A2A3c1D408b8aE60A2Ba8D6d264D7BA`  |
-| Kernel V2                                                                             |
 | MultiWebAuthN - Kernel v2             | `0xF05f18D9312f10d1d417c45040B8497899f66A5E`  |
 | MultiWebAuthN Recovery - Kernel v2    | `0x8b29229515D3e5b829D59617A791b5B3a2c32ff1`  |
 | Interaction delegator                 | `0x4b8350E6291063bF14ca1E4379147a3bd23714CB`  |
 | Interaction delegator validator       | `0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C`  |
-| Interaction delegator action          | `0xF9aC3355363a1F3b501Df411cA4d08e8F854bF76`  |
+| Interaction delegator action          | `0xaAF9c01fe6193d6226003B233A68f6EDD807bAb0`  |
 
 
 ## Folder Structure
 
 ```
-├─src
+src
 ├── campaign
+│   ├── CampaignFactory.sol
 │   ├── InteractionCampaign.sol
 │   └── ReferralCampaign.sol
-├── interaction
-│   ├── lib/
-│   ├── facets
-│   │ ├── IInteractionFacet.sol
-│   │ ├── DappInteractionFacet.sol
-│   │ └── PressInteractionFacet.sol
-│   ├── InteractionFacetsFactory.sol
-│   ├── ContentInteractionDiamond.sol
-│   └── ContentInteractionManager.sol
-├── registry
-│   ├── ContentRegistry.sol
-│   └── ReferralRegistry.sol
 ├── constants
-├── tokens
+├── interaction
+│   ├── InteractionFacetsFactory.sol
+│   ├── ProductInteractionDiamond.sol
+│   ├── ProductInteractionManager.sol
+│   ├── facets
+│   │   ├── DappInteractionFacet.sol
+│   │   ├── IInteractionFacet.sol
+│   │   ├── PressInteractionFacet.sol
+│   │   └── ReferralFeatureFacet.sol
+│   └── lib
+├── interfaces
 ├── kernel
+│   ├── interaction
+│   ├── types
+│   ├── utils
+│   └── webauthn
+├── modules
+├── registry
+│   ├── ProductAdministratorRegistry.sol
+│   ├── ProductRegistry.sol
+│   └── ReferralRegistry.sol
+├── stylus
+└── tokens
 ```
-
 ## Registries
 
-### `registry/`
+The `registry/` directory houses contracts that function as essential data registries within the Frak ecosystem. These registries manage crucial information about products, referrals, and administrative roles.
 
-This directory houses contracts that function as registries for essential data within the Frak ecosystem. 
+### ProductRegistry.sol
 
-#### `ContentRegistry.sol`
+The ProductRegistry manages metadata associated with products within the Frak ecosystem.
 
-- Manages metadata associated with content within the Frak ecosystem.
-- Each content piece is represented by a unique ERC-721 token and is identified by a unique domain.
-- Stores content metadata: name, domain, and supported content types.
-- Handles content registration, metadata updates, ownership transfers, and content discovery.
+Key features:
+- Represents each product as a unique ERC-721 token.
+- Identifies products by a unique domain.
+- Stores product metadata: name, domain, and supported product types.
+- Handles product registration, metadata updates, ownership transfers, and product discovery.
 
-#### `ReferralRegistry.sol`
+### ReferralRegistry.sol
 
-- Manages referral trees for implementing referral programs and reward distributions.
-- Allows creation of referral trees, each identified by a unique `bytes32` selector.
+The ReferralRegistry manages referral trees for implementing referral programs and reward distributions.
+
+Key features:
+- Supports creation of multiple referral trees, each identified by a unique `bytes32` selector.
 - Tracks referrals within each tree, establishing relationships between referrers and referees.
 - Controls write access to referral trees to ensure only authorized contracts or users can add new referrals.
 
+### ProductAdministratorRegistry.sol
+
+The ProductAdministratorRegistry manages roles and permissions for products within the Frak ecosystem.
+
+Key features:
+- Greatly inspired by solady's OwnableRoles contract, but uses productId as a key.
+- Interacts with ProductRegistry to verify product ownership.
+- Only the owner of a product can update permissions for users.
+- Provides role-based access control for product-related operations.
+
+Integration:
+These registries work together to provide a comprehensive management system for the Frak ecosystem:
+- The ProductRegistry serves as the source of truth for product information.
+- The ReferralRegistry enables the implementation of complex referral programs.
+- The ProductAdministratorRegistry ensures that only authorized users can perform specific actions on products.
+
+Other components of the system, such as the interaction diamonds and campaign contracts, frequently interact with these registries to retrieve information, verify permissions, and update states as necessary.
+
 ## Interactions
 
-### `interaction/`
+The `interaction/` directory manages user interactions with products using a custom adaptation of the diamond pattern.
 
-This directory manages user interactions with content and leverages a diamond pattern for extensibility.
+### ProductInteractionDiamond.sol
 
-#### `ContentInteractionManager.sol`
+- Implements a custom version of the diamond pattern, acting as the main contract for product interactions.
+- Uses delegatecall to interact with specific facets based on product type or feature.
+- Maintains root storage for shared data across facets.
 
-- Central orchestrator for deploying, managing, and upgrading interaction logic within the Frak ecosystem.
-- **Responsibilities:**
-    - Deploys and manages `ContentInteractionDiamond` contracts, one per piece of content.
-    - Associates `InteractionCampaign` contracts with content interactions.
-    - Coordinates with the `ContentRegistry` to determine the appropriate interaction facets based on content metadata.
-    - Authorizes interaction diamonds to manage referral relationships in the `ReferralRegistry`.
-    - Upgrades facet logic for interaction diamonds, providing flexibility and future-proofing the system. 
+Key features:
+- Each ProductInteractionDiamond is associated with a single product.
+- Facets are not bound to specific method signatures, allowing for more flexible interaction handling.
+- Does not implement looping through facets; instead, it directly delegates to the appropriate facet based on the product type or feature.
 
-#### `ContentInteractionDiamond.sol`
+### InteractionFacetsFactory.sol
 
-- Implements the core logic of the diamond pattern, acting as a proxy that delegates function calls to specific facets.
-- **Key Features:**
-    - Each `ContentInteractionDiamond` is associated with a single piece of content.
-    - It handles common tasks like:
-        - Validating user interactions using EIP-712 signatures for security.
-        - Managing interactions with the `ReferralRegistry` for referral tracking.
-        - Forwarding interaction data to attached `InteractionCampaign` contracts.
-    - It delegates the actual handling of content-specific interactions (e.g., opening an article, liking a video) to dedicated facet contracts.
-    - This diamond pattern allows for adding new content types and interaction logic without modifying the core `ContentInteractionDiamond` contract. 
+- Responsible for creating and deploying new interaction facets.
 
-### `interaction/facets/` 
+### ProductInteractionManager.sol
 
-This directory contains the facet contracts that implement specific interaction logic for different content types.
+- Central orchestrator for deploying and managing ProductInteractionDiamond contracts.
+- Coordinates with the ProductRegistry to determine the appropriate interaction facets based on product metadata.
 
-#### `PressInteractionFacet.sol`
+### Facets
 
-- A facet contract specifically designed to handle user interactions with press content (e.g., articles).
-- **Functionality:**
-    - Tracks user interactions like article opens (distinguishing direct opens and opens via shared links), article reads, share link creation, and share link usage.
-    - Emits detailed events for each interaction to provide an audit trail for off-chain systems.
-    - Can be extended to integrate with reward mechanisms and other campaign logic.
+The `facets/` subdirectory contains specific interaction logic for different product types or features:
+
+- `DappInteractionFacet.sol`: Handles interactions specific to dapp products.
+- `PressInteractionFacet.sol`: Manages interactions related to press products.
+- `ReferralFeatureFacet.sol`: Implements referral-related interactions.
+- `IInteractionFacet.sol`: Likely an interface defining common interaction methods.
+
+Each facet implements logic for a specific type of product or a particular feature, and can be called via delegatecall from the main ProductInteractionDiamond contract.
+
+Integration:
+- The interaction system interacts with the registries (ProductRegistry, ReferralRegistry, ProductAdministratorRegistry) to retrieve product information, manage referrals, and check permissions.
+- It may also interact with campaign contracts to trigger rewards based on user interactions.
+
+Note: The exact details of how facets are selected and called, and how storage is shared between the main diamond contract and its facets, may vary based on the specific implementation of this custom diamond pattern adaptation.
 
 ## Campaigns
 
-### `campaign/`
+The `campaign/` directory contains contracts related to campaign management and execution within the Frak ecosystem. These contracts work in conjunction with the interaction system to reward users based on their activities.
 
-Contracts for running campaigns within the Frak ecosystem.
+### CampaignFactory.sol
 
-#### `InteractionCampaign.sol`
+- Responsible for creating and deploying new campaign contracts.
+- Likely manages the lifecycle of campaigns, including creation, activation, and potentially deactivation.
 
-- Abstract contract providing the base logic for campaigns that distribute rewards based on user interactions with content.
-- **Key Features:**
-    - Defines an interface for handling user interactions and managing campaign state.
-    - Requires implementations to specify:
-        - Supported content types.
-        - Whether the campaign is currently active.
-        - Logic for processing user interactions and distributing rewards.
+Key features:
+- May interact with the ProductAdministratorRegistry to ensure only authorized users can create or manage campaigns for specific products.
 
-#### `ReferralCampaign.sol`
+### InteractionCampaign.sol
 
-- A concrete implementation of `InteractionCampaign` focused on rewarding users for referring new users to the platform.
-- **Features:**
-    - Integrates with the `ReferralRegistry` to track referral relationships.
-    - Supports multi-level referral systems, rewarding both referrers and referees at multiple levels.
-    - Allows for customizable reward distribution, where the percentage of rewards allocated to each referral level can be configured.
-    - Implements a daily distribution cap to prevent abuse and ensure the sustainability of the campaign.
+- An abstract contract providing the base logic for campaigns that distribute rewards based on user interactions with products.
+
+Key features:
+- Likely defines an interface for handling user interactions and managing campaign state.
+- May include common functionality shared across different types of campaigns.
+
+### ReferralCampaign.sol
+
+- A concrete implementation of InteractionCampaign, focused on rewarding users for referring new users to the platform.
+
+Key features:
+- Likely integrates with the ReferralRegistry to track referral relationships.
+- May implement specific reward distribution logic for referral activities.
+
+Integration:
+- These campaign contracts interact with the ProductInteractionDiamond and various registries to:
+  - Receive information about user interactions.
+  - Verify product and user information.
+  - Check permissions for campaign-related actions.
+  - Update campaign states and distribute rewards.
+
+Note: The exact mechanisms for reward calculation, distribution, and the specific types of campaigns supported may vary based on the implementation details of these contracts.

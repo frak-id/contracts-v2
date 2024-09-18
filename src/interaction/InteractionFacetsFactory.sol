@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {ContentTypes} from "../constants/ContentTypes.sol";
+import {ProductTypes} from "../constants/ProductTypes.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
-import {ContentRegistry} from "../registry/ContentRegistry.sol";
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
+import {ProductRegistry} from "../registry/ProductRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {ContentInteractionDiamond} from "./ContentInteractionDiamond.sol";
+import {ProductInteractionDiamond} from "./ProductInteractionDiamond.sol";
 import {DappInteractionFacet} from "./facets/DappInteractionFacet.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
@@ -13,54 +14,62 @@ import {ReferralFeatureFacet} from "./facets/ReferralFeatureFacet.sol";
 
 /// @title InteractionFacetsFactory
 /// @author @KONFeature
-/// @notice Contract used to fetch the facets logics for the list of content types
+/// @notice Contract used to fetch the facets logics for the list of product types
 /// @custom:security-contact contact@frak.id
 contract InteractionFacetsFactory is IFacetsFactory {
-    error CantHandleContentTypes();
+    error CantHandleProductTypes();
 
-    /// @dev The press facet address
-    ReferralRegistry private immutable _REFERRAL_REGISTRY;
-    ContentRegistry private immutable _CONTENT_REGISTRY;
+    /// @dev The different registries
+    ReferralRegistry private immutable REFERRAL_REGISTRY;
+    ProductRegistry private immutable PRODUCT_REGISTRY;
+    ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
     /// @dev The facets addresses
-    IInteractionFacet private immutable _PRESS_FACET;
-    IInteractionFacet private immutable _DAPP_FACET;
-    IInteractionFacet private immutable _REFERRAL_FEATURE_FACET;
+    IInteractionFacet private immutable PRESS_FACET;
+    IInteractionFacet private immutable DAPP_FACET;
+    IInteractionFacet private immutable REFERRAL_FEATURE_FACET;
 
     /// @dev Constructor, will deploy all the known facets
-    constructor(ReferralRegistry _referralRegistry, ContentRegistry _contentRegistry) {
+    constructor(
+        ReferralRegistry _referralRegistry,
+        ProductRegistry _productRegistry,
+        ProductAdministratorRegistry _productAdministratorRegistry
+    ) {
         // Save the registries
-        _REFERRAL_REGISTRY = _referralRegistry;
-        _CONTENT_REGISTRY = _contentRegistry;
+        REFERRAL_REGISTRY = _referralRegistry;
+        PRODUCT_REGISTRY = _productRegistry;
+        PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
 
         // Our facets
-        _PRESS_FACET = new PressInteractionFacet();
-        _DAPP_FACET = new DappInteractionFacet();
-        _REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
+        PRESS_FACET = new PressInteractionFacet();
+        DAPP_FACET = new DappInteractionFacet();
+        REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                  Deploy a new content interaction diamond                  */
+    /*                  Deploy a new product interaction diamond                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Deploy a new content interaction diamond
+    /// @dev Deploy a new product interaction diamond
     /// @dev Should only be called with delegate call, otherwise the manager would be the caller
-    function createContentInteractionDiamond(uint256 _contentId, address _owner)
+    function createProductInteractionDiamond(uint256 _productId, bytes32 _salt)
         public
-        returns (ContentInteractionDiamond diamond)
+        returns (ProductInteractionDiamond diamond)
     {
-        // Retreive the owner of this content
-        address contentOwner = _CONTENT_REGISTRY.ownerOf(_contentId);
+        // Mix product id and salt for a more unique diamond
+        _salt = keccak256(abi.encodePacked(_productId, _salt));
 
         // Deploy the interaction contract
-        diamond = new ContentInteractionDiamond(_contentId, _REFERRAL_REGISTRY, address(this), _owner, contentOwner);
+        diamond = new ProductInteractionDiamond{salt: _salt}(
+            _productId, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, address(this)
+        );
 
         // Get the facets for it
-        IInteractionFacet[] memory facets = getFacets(_CONTENT_REGISTRY.getContentTypes(_contentId));
+        IInteractionFacet[] memory facets = getFacets(PRODUCT_REGISTRY.getProductTypes(_productId));
 
         // If we have no facet logics, revert
         if (facets.length == 0) {
-            revert CantHandleContentTypes();
+            revert CantHandleProductTypes();
         }
 
         // Set them
@@ -68,26 +77,26 @@ contract InteractionFacetsFactory is IFacetsFactory {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*           Get all the facets possible for the given content types          */
+    /*           Get all the facets possible for the given product types          */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Get the facet for the given `contentTypes`
-    function getFacets(ContentTypes contentTypes) public view returns (IInteractionFacet[] memory facets) {
-        // Allocate 256 items for our initial array (max amount of content type possibles)
+    /// @dev Get the facet for the given `productTypes`
+    function getFacets(ProductTypes productTypes) public view returns (IInteractionFacet[] memory facets) {
+        // Allocate 256 items for our initial array (max amount of product type possibles)
         facets = new IInteractionFacet[](256);
         uint256 index = 0;
 
-        // Check if we have a press content type
-        if (contentTypes.isPressType()) {
-            facets[index] = _PRESS_FACET;
+        // Check if we have a press product type
+        if (productTypes.isPressType()) {
+            facets[index] = PRESS_FACET;
             index++;
         }
-        if (contentTypes.isDappType()) {
-            facets[index] = _DAPP_FACET;
+        if (productTypes.isDappType()) {
+            facets[index] = DAPP_FACET;
             index++;
         }
-        if (contentTypes.hasReferralFeature()) {
-            facets[index] = _REFERRAL_FEATURE_FACET;
+        if (productTypes.hasReferralFeature()) {
+            facets[index] = REFERRAL_FEATURE_FACET;
             index++;
         }
 

@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {InvalidConfig} from "../constants/Errors.sol";
-
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
@@ -34,9 +33,9 @@ abstract contract MultiPushPullModule is ReentrancyGuard {
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev bytes32(uint256(keccak256('frak.module.push-pull')) - 1)
+    /// @dev bytes32(uint256(keccak256('frak.module.multi-push-pull')) - 1)
     bytes32 private constant _PUSH_PULL_MODULE_STORAGE_SLOT =
-        0xb5d5f32fdcdcfca56d53b0b17de9c2bd793504ee1a7f7f226ef9e328f41bcfb5;
+        0x5f1d0c9da18d91c7f386a94a92b28ac7c335370a7eb6e8c2287d273cef7d06f2;
 
     /// @dev Storage per token
     struct PushPullStoragePerToken {
@@ -46,6 +45,7 @@ abstract contract MultiPushPullModule is ReentrancyGuard {
         mapping(address wallet => uint256 amount) pendingAmount;
     }
 
+    /// @custom:storage-location erc7201:frak.module.multi-push-pull
     struct PushPullModuleStorage {
         /// @dev All the tokens handled data
         mapping(address token => PushPullStoragePerToken) tokens;

@@ -40,6 +40,7 @@ abstract contract PushPullModule is ReentrancyGuard {
     bytes32 private constant _PUSH_PULL_MODULE_STORAGE_SLOT =
         0xb5d5f32fdcdcfca56d53b0b17de9c2bd793504ee1a7f7f226ef9e328f41bcfb5;
 
+    /// @custom:storage-location erc7201:frak.module.push-pull
     struct PushPullModuleStorage {
         /// @dev Total pending amount
         uint256 totalPending;

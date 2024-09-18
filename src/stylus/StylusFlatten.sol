@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-interface IContentConsumptionContract {
+interface IProductConsumptionContract {
     function pushCcu(bytes32 platform_id, uint256 added_consumption, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
         external;
 
@@ -12,7 +12,7 @@ interface IContentConsumptionContract {
     function domainSeparator() external view returns (bytes32);
 }
 
-contract StylusFlattened is IContentConsumptionContract {
+contract StylusFlattened is IProductConsumptionContract {
     function pushCcu(bytes32 platform_id, uint256 added_consumption, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
         external
         override
