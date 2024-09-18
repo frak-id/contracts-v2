@@ -5,6 +5,12 @@ import {InvalidConfig} from "../constants/Errors.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
+/// @dev Reward struct to sent to a user
+struct Reward {
+    address user;
+    uint256 amount;
+}
+
 /// @author @KONFeature
 /// @title PushPullModule
 /// @notice Contract providing utilities to create push pull based module
@@ -81,11 +87,6 @@ abstract contract PushPullModule is ReentrancyGuard {
 
         // Emit the event
         emit RewardAdded(_user, _amount);
-    }
-
-    struct Reward {
-        address user;
-        uint256 amount;
     }
 
     /// @notice Add multiple rewards for the given `_user` with the given `_amount`

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {MockErc20} from "../utils/MockErc20.sol";
 import {Test} from "forge-std/Test.sol";
-import {PushPullModule} from "src/modules/PushPullModule.sol";
+import {PushPullModule, Reward} from "src/modules/PushPullModule.sol";
 
 contract PushPullModuleTest is Test {
     /// @dev The module we will test
@@ -56,10 +56,10 @@ contract PushPullModuleTest is Test {
     function test_addRewards() public {
         token.mint(address(pushPullModule), 100 ether);
 
-        PushPullModule.Reward[] memory rewards = new PushPullModule.Reward[](2);
+        Reward[] memory rewards = new Reward[](2);
 
-        rewards[0] = PushPullModule.Reward(alice, 50 ether);
-        rewards[1] = PushPullModule.Reward(bob, 50 ether);
+        rewards[0] = Reward(alice, 50 ether);
+        rewards[1] = Reward(bob, 50 ether);
 
         pushPullModule.addRewards(rewards);
 
@@ -71,10 +71,10 @@ contract PushPullModuleTest is Test {
     function test_addRewards_NotEnoughToken() public {
         token.mint(address(pushPullModule), 100 ether);
 
-        PushPullModule.Reward[] memory rewards = new PushPullModule.Reward[](2);
+        Reward[] memory rewards = new Reward[](2);
 
-        rewards[0] = PushPullModule.Reward(alice, 50 ether);
-        rewards[1] = PushPullModule.Reward(bob, 51 ether);
+        rewards[0] = Reward(alice, 50 ether);
+        rewards[1] = Reward(bob, 51 ether);
 
         vm.expectRevert(PushPullModule.NotEnoughToken.selector);
         pushPullModule.addRewards(rewards);

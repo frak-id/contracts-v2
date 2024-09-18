@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "../constants/Roles.sol";
-import {PushPullModule} from "../modules/PushPullModule.sol";
+import {PushPullModule, Reward} from "../modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
@@ -63,7 +63,7 @@ contract CampaignBank is PushPullModule {
 
     /// @notice Push multiple rewards
     /// @param _rewards Rewards to be pushed
-    function pushRewards(PushPullModule.Reward[] calldata _rewards) external onlyApprovedCampaign {
+    function pushRewards(Reward[] calldata _rewards) external onlyApprovedCampaign {
         if (!_campaignBankStorage().isDistributionEnable) revert BankIsntOpen();
 
         _pushRewardsCd(_rewards);
@@ -79,19 +79,9 @@ contract CampaignBank is PushPullModule {
         _campaignBankStorage().allowedCampaign[_campaign] = _isAllowed;
     }
 
-    /// @notice Check if the campaign is allowed for distribution
-    function isCampaignAllowed(address _campaign) external view returns (bool) {
-        return _campaignBankStorage().allowedCampaign[_campaign];
-    }
-
     /// @notice Update the distribution state
     function updateDistributionState(bool _state) external onlyAllowedProductManager {
         _campaignBankStorage().isDistributionEnable = _state;
-    }
-
-    /// @notice Check if the distribution is enabled
-    function isDistributionEnabled() external view returns (bool) {
-        return _campaignBankStorage().isDistributionEnable;
     }
 
     /// @dev Withdraw the remaining token from the campaign
@@ -104,6 +94,31 @@ contract CampaignBank is PushPullModule {
 
         // Withdraw the amount
         TOKEN.safeTransfer(msg.sender, withdrawable);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                View methods                                */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Check if the campaign is allowed for distribution
+    function isCampaignAllowed(address _campaign) external view returns (bool) {
+        return _campaignBankStorage().allowedCampaign[_campaign];
+    }
+
+    /// @notice Check if the distribution is enabled
+    function isDistributionEnabled() external view returns (bool) {
+        return _campaignBankStorage().isDistributionEnable;
+    }
+
+    /// @notice Check if the campaign is able to distribute tokens
+    function isAbleToDistributeForCampaign(address _campaign) external view returns (bool) {
+        CampaignBankStorage storage bankStorage = _campaignBankStorage();
+
+        // Check from the storage first
+        if (!bankStorage.allowedCampaign[_campaign] || !bankStorage.isDistributionEnable) return false;
+
+        // Then check if we got enough token
+        return TOKEN.balanceOf(address(this)) > getTotalPending();
     }
 
     /* -------------------------------------------------------------------------- */

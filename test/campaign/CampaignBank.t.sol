@@ -7,7 +7,7 @@ import {Test} from "forge-std/Test.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {PushPullModule} from "src/modules/PushPullModule.sol";
+import {PushPullModule, Reward} from "src/modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 
@@ -113,7 +113,7 @@ contract CampaignBankTest is Test {
 
     function test_distributeRewards() public {
         // Get some rewards
-        PushPullModule.Reward[] memory rewards = _getRewards();
+        Reward[] memory rewards = _getRewards();
 
         // The campaign manager can't distribute rewards
         vm.expectRevert(CampaignBank.Unauthorized.selector);
@@ -208,7 +208,7 @@ contract CampaignBankTest is Test {
         campaignBank.updateDistributionState(true);
 
         // Get some rewards
-        PushPullModule.Reward[] memory rewards = _getRewards();
+        Reward[] memory rewards = _getRewards();
 
         vm.prank(campaign);
         campaignBank.pushRewards(rewards);
@@ -246,13 +246,40 @@ contract CampaignBankTest is Test {
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                              View method test                              */
+    /* -------------------------------------------------------------------------- */
+
+    function test_isAbleToDistribute() public {
+        assertFalse(campaignBank.isAbleToDistributeForCampaign(campaign));
+
+        vm.prank(campaignManager);
+        campaignBank.updateCampaignAllowance(campaign, true);
+
+        assertFalse(campaignBank.isAbleToDistributeForCampaign(campaign));
+
+        vm.prank(productOwner);
+        campaignBank.updateDistributionState(true);
+        assertTrue(campaignBank.isAbleToDistributeForCampaign(campaign));
+
+        vm.prank(productOwner);
+        campaignBank.updateDistributionState(false);
+        vm.prank(productOwner);
+        campaignBank.withdraw();
+
+        vm.prank(productOwner);
+        campaignBank.updateDistributionState(true);
+
+        assertFalse(campaignBank.isAbleToDistributeForCampaign(campaign));
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                                   Heleprs                                  */
     /* -------------------------------------------------------------------------- */
 
     // Get tesst rewards
-    function _getRewards() private view returns (PushPullModule.Reward[] memory rewards) {
-        rewards = new PushPullModule.Reward[](2);
-        rewards[0] = PushPullModule.Reward({user: alice, amount: 1 ether});
-        rewards[1] = PushPullModule.Reward({user: bob, amount: 1 ether});
+    function _getRewards() private view returns (Reward[] memory rewards) {
+        rewards = new Reward[](2);
+        rewards[0] = Reward({user: alice, amount: 1 ether});
+        rewards[1] = Reward({user: bob, amount: 1 ether});
     }
 }
