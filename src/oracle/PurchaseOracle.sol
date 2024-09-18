@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {IPurchaseOracle} from "./IPurchaseOracle.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 
 /// @title PurchsaeOracle
 /// @author @KONFeature
 /// @notice Contract acting as an oracle for purchase states accross the products networks
 /// @custom:security-contact contact@frak.id
-contract PurchaseOracle is OwnableRoles {
+contract PurchaseOracle is OwnableRoles, IPurchaseOracle {
     /// @dev Struct representing a purchase representing a simple purchase
     struct Purchase {
         // todo: should be custom type or enum

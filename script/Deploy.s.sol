@@ -17,6 +17,7 @@ import {InteractionDelegatorValidator} from "src/kernel/interaction/InteractionD
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 import {MultiWebAuthNRecoveryAction} from "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol";
 import {MultiWebAuthNValidatorV2} from "src/kernel/webauthn/MultiWebAuthNValidator.sol";
+import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
@@ -47,6 +48,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - ProductRegistry: %s", addresses.productRegistry);
         console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
         console.log(" - ProductAdministratorRegistry: %s", addresses.productAdministratorlRegistry);
+        console.log(" - PurchaseOracle: %s", addresses.purchaseOracle);
         console.log(" - ProductInteractionManager: %s", addresses.productInteractionManager);
         console.log(" - FacetFactory: %s", addresses.facetFactory);
         console.log(" - CampaignFactory: %s", addresses.campaignFactory);
@@ -98,13 +100,21 @@ contract Deploy is Script, DeterminedAddress {
             addresses.productAdministratorlRegistry = address(adminRegistry);
         }
 
+        // Deploy the oracle
+        if (_shouldDeploy(addresses.purchaseOracle)) {
+            console.log(" * Deploying PurchaseOracle");
+            PurchaseOracle purchaseOracle = new PurchaseOracle{salt: 0}();
+            addresses.purchaseOracle = address(purchaseOracle);
+        }
+
         // Deploy the facet factory
         if (_shouldDeploy(addresses.facetFactory)) {
             console.log(" * Deploying InteractionFacetsFactory");
             InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{salt: 0}(
                 ReferralRegistry(addresses.referralRegistry),
                 ProductRegistry(addresses.productRegistry),
-                ProductAdministratorRegistry(addresses.productAdministratorlRegistry)
+                ProductAdministratorRegistry(addresses.productAdministratorlRegistry),
+                PurchaseOracle(addresses.purchaseOracle)
             );
             addresses.facetFactory = address(facetFactory);
         }

@@ -48,10 +48,6 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Event when two wallet are linked together
-    ///  Mostly use in case of initial nexus creation, when a burner wallet is linked to a new wallet
-    event WalletLinked(address indexed prevWallet, address indexed newWallet);
-
     /// @dev Event emitted when an interaction contract is deployed
     event InteractionContractDeployed(uint256 indexed productId, ProductInteractionDiamond interactionContract);
 
@@ -266,12 +262,6 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         // Retreive the interaction contract
         interactionContract = _storage().products[_productId].diamond;
         if (interactionContract == ProductInteractionDiamond(address(0))) revert NoInteractionContractFound();
-    }
-
-    /// @dev Emit the wallet linked event (only used for indexing purpose)
-    function walletLinked(address _newWallet) external {
-        emit WalletLinked(msg.sender, _newWallet);
-        // todo: propagate the event to each referral trees
     }
 
     /* -------------------------------------------------------------------------- */

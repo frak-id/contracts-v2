@@ -19,6 +19,7 @@ import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from 
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
@@ -30,6 +31,8 @@ contract ProductInteractionManagerTest is Test {
     ProductRegistry private productRegistry;
     ReferralRegistry private referralRegistry;
     ProductAdministratorRegistry private adminRegistry;
+    PurchaseOracle internal purchaseOracle;
+
     InteractionFacetsFactory private facetFactory;
     CampaignFactory private campaignFactory;
 
@@ -44,8 +47,9 @@ contract ProductInteractionManagerTest is Test {
         productRegistry = new ProductRegistry(owner);
         referralRegistry = new ReferralRegistry(owner);
         adminRegistry = new ProductAdministratorRegistry(productRegistry);
+        purchaseOracle = new PurchaseOracle();
 
-        facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry);
+        facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry, purchaseOracle);
         campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
 
         address implem = address(new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry));
@@ -334,17 +338,6 @@ contract ProductInteractionManagerTest is Test {
         productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
 
         assertEq(interactionContract.getCampaigns().length, 1);
-    }
-
-    function test_walletLinked() public {
-        address alice = makeAddr("alice");
-        address bob = makeAddr("bob");
-
-        vm.expectEmit(true, true, true, true);
-        emit ProductInteractionManager.WalletLinked(alice, bob);
-
-        vm.prank(alice);
-        productInteractionManager.walletLinked(bob);
     }
 
     /* -------------------------------------------------------------------------- */

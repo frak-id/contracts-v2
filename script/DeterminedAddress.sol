@@ -9,6 +9,8 @@ struct Addresses {
     address productRegistry;
     address referralRegistry;
     address productAdministratorlRegistry;
+    // Oracle
+    address purchaseOracle;
     // Interactions
     address facetFactory;
     address productInteractionManager;
@@ -59,6 +61,7 @@ contract DeterminedAddress is Script {
                 productRegistry: address(0),
                 referralRegistry: address(0),
                 productAdministratorlRegistry: address(0),
+                purchaseOracle: address(0),
                 productInteractionManager: address(0),
                 facetFactory: address(0),
                 campaignFactory: address(0),

@@ -2,15 +2,13 @@
 pragma solidity 0.8.23;
 
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../constants/InteractionType.sol";
-import {PRODUCT_TYPE_PRESS, ProductTypes} from "../constants/ProductTypes.sol";
-import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
+import {ProductTypes} from "../constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {PushPullModule} from "../modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {InteractionCampaign} from "./InteractionCampaign.sol";
-import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /// @author @KONFeature

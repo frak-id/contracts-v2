@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {ProductTypes} from "../constants/ProductTypes.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
+import {IPurchaseOracle} from "../oracle/IPurchaseOracle.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "../registry/ProductRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
@@ -10,7 +11,6 @@ import {ProductInteractionDiamond} from "./ProductInteractionDiamond.sol";
 import {DappInteractionFacet} from "./facets/DappInteractionFacet.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
-
 import {PurchaseFeatureFacet} from "./facets/PurchaseFeatureFacet.sol";
 import {ReferralFeatureFacet} from "./facets/ReferralFeatureFacet.sol";
 import {WebShopInteractionFacet} from "./facets/WebShopInteractionFacet.sol";
@@ -27,6 +27,9 @@ contract InteractionFacetsFactory is IFacetsFactory {
     ProductRegistry private immutable PRODUCT_REGISTRY;
     ProductAdministratorRegistry internal immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
+    /// @dev The purchase oracle
+    IPurchaseOracle internal immutable PURCHASE_ORACLE;
+
     /// @dev The core facets addresses
     IInteractionFacet private immutable PRESS_FACET;
     IInteractionFacet private immutable DAPP_FACET;
@@ -40,7 +43,8 @@ contract InteractionFacetsFactory is IFacetsFactory {
     constructor(
         ReferralRegistry _referralRegistry,
         ProductRegistry _productRegistry,
-        ProductAdministratorRegistry _productAdministratorRegistry
+        ProductAdministratorRegistry _productAdministratorRegistry,
+        IPurchaseOracle _purchaseOracle
     ) {
         // Save the registries
         REFERRAL_REGISTRY = _referralRegistry;
@@ -53,7 +57,7 @@ contract InteractionFacetsFactory is IFacetsFactory {
         WEB_SHOP_FACET = new WebShopInteractionFacet();
 
         REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
-        PURCHASE_FEATURE_FACET = new PurchaseFeatureFacet();
+        PURCHASE_FEATURE_FACET = new PurchaseFeatureFacet(_purchaseOracle);
     }
 
     /* -------------------------------------------------------------------------- */

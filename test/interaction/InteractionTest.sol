@@ -12,6 +12,7 @@ import {INTERCATION_VALIDATOR_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Ro
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
@@ -26,6 +27,8 @@ abstract contract InteractionTest is Test {
     ProductRegistry internal productRegistry = new ProductRegistry(owner);
     ReferralRegistry internal referralRegistry = new ReferralRegistry(owner);
     ProductAdministratorRegistry internal adminRegistry = new ProductAdministratorRegistry(productRegistry);
+    PurchaseOracle internal purchaseOracle = new PurchaseOracle();
+
     ProductInteractionManager internal productInteractionManager;
     InteractionFacetsFactory internal facetFactory;
     CampaignFactory internal campaignFactory;
@@ -41,7 +44,7 @@ abstract contract InteractionTest is Test {
         // Create our validator ECDSA
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
 
-        facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry);
+        facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry, purchaseOracle);
         campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
 
         // Create our product interaction

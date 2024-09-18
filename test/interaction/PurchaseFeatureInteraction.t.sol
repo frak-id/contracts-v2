@@ -53,7 +53,7 @@ contract PurchaseFeatureInteractionTest is InteractionTest {
 
     function test_construct() public {
         // Can be built
-        PurchaseFeatureFacet tFacet = new PurchaseFeatureFacet();
+        PurchaseFeatureFacet tFacet = new PurchaseFeatureFacet(purchaseOracle);
         assertEq(tFacet.productTypeDenominator(), DENOMINATOR_FEATURE_PURCHASE);
     }
 }
