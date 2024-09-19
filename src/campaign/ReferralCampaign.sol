@@ -4,18 +4,44 @@ pragma solidity 0.8.23;
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
-import {PushPullModule, Reward} from "../modules/PushPullModule.sol";
+import {Reward} from "../modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
+import {CampaignBank} from "./CampaignBank.sol";
 import {InteractionCampaign} from "./InteractionCampaign.sol";
+import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+
+/// @dev Representing the config for a reward trigger of the campaign
+struct ReferralCampaignTriggerConfig {
+    InteractionType interactionType;
+    uint256 baseReward;
+    uint256 userPercent;
+    uint256 deperditionPerLevel;
+    uint256 maxCountPerUser;
+}
+
+/// @dev Representing the config for the referral campaign
+struct ReferralCampaignConfig {
+    // Optional name for the campaign (as bytes32)
+    bytes32 name;
+    // The associated campaign bank
+    CampaignBank campaignBank;
+    // Set of triggers for the campaign
+    ReferralCampaignTriggerConfig[] triggers;
+    // Optional distribution cap config
+    ReferralCampaign.CapConfig capConfig;
+    // Optional activation period for the campaign
+    ReferralCampaign.ActivationPeriod activationPeriod;
+}
 
 /// @author @KONFeature
 /// @title ReferralCampaign
 /// @notice Smart contract for a referral based compagn
 /// @custom:security-contact contact@frak.id
-contract ReferralCampaign is InteractionCampaign, PushPullModule {
+contract ReferralCampaign is InteractionCampaign {
     using SafeTransferLib for address;
+    using SafeCastLib for uint256;
     using InteractionTypeLib for bytes;
     using ReferralInteractions for bytes;
 
@@ -46,21 +72,6 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev The fixed frak fee rate
     uint256 private constant FRAK_FEE = 2_000; // 20%
 
-    /// @dev The deperdition rate per level
-    uint256 private constant DEPERDITION_PER_LEVEL = 8_000; // 80%
-
-    /// @dev The percent for the user
-    uint256 private immutable USER_PERCENT;
-
-    /// @dev The initial referrer reward
-    uint256 private immutable BASE_REWARD;
-
-    /// @dev The distribution cap
-    uint256 private immutable DISTRIBUTION_CAP;
-
-    /// @dev The distribution period
-    uint256 private immutable DISTRIBUTION_CAP_PERIOD;
-
     /// @dev The referral tree for the current product id
     bytes32 private immutable REFERRAL_TREE;
 
@@ -70,79 +81,122 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /// @dev The referral registry
     ReferralRegistry private immutable REFERRAL_REGISTRY;
 
+    /// @dev The associated bank campaign
+    CampaignBank private immutable CAMPAIGN_BANK;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev bytes32(uint256(keccak256('frak.campaign.referral')) - 1)
+    /// @dev Representing a reward trigger
+    struct RewardTrigger {
+        uint192 baseReward;
+        uint16 userPercent;
+        uint16 deperditionPerLevel;
+        uint16 maxCountPerUser;
+    }
+
+    /// @dev Representing the reward trigger storage, storage location is at:
+    ///     (
+    ///         bytes32(uint256(keccak256('frak.campaign.referral.trigger')) - 1) &
+    ///         0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    ///     ) | _interactionType
+    function _trigger(InteractionType _interactionType) private pure returns (RewardTrigger storage storagePtr) {
+        assembly {
+            storagePtr.slot := or(0x2b590e368f6e51c03042de6eb3d37f464929de3b3f869c37f1eb01ab, _interactionType)
+        }
+    }
+
+    /// @dev Representing the current cap state
+    /// @custom:storage-location erc7201:frak.campaign.capState
+    struct CapState {
+        uint48 startTimestamp;
+        uint208 distributedAmount;
+    }
+
+    /// @dev bytes32(uint256(keccak256('frak.campaign.referral.capState')) - 1)
+    function _capState() private pure returns (CapState storage storagePtr) {
+        assembly {
+            storagePtr.slot := 0x881caacfc312bc308261b04ba99d456fed46f678c5e99a1782daaeb374ee5ecc
+        }
+    }
+
+    /// @dev Representing the activation period
+    struct ActivationPeriod {
+        uint48 start;
+        uint48 end;
+    }
+
+    /// @dev Representing the cap config
+    struct CapConfig {
+        // Distribution cap period, in seconds
+        uint48 period;
+        // Distribution cap amount
+        uint208 amount;
+    }
+
     bytes32 private constant _REFERRAL_CAMPAIGN_STORAGE_SLOT =
         0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f;
 
     /// @custom:storage-location erc7201:frak.campaign.referral
     struct ReferralCampaignStorage {
-        /// @dev The start timestamp for the cap computation
-        uint48 capStartTimestamp;
-        /// @dev The current amount during the given timeframe
-        uint208 capDistributedAmount;
-        /// @dev The total amount distributed
-        uint256 totalDistributedAmount;
-        /// @dev Start and end data
-        uint48 startDate;
-        uint48 endDate;
+        // Mapping of user + interaction type to triggered count
+        mapping(uint256 userAndInteractionType => uint16 triggeredCount) userTriggeredCount;
+        /// @dev The distribution cap config
+        CapConfig capConfig;
+        /// @dev The start date of the campaign
+        ActivationPeriod activationPeriod;
     }
 
+    /// @dev bytes32(uint256(keccak256('frak.campaign.referral')) - 1)
     function _referralCampaignStorage() private pure returns (ReferralCampaignStorage storage storagePtr) {
         assembly {
-            storagePtr.slot := _REFERRAL_CAMPAIGN_STORAGE_SLOT
+            storagePtr.slot := 0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f
         }
     }
 
-    struct CampaignConfig {
-        // Required config
-        address token;
-        uint256 initialReward;
-        // Percent of the reward for the end users
-        uint256 userRewardPercent; // (on a 1/10_000) scale
-        // Optional distribution cap infos
-        uint256 distributionCapPeriod; // in seconds, can be 3600 for an hour for exmaple
-        uint256 distributionCap;
-        // Optional data range for the config
-        uint48 startDate;
-        uint48 endDate;
-        // Optional name for the campaign (as bytes32)
-        bytes32 name;
-    }
+    /* -------------------------------------------------------------------------- */
+    /*                                    Init                                    */
+    /* -------------------------------------------------------------------------- */
 
     constructor(
-        CampaignConfig memory _config,
+        ReferralCampaignConfig memory _config,
         ReferralRegistry _referralRegistry,
         ProductAdministratorRegistry _productAdministratorRegistry,
         address _frakCampaignWallet,
         ProductInteractionDiamond _interaction
-    ) InteractionCampaign(_productAdministratorRegistry, _interaction, _config.name) PushPullModule(_config.token) {
-        if (_config.token == address(0)) {
+    ) InteractionCampaign(_productAdministratorRegistry, _interaction, _config.name) {
+        // Early exit if we got no triggers nor campaign bank
+        if (_config.triggers.length == 0) {
+            revert InvalidConfig();
+        }
+        if (address(_config.campaignBank) == address(0)) {
             revert InvalidConfig();
         }
 
         // Set every immutable arguments
         REFERRAL_REGISTRY = _referralRegistry;
-        USER_PERCENT = _config.userRewardPercent;
-        BASE_REWARD = _config.initialReward;
+        CAMPAIGN_BANK = _config.campaignBank;
         FRAK_CAMPAIGN = _frakCampaignWallet;
-
-        DISTRIBUTION_CAP = _config.distributionCap;
-        DISTRIBUTION_CAP_PERIOD = _config.distributionCapPeriod;
 
         // Store the referral tree
         REFERRAL_TREE = _interaction.getReferralTree();
 
-        // If we got a start date, set it in storage
+        // Set our config for the distribution cap and period
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        if (_config.startDate != 0) {
-            campaignStorage.startDate = _config.startDate;
-        }
-        if (_config.endDate != 0) {
-            campaignStorage.endDate = _config.endDate;
+        campaignStorage.activationPeriod = _config.activationPeriod;
+        campaignStorage.capConfig = _config.capConfig;
+
+        // Iterate over each triggers and set them
+        uint256 triggerLength = _config.triggers.length;
+        for (uint256 i = 0; i < triggerLength; i++) {
+            ReferralCampaignTriggerConfig memory triggerConfig = _config.triggers[i];
+
+            RewardTrigger storage trigger = _trigger(triggerConfig.interactionType);
+            trigger.baseReward = triggerConfig.baseReward.toUint192();
+            trigger.userPercent = triggerConfig.userPercent.toUint16();
+            trigger.deperditionPerLevel = triggerConfig.deperditionPerLevel.toUint16();
+            trigger.maxCountPerUser = triggerConfig.maxCountPerUser.toUint16();
         }
     }
 
@@ -158,19 +212,11 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     }
 
     /// @dev Get the campaign config
-    function getConfig() public view returns (CampaignConfig memory) {
+    function getConfig() public view returns (CapConfig memory capConfig, ActivationPeriod memory activationPeriod) {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        InteractionCampaignStorage storage interactionStorage = _interactionCampaignStorage();
-        return CampaignConfig({
-            token: TOKEN,
-            initialReward: BASE_REWARD,
-            userRewardPercent: USER_PERCENT,
-            distributionCapPeriod: DISTRIBUTION_CAP_PERIOD,
-            distributionCap: DISTRIBUTION_CAP,
-            startDate: campaignStorage.startDate,
-            endDate: campaignStorage.endDate,
-            name: interactionStorage.name
-        });
+
+        capConfig = campaignStorage.capConfig;
+        activationPeriod = campaignStorage.activationPeriod;
     }
 
     /// @dev Check if the campaign is active or not
@@ -183,15 +229,17 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
             return false;
         }
 
-        // Otherwise, check the date
-        if (campaignStorage.startDate != 0 && block.timestamp < campaignStorage.startDate) {
+        // Check the activation period
+        ActivationPeriod storage activationPeriod = campaignStorage.activationPeriod;
+        if (activationPeriod.start != 0 && block.timestamp < activationPeriod.start) {
             return false;
         }
-        if (campaignStorage.endDate != 0 && block.timestamp > campaignStorage.endDate) {
+        if (activationPeriod.end != 0 && block.timestamp > activationPeriod.end) {
             return false;
         }
-        // Active only if we can distribute a few rewards
-        return TOKEN.balanceOf(address(this)) > BASE_REWARD * 2;
+
+        // Check if the campaign bank is able to distribute tokens
+        return CAMPAIGN_BANK.isAbleToDistributeForCampaign(address(this));
     }
 
     /// @dev Check if the given campaign support the `_productType`
@@ -205,35 +253,45 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Handle the given interaction
-    function innerHandleInteraction(bytes calldata _data) internal override {
+    /// todo: nonreetrant should be moved up a level
+    function innerHandleInteraction(bytes calldata _data) internal override nonReentrant {
         // Extract the data
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
 
-        // If the interaction is a usage of a share link, handle it
-        if (interactionType == ReferralInteractions.REFERRED) {
-            _performTokenDistribution(user, BASE_REWARD);
+        // Check if we got a trigger for this interaction
+        RewardTrigger storage trigger = _trigger(interactionType);
+        if (trigger.baseReward == 0) {
+            return;
         }
-    }
 
-    /// @dev External method callable by the manager, to distribute token to all the user referrers
-    function distributeTokenToUserReferrers(address _user, uint256 _initialAmount)
-        external
-        onlyAllowedManager
-        onlyActiveCampaign
-    {
-        // If the campaign isn't active, directly exit
-        if (!isActive()) {
-            revert InactiveCampaign();
+        // If we got a limit per user, check it
+        uint256 countKey;
+        if (trigger.maxCountPerUser != 0) {
+            assembly {
+                countKey := or(user, interactionType)
+            }
+            if (_referralCampaignStorage().userTriggeredCount[countKey] >= trigger.maxCountPerUser) {
+                return;
+            }
         }
-        _performTokenDistribution(_user, _initialAmount);
+
+        // Perform the token distribution
+        _performTokenDistribution(user, trigger.baseReward, trigger.userPercent, trigger.deperditionPerLevel);
+
+        // Update the count if we got a computed key (otherwise, we don't care)
+        if (countKey != 0) {
+            _referralCampaignStorage().userTriggeredCount[countKey]++;
+        }
     }
 
     /// @dev Perform a token distrubtion for all the referrers of `_user`, with the initial amount to `_amount`
-    function _performTokenDistribution(address _user, uint256 _amount) internal {
+    function _performTokenDistribution(address _user, uint256 _amount, uint256 _userPercent, uint256 _deperditionLevel)
+        internal
+    {
         // Get all the referrers
         address[] memory referrers = REFERRAL_REGISTRY.getCappedReferrers(REFERRAL_TREE, _user, MAX_EXPLORATION_LEVEL);
 
-        // Early exit if no saved referrers (shouldn't be the case, be safety first)
+        // Early exit if no saved referrers
         if (referrers.length == 0) {
             return;
         }
@@ -253,7 +311,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
 
             // Second one is the user
             {
-                uint256 userAmount = (remainingAmount * USER_PERCENT) / PERCENT_BASE;
+                uint256 userAmount = (remainingAmount * _userPercent) / PERCENT_BASE;
                 rewards[1] = Reward(_user, userAmount);
                 // Decrease the amount
                 remainingAmount -= userAmount;
@@ -262,7 +320,7 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
             // Iterate over each referrers
             for (uint256 i = 0; i < referrers.length; i++) {
                 // Build the reward
-                uint256 reward = (remainingAmount * DEPERDITION_PER_LEVEL) / PERCENT_BASE;
+                uint256 reward = (remainingAmount * _deperditionLevel) / PERCENT_BASE;
                 rewards[i + 2] = Reward(referrers[i], reward);
                 // Decrease the reward by the amount distributed
                 remainingAmount -= reward;
@@ -275,41 +333,39 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
             }
 
             // Push all the rewards
-            _pushRewards(rewards);
+            CAMPAIGN_BANK.pushRewards(rewards);
 
             // If we have no cap, exit
-            if (DISTRIBUTION_CAP == 0) {
+            CapConfig storage capConfig = _referralCampaignStorage().capConfig;
+            if (capConfig.amount == 0) {
                 return;
             }
 
             // Update the cap
-            _updateDistributionCap(_amount);
+            _updateDistributionCap(capConfig, _amount);
         }
     }
 
     /// @dev Update the distribution cap
     /// @dev  And reset it if needed
-    function _updateDistributionCap(uint256 _distributedAmount) private {
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
+    function _updateDistributionCap(CapConfig storage _capConfig, uint256 _distributedAmount) private {
+        CapState memory capReadOnly = _capState();
 
         unchecked {
-            // Update the total distributed amount
-            campaignStorage.totalDistributedAmount += _distributedAmount;
-
             // Cap reset case
-            if (block.timestamp > campaignStorage.capStartTimestamp + DISTRIBUTION_CAP_PERIOD) {
-                emit DistributionCapReset(campaignStorage.capStartTimestamp, campaignStorage.capDistributedAmount);
+            if (block.timestamp > capReadOnly.startTimestamp + _capConfig.period) {
+                emit DistributionCapReset(capReadOnly.startTimestamp, capReadOnly.distributedAmount);
 
-                campaignStorage.capStartTimestamp = uint48(block.timestamp);
-                campaignStorage.capDistributedAmount = uint208(_distributedAmount);
+                _capState().startTimestamp = uint48(block.timestamp);
+                _capState().distributedAmount = uint208(_distributedAmount);
 
                 return;
             }
             // Check if we can distribute the reward
-            if (campaignStorage.capDistributedAmount + _distributedAmount > DISTRIBUTION_CAP) {
+            if (capReadOnly.distributedAmount + _distributedAmount > _capConfig.amount) {
                 revert DistributionCapReached();
             }
-            campaignStorage.capDistributedAmount += uint208(_distributedAmount);
+            _capState().distributedAmount += uint208(_distributedAmount);
         }
     }
 
@@ -317,15 +373,13 @@ contract ReferralCampaign is InteractionCampaign, PushPullModule {
     /*                           Campaign Administration                          */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Withdraw the remaining token from the campaign
-    function withdraw() external nonReentrant onlyAllowedManager {
-        TOKEN.safeTransfer(msg.sender, TOKEN.balanceOf(address(this)));
+    /// @dev Update the campaign activation period
+    function updateActivationPeriod(ActivationPeriod calldata _activationPeriod) external onlyAllowedManager {
+        _referralCampaignStorage().activationPeriod = _activationPeriod;
     }
 
-    /// @dev Update the campaign activation date
-    function setActivationDate(uint48 _startDate, uint48 _endDate) external nonReentrant onlyAllowedManager {
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        campaignStorage.startDate = _startDate;
-        campaignStorage.endDate = _endDate;
+    /// @dev Update the campaign activation period
+    function updateCapConfig(CapConfig calldata _capConfig) external onlyAllowedManager {
+        _referralCampaignStorage().capConfig = _capConfig;
     }
 }

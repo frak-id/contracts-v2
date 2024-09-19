@@ -5,7 +5,7 @@ import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamon
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {ReferralCampaignV2, ReferralCampaignV2Config} from "./ReferralCampaignV2.sol";
+import {ReferralCampaign, ReferralCampaignConfig} from "./ReferralCampaign.sol";
 
 /// @author @KONFeature
 /// @title CampaignFactory
@@ -81,10 +81,10 @@ contract CampaignFactory is ICampaignFactory {
         returns (address)
     {
         // Parse the input data
-        ReferralCampaignV2Config memory config = abi.decode(_initData, (ReferralCampaignV2Config));
+        ReferralCampaignConfig memory config = abi.decode(_initData, (ReferralCampaignConfig));
 
         // Create the campaign
-        ReferralCampaignV2 campaign = new ReferralCampaignV2(
+        ReferralCampaign campaign = new ReferralCampaign(
             config, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, FRAK_CAMPAIGN_WALLET, _interaction
         );
         return address(campaign);

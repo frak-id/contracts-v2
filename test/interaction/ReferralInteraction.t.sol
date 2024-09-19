@@ -3,17 +3,12 @@ pragma solidity ^0.8.0;
 
 import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {InteractionType, InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
+import {ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     DENOMINATOR_DAPP,
     DENOMINATOR_FEATURE_REFERRAL,
-    DENOMINATOR_PRESS,
-    PRODUCT_TYPE_FEATURE_REFERRAL,
-    ProductTypes
+    PRODUCT_TYPE_FEATURE_REFERRAL
 } from "src/constants/ProductTypes.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ReferralFeatureFacet} from "src/interaction/facets/ReferralFeatureFacet.sol";
 

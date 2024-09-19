@@ -3,19 +3,13 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
-import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {
-    ReferralCampaignV2,
-    ReferralCampaignV2Config,
-    ReferralCampaignV2TriggerConfig
-} from "src/campaign/ReferralCampaignV2.sol";
-
-import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
+    ReferralCampaign, ReferralCampaignConfig, ReferralCampaignTriggerConfig
+} from "src/campaign/ReferralCampaign.sol";
+import {ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     DENOMINATOR_DAPP,
     DENOMINATOR_PRESS,
@@ -27,10 +21,6 @@ import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from 
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
-import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
-import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
-import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 contract ProductInteractionManagerTest is EcosystemAwareTest {
     uint256 private productIdDapp;
@@ -337,8 +327,8 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
 
     function _getReferralCampaignConfigInitData() internal returns (bytes memory initData) {
         vm.pauseGasMetering();
-        ReferralCampaignV2TriggerConfig[] memory triggers = new ReferralCampaignV2TriggerConfig[](1);
-        triggers[0] = ReferralCampaignV2TriggerConfig({
+        ReferralCampaignTriggerConfig[] memory triggers = new ReferralCampaignTriggerConfig[](1);
+        triggers[0] = ReferralCampaignTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
             userPercent: 5_000, // 50%
@@ -346,11 +336,11 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
             maxCountPerUser: 1
         });
 
-        ReferralCampaignV2Config memory config = ReferralCampaignV2Config({
+        ReferralCampaignConfig memory config = ReferralCampaignConfig({
             name: "test",
             triggers: triggers,
-            capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
             campaignBank: campaignBank
         });
         initData = abi.encode(config);
