@@ -3,7 +3,8 @@ pragma solidity ^0.8.23;
 
 import {RLPReader} from "rlp/RLPReader.sol";
 
-/// Extracted from Cometh MPT implementation: https://github.com/cometh-hq/pixel-war/blob/aab5061fb4113b31a7f00b4a7ce32c3dbbc3cd4d/packages/contracts/src/libs/MPT.sol
+/// Extracted from Cometh MPT implementation:
+/// https://github.com/cometh-hq/pixel-war/blob/aab5061fb4113b31a7f00b4a7ce32c3dbbc3cd4d/packages/contracts/src/libs/MPT.sol
 /// Modification:
 ///  - Only keeping EIP-1186 compliant proof check
 ///  - Some gas optimisations

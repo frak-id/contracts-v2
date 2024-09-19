@@ -202,7 +202,8 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         assertEq(actualY, expectedY, "Public key Y component mismatch");
     }
 
-    /// @dev Ensure that the validation won't revert when using the dummy signature bypass (challenge offset to uint256.max)
+    /// @dev Ensure that the validation won't revert when using the dummy signature bypass (challenge offset to
+    /// uint256.max)
     function test_dontRevertForDummySig() public view {
         // Build rly dummy data for authenticator data and client data
         bytes memory authenticatorData = hex"1312";
@@ -312,7 +313,8 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         // Prepare the authenticator data (from a real webauthn challenge)
         authenticatorData = hex"49960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97630500000000";
 
-        // Prepare the client data (starting from a real webauthn challenge, then replacing only the bytes needed for the challenge)
+        // Prepare the client data (starting from a real webauthn challenge, then replacing only the bytes needed for
+        // the challenge)
         bytes memory clientDataStart = hex"7b2274797065223a22776562617574686e2e676574222c226368616c6c656e6765223a22";
         bytes memory clientDataEnd =
             hex"222c226f726967696e223a22687474703a2f2f6c6f63616c686f73743a33303032222c2263726f73734f726967696e223a66616c73657d";

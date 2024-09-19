@@ -147,7 +147,8 @@ contract ProductAdministratorRegistry {
     /*                             Public role checks                             */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Check if the `_caller` is authorized to manage the `_productId` (basically if he have the admin right on the product)
+    /// @dev Check if the `_caller` is authorized to manage the `_productId` (basically if he have the admin right on
+    /// the product)
     function isAuthorizedAdmin(uint256 _productId, address _caller) public view returns (bool) {
         return PRODUCT_REGISTRY.isAuthorized(_productId, _caller);
     }

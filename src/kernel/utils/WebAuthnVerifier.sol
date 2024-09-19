@@ -40,7 +40,8 @@ library WebAuthnVerifier {
         (uint256 challengeOffset, bytes calldata authenticatorData, bytes calldata clientData) =
             _signature.formattingPayload();
 
-        // If the challenge offset is uint256 max, it's mean that we are in the case of a dummy sig, so we can skip the check and just return the hash
+        // If the challenge offset is uint256 max, it's mean that we are in the case of a dummy sig, so we can skip the
+        // check and just return the hash
         if (challengeOffset == type(uint256).max) {
             return _hash;
         }
@@ -98,7 +99,8 @@ library WebAuthnVerifier {
     }
 
     /// @dev Proceed to the full webauth verification
-    /// @param _p256Verifier The p256 verifier contract on-chain (if user want to use this instead of the precompiled one)
+    /// @param _p256Verifier The p256 verifier contract on-chain (if user want to use this instead of the precompiled
+    /// one)
     /// @param _hash The hash that has been signed via WebAuthN
     /// @param _signature The signature that has been provided with the userOp
     /// @param _x The X point of the public key

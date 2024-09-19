@@ -13,7 +13,8 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 /// @title DappFacet
 /// @author @KONFeature
 /// @notice Contract managing a user interacting with a dapp
-/// @notice This is usefull wshen Dapps are built on other chains, and the interaction can be verified by storage modification (using a merklee patricia tree verification)
+/// @notice This is usefull wshen Dapps are built on other chains, and the interaction can be verified by storage
+/// modification (using a merklee patricia tree verification)
 /// @custom:security-contact contact@frak.id
 contract DappInteractionFacet is ProductInteractionStorageLib, IInteractionFacet, OwnableRoles {
     using InteractionTypeLib for bytes;
@@ -117,7 +118,8 @@ contract DappInteractionFacet is ProductInteractionStorageLib, IInteractionFacet
         uint256 storageValue;
     }
 
-    /// @dev Verify that the storage of a contract was updated by perform a read call on the other contract, passing the current `msg.sender`
+    /// @dev Verify that the storage of a contract was updated by perform a read call on the other contract, passing the
+    /// current `msg.sender`
     function _callableProofStorageUpdate(bytes calldata _data) internal returns (bytes memory) {
         // Parse the input data
         CallableVerifableStorageUpdate calldata data;

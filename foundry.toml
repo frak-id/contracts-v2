@@ -14,7 +14,7 @@ fuzz = { runs = 128, seed = "0xacab" }
 invariant = { runs = 128, seed = "0xacab", depth = 500, call_override = true }
 
 # Formatter config
-fmt = { sort_imports = true, line_length = 120, number_underscore = "thousands" }
+fmt = { sort_imports = true, line_length = 120, number_underscore = "thousands", wrap_comments = true }
 
 # Heavy profile fat testing
 [profile.heavy]

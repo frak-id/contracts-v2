@@ -6,7 +6,8 @@ import {FCL_ecdsa} from "FreshCryptoLib/FCL_ecdsa.sol";
 /// @title P256VerifierWrapper
 /// @author rdubois-crypto
 /// @author KONFeature
-/// @notice Wrapper arround the P256Verifier contract of @rdubois-crypto, using it to accept EIP-7212 compliant verification (p256 pre-compiled curve)
+/// @notice Wrapper arround the P256Verifier contract of @rdubois-crypto, using it to accept EIP-7212 compliant
+/// verification (p256 pre-compiled curve)
 /// @dev This lib is only a wrapper around the P256Verifier contract.
 ///     It will call the verifySignature function of the P256Verifier contract.
 ///     Once the RIP-7212 will be deployed and effective, this contract will be useless.

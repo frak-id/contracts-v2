@@ -178,7 +178,8 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
             revert InteractionHandlingFailed();
         }
 
-        // Send the interaction to the campaigns if we got some (at least 24 bytes since it should contain the action + user with it)
+        // Send the interaction to the campaigns if we got some (at least 24 bytes since it should contain the action +
+        // user with it)
         if (outputData.length > 23) {
             _sendInteractionToCampaign(outputData);
         }

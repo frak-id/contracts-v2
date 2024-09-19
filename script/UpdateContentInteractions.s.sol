@@ -17,7 +17,8 @@ import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorReg
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
-/// todo: Should be refacto to update the faucet factory, set it on the productInteractionManager, and then call the update function
+/// todo: Should be refacto to update the faucet factory, set it on the productInteractionManager, and then call the
+/// update function
 contract UpdateProductInteractions is Script, DeterminedAddress {
     function run() public {
         // _updateManager();

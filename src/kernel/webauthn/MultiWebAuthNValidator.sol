@@ -28,7 +28,8 @@ struct MultiWebAuthNValidatorStorage {
 
 /// @dev The initialisation data for the WebAuthN validator.
 struct WebAuthNInitializationData {
-    /// @dev The authenticator id used to create the public key, base64 encoded, used to find the public key on-chain post creation.
+    /// @dev The authenticator id used to create the public key, base64 encoded, used to find the public key on-chain
+    /// post creation.
     bytes32 authenticatorIdHash;
     uint256 x;
     uint256 y;
@@ -36,7 +37,8 @@ struct WebAuthNInitializationData {
 
 /// @author @KONFeature
 /// @title MultiWebAuthNValidator
-/// @notice A Multi-WebAuthN validator for kernel v2 smart wallet, based on the FCL approach arround WebAuthN signature handling
+/// @notice A Multi-WebAuthN validator for kernel v2 smart wallet, based on the FCL approach arround WebAuthN signature
+/// handling
 /// @notice This validator can have multiple webauthn validator per wallet, can revoke them etc.
 contract MultiWebAuthNValidatorV2 is IKernelValidator {
     using MultiWebAuthNSignatureLib for bytes;
@@ -84,7 +86,9 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
     /// @dev Mapping of smart account address to each webAuthn specific storage
     mapping(address smartAccount => MultiWebAuthNValidatorStorage webAuthnStorage) private signerStorage;
 
-    /// @dev The address of the on-chain p256 verifier contract (will be used if the user want that instead of the pre-compiled one, that way this validator can work on every chain out of the box while rip7212 is slowly being implemented everywhere)
+    /// @dev The address of the on-chain p256 verifier contract (will be used if the user want that instead of the
+    /// pre-compiled one, that way this validator can work on every chain out of the box while rip7212 is slowly being
+    /// implemented everywhere)
     address private immutable P256_VERIFIER;
 
     /// @dev Simple constructor, setting the P256 verifier address
@@ -166,8 +170,10 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
 
     /// @notice Install WebAuthn validator for a smart account.
     /// @dev The smart account need to be the `msg.sender`.
-    /// @dev The public key is encoded as `abi.encode(MultiWebAuthNValidatorStorage)` inside the data, so (uint256,uint256).
-    /// @dev The authenticatorIdHash is the hash of the authenticatorId. It enables to find public keys on-chain via event logs.
+    /// @dev The public key is encoded as `abi.encode(MultiWebAuthNValidatorStorage)` inside the data, so
+    /// (uint256,uint256).
+    /// @dev The authenticatorIdHash is the hash of the authenticatorId. It enables to find public keys on-chain via
+    /// event logs.
     function enable(bytes calldata _data) external payable override {
         // Extract the init data
         WebAuthNInitializationData calldata initData;
@@ -223,7 +229,8 @@ contract MultiWebAuthNValidatorV2 is IKernelValidator {
         return _checkSignature(msg.sender, _hash, _data) ? SIG_VALIDATION_SUCCESS : SIG_VALIDATION_FAILED;
     }
 
-    /// @dev Check if the caller is a valid signer, this don't apply to the WebAuthN validator, since it's using a public key
+    /// @dev Check if the caller is a valid signer, this don't apply to the WebAuthN validator, since it's using a
+    /// public key
     function validCaller(address, bytes calldata) external pure override returns (bool) {
         return false;
     }
