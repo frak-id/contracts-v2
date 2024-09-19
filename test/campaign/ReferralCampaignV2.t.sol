@@ -5,7 +5,11 @@ import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
-import {ReferralCampaignV2} from "src/campaign/ReferralCampaignv2.sol";
+import {
+    ReferralCampaignV2,
+    ReferralCampaignV2Config,
+    ReferralCampaignV2TriggerConfig
+} from "src/campaign/ReferralCampaignv2.sol";
 import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     PRODUCT_TYPE_DAPP,
@@ -76,17 +80,29 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
     /* -------------------------------------------------------------------------- */
 
     function test_construct_InvalidConfig_emptyTrigger() public {
-        ReferralCampaignV2.ReferralCampaignV2Config memory config = ReferralCampaignV2.ReferralCampaignV2Config({
+        ReferralCampaignV2Config memory config = ReferralCampaignV2Config({
             name: "test",
-            triggers: new ReferralCampaignV2.ReferralCampaignV2TriggerConfig[](0),
+            triggers: new ReferralCampaignV2TriggerConfig[](0),
             capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)})
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
         });
 
         vm.expectRevert(ReferralCampaignV2.InvalidConfig.selector);
-        new ReferralCampaignV2(
-            config, referralRegistry, adminRegistry, campaignBank, frakCampaignWallet, productInteraction
-        );
+        new ReferralCampaignV2(config, referralRegistry, adminRegistry, frakCampaignWallet, productInteraction);
+    }
+
+    function test_construct_InvalidConfig_noBank() public {
+        ReferralCampaignV2Config memory config = ReferralCampaignV2Config({
+            name: "test",
+            triggers: _buildTriggers(),
+            capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: CampaignBank(address(0))
+        });
+
+        vm.expectRevert(ReferralCampaignV2.InvalidConfig.selector);
+        new ReferralCampaignV2(config, referralRegistry, adminRegistry, frakCampaignWallet, productInteraction);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -414,11 +430,12 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
     modifier withSimpleConfig() {
         vm.pauseGasMetering();
         // Build a config
-        ReferralCampaignV2.ReferralCampaignV2Config memory config = ReferralCampaignV2.ReferralCampaignV2Config({
+        ReferralCampaignV2Config memory config = ReferralCampaignV2Config({
             name: "test",
             triggers: _buildTriggers(),
             capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)})
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
         });
 
         // Continue the execution
@@ -430,11 +447,12 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
     modifier withCappedConfig(uint256 capAmount, uint256 capPeriod) {
         vm.pauseGasMetering();
         // Build a config
-        ReferralCampaignV2.ReferralCampaignV2Config memory config = ReferralCampaignV2.ReferralCampaignV2Config({
+        ReferralCampaignV2Config memory config = ReferralCampaignV2Config({
             name: "test",
             triggers: _buildTriggers(),
             capConfig: ReferralCampaignV2.CapConfig({period: uint48(capPeriod), amount: uint208(capAmount)}),
-            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)})
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
         });
 
         // Continue the execution
@@ -446,11 +464,12 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
     modifier withActivationConfig(uint256 start, uint256 end) {
         vm.pauseGasMetering();
         // Build a config
-        ReferralCampaignV2.ReferralCampaignV2Config memory config = ReferralCampaignV2.ReferralCampaignV2Config({
+        ReferralCampaignV2Config memory config = ReferralCampaignV2Config({
             name: "test",
             triggers: _buildTriggers(),
             capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(start), end: uint48(end)})
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(start), end: uint48(end)}),
+            campaignBank: campaignBank
         });
 
         // Continue the execution
@@ -459,21 +478,17 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
         _;
     }
 
-    function _buildTriggers()
-        private
-        pure
-        returns (ReferralCampaignV2.ReferralCampaignV2TriggerConfig[] memory triggers)
-    {
-        triggers = new ReferralCampaignV2.ReferralCampaignV2TriggerConfig[](2);
+    function _buildTriggers() private pure returns (ReferralCampaignV2TriggerConfig[] memory triggers) {
+        triggers = new ReferralCampaignV2TriggerConfig[](2);
 
-        triggers[0] = ReferralCampaignV2.ReferralCampaignV2TriggerConfig({
+        triggers[0] = ReferralCampaignV2TriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
             userPercent: 5_000, // 50%
             deperditionPerLevel: 8_000, // 80%
             maxCountPerUser: 1
         });
-        triggers[1] = ReferralCampaignV2.ReferralCampaignV2TriggerConfig({
+        triggers[1] = ReferralCampaignV2TriggerConfig({
             interactionType: ReferralInteractions.REFERRAL_LINK_CREATION,
             baseReward: 10 ether,
             userPercent: 5_000, // 50%
@@ -482,11 +497,10 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
         });
     }
 
-    function _campaignSetup(ReferralCampaignV2.ReferralCampaignV2Config memory _config) private {
+    function _campaignSetup(ReferralCampaignV2Config memory _config) private {
         // Deploy the campaign
-        referralCampaign = new ReferralCampaignV2(
-            _config, referralRegistry, adminRegistry, campaignBank, frakCampaignWallet, productInteraction
-        );
+        referralCampaign =
+            new ReferralCampaignV2(_config, referralRegistry, adminRegistry, frakCampaignWallet, productInteraction);
 
         // Allow the campaign bank to distribute rewards
         vm.prank(campaignManager);

@@ -12,12 +12,28 @@ import {InteractionCampaign} from "./InteractionCampaign.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
-/*
+/// @dev Representing the config for a reward trigger of the campaign
+struct ReferralCampaignV2TriggerConfig {
+    InteractionType interactionType;
+    uint256 baseReward;
+    uint256 userPercent;
+    uint256 deperditionPerLevel;
+    uint256 maxCountPerUser;
+}
 
-todo:
- - Split storage structure to reduce gas cost for access (to benchmark with unit tests)
- - Expose a few readers function (trigger, trigger per users, cap config and cap state)
-*/
+/// @dev Representing the config for the referral campaign
+struct ReferralCampaignV2Config {
+    // Optional name for the campaign (as bytes32)
+    bytes32 name;
+    // The associated campaign bank
+    CampaignBank campaignBank;
+    // Set of triggers for the campaign
+    ReferralCampaignV2TriggerConfig[] triggers;
+    // Optional distribution cap config
+    ReferralCampaignV2.CapConfig capConfig;
+    // Optional activation period for the campaign
+    ReferralCampaignV2.ActivationPeriod activationPeriod;
+}
 
 /// @author @KONFeature
 /// @title ReferralCampaign
@@ -69,31 +85,6 @@ contract ReferralCampaignV2 is InteractionCampaign {
     CampaignBank private immutable CAMPAIGN_BANK;
 
     /* -------------------------------------------------------------------------- */
-    /*                               Config structs                               */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev Representing the config for a reward trigger of the campaign
-    struct ReferralCampaignV2TriggerConfig {
-        InteractionType interactionType;
-        uint256 baseReward;
-        uint256 userPercent;
-        uint256 deperditionPerLevel;
-        uint256 maxCountPerUser;
-    }
-
-    /// @dev Representing the config for the referral campaign
-    struct ReferralCampaignV2Config {
-        // Optional name for the campaign (as bytes32)
-        bytes32 name;
-        // Set of triggers for the campaign
-        ReferralCampaignV2TriggerConfig[] triggers;
-        // Optional distribution cap config
-        CapConfig capConfig;
-        // Optional activation period for the campaign
-        ActivationPeriod activationPeriod;
-    }
-
-    /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
@@ -105,16 +96,35 @@ contract ReferralCampaignV2 is InteractionCampaign {
         uint16 maxCountPerUser;
     }
 
+    /// @dev Representing the reward trigger storage, storage location is at:
+    ///     (
+    ///         bytes32(uint256(keccak256('frak.campaign.referral.trigger')) - 1) &
+    ///         0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    ///     ) | _interactionType
+    function _trigger(InteractionType _interactionType) private pure returns (RewardTrigger storage storagePtr) {
+        assembly {
+            storagePtr.slot := or(0x2b590e368f6e51c03042de6eb3d37f464929de3b3f869c37f1eb01ab, _interactionType)
+        }
+    }
+
+    /// @dev Representing the current cap state
+    /// @custom:storage-location erc7201:frak.campaign.capState
+    struct CapState {
+        uint48 startTimestamp;
+        uint208 distributedAmount;
+    }
+
+    /// @dev bytes32(uint256(keccak256('frak.campaign.referral.capState')) - 1)
+    function _capState() private pure returns (CapState storage storagePtr) {
+        assembly {
+            storagePtr.slot := 0x881caacfc312bc308261b04ba99d456fed46f678c5e99a1782daaeb374ee5ecc
+        }
+    }
+
     /// @dev Representing the activation period
     struct ActivationPeriod {
         uint48 start;
         uint48 end;
-    }
-
-    /// @dev Representing the current cap state
-    struct CapState {
-        uint48 startTimestamp;
-        uint208 distributedAmount;
     }
 
     /// @dev Representing the cap config
@@ -125,29 +135,23 @@ contract ReferralCampaignV2 is InteractionCampaign {
         uint208 amount;
     }
 
-    /// @dev bytes32(uint256(keccak256('frak.campaign.referral')) - 1)
     bytes32 private constant _REFERRAL_CAMPAIGN_STORAGE_SLOT =
         0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f;
 
     /// @custom:storage-location erc7201:frak.campaign.referral
     struct ReferralCampaignStorage {
-        // Mapping of interaction type to the trigger
-        mapping(InteractionType interactionType => RewardTrigger trigger) triggers;
         // Mapping of user + interaction type to triggered count
         mapping(uint256 userAndInteractionType => uint16 triggeredCount) userTriggeredCount;
-        /// @dev The distribution cap state
-        CapState capState;
         /// @dev The distribution cap config
         CapConfig capConfig;
         /// @dev The start date of the campaign
         ActivationPeriod activationPeriod;
-        /// @dev The total amount distributed
-        uint256 totalDistributedAmount;
     }
 
+    /// @dev bytes32(uint256(keccak256('frak.campaign.referral')) - 1)
     function _referralCampaignStorage() private pure returns (ReferralCampaignStorage storage storagePtr) {
         assembly {
-            storagePtr.slot := _REFERRAL_CAMPAIGN_STORAGE_SLOT
+            storagePtr.slot := 0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f
         }
     }
 
@@ -159,18 +163,20 @@ contract ReferralCampaignV2 is InteractionCampaign {
         ReferralCampaignV2Config memory _config,
         ReferralRegistry _referralRegistry,
         ProductAdministratorRegistry _productAdministratorRegistry,
-        CampaignBank _campaignBank,
         address _frakCampaignWallet,
         ProductInteractionDiamond _interaction
     ) InteractionCampaign(_productAdministratorRegistry, _interaction, _config.name) {
-        // Early exit if we got no triggers
+        // Early exit if we got no triggers nor campaign bank
         if (_config.triggers.length == 0) {
+            revert InvalidConfig();
+        }
+        if (address(_config.campaignBank) == address(0)) {
             revert InvalidConfig();
         }
 
         // Set every immutable arguments
         REFERRAL_REGISTRY = _referralRegistry;
-        CAMPAIGN_BANK = _campaignBank;
+        CAMPAIGN_BANK = _config.campaignBank;
         FRAK_CAMPAIGN = _frakCampaignWallet;
 
         // Store the referral tree
@@ -182,14 +188,15 @@ contract ReferralCampaignV2 is InteractionCampaign {
         campaignStorage.capConfig = _config.capConfig;
 
         // Iterate over each triggers and set them
-        for (uint256 i = 0; i < _config.triggers.length; i++) {
+        uint256 triggerLength = _config.triggers.length;
+        for (uint256 i = 0; i < triggerLength; i++) {
             ReferralCampaignV2TriggerConfig memory triggerConfig = _config.triggers[i];
-            campaignStorage.triggers[triggerConfig.interactionType] = RewardTrigger({
-                baseReward: triggerConfig.baseReward.toUint192(),
-                userPercent: triggerConfig.userPercent.toUint16(),
-                deperditionPerLevel: triggerConfig.deperditionPerLevel.toUint16(),
-                maxCountPerUser: triggerConfig.maxCountPerUser.toUint16()
-            });
+
+            RewardTrigger storage trigger = _trigger(triggerConfig.interactionType);
+            trigger.baseReward = triggerConfig.baseReward.toUint192();
+            trigger.userPercent = triggerConfig.userPercent.toUint16();
+            trigger.deperditionPerLevel = triggerConfig.deperditionPerLevel.toUint16();
+            trigger.maxCountPerUser = triggerConfig.maxCountPerUser.toUint16();
         }
     }
 
@@ -252,7 +259,7 @@ contract ReferralCampaignV2 is InteractionCampaign {
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
 
         // Check if we got a trigger for this interaction
-        RewardTrigger storage trigger = _referralCampaignStorage().triggers[interactionType];
+        RewardTrigger storage trigger = _trigger(interactionType);
         if (trigger.baseReward == 0) {
             return;
         }
@@ -342,27 +349,23 @@ contract ReferralCampaignV2 is InteractionCampaign {
     /// @dev Update the distribution cap
     /// @dev  And reset it if needed
     function _updateDistributionCap(CapConfig storage _capConfig, uint256 _distributedAmount) private {
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        CapState storage cap = campaignStorage.capState;
+        CapState memory capReadOnly = _capState();
 
         unchecked {
-            // Update the total distributed amount
-            campaignStorage.totalDistributedAmount += _distributedAmount;
-
             // Cap reset case
-            if (block.timestamp > cap.startTimestamp + _capConfig.period) {
-                emit DistributionCapReset(cap.startTimestamp, cap.distributedAmount);
+            if (block.timestamp > capReadOnly.startTimestamp + _capConfig.period) {
+                emit DistributionCapReset(capReadOnly.startTimestamp, capReadOnly.distributedAmount);
 
-                cap.startTimestamp = uint48(block.timestamp);
-                cap.distributedAmount = uint208(_distributedAmount);
+                _capState().startTimestamp = uint48(block.timestamp);
+                _capState().distributedAmount = uint208(_distributedAmount);
 
                 return;
             }
             // Check if we can distribute the reward
-            if (cap.distributedAmount + _distributedAmount > _capConfig.amount) {
+            if (capReadOnly.distributedAmount + _distributedAmount > _capConfig.amount) {
                 revert DistributionCapReached();
             }
-            cap.distributedAmount += uint208(_distributedAmount);
+            _capState().distributedAmount += uint208(_distributedAmount);
         }
     }
 
