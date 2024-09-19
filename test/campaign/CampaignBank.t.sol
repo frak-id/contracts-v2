@@ -15,11 +15,13 @@ contract CampaignBankTest is EcosystemAwareTest {
     /// @dev The bank we will test
     CampaignBank private campaignBank;
 
+    uint256 productId;
+
     function setUp() public {
         _initEcosystemAwareTest();
 
         // Setup content with allowance for the operator
-        uint256 productId = _mintProduct(PRODUCT_TYPE_PRESS, "name", "press-domain");
+        productId = _mintProduct(PRODUCT_TYPE_PRESS, "name", "press-domain");
 
         // Deploy the bank
         campaignBank = new CampaignBank(adminRegistry, productId, address(token));
@@ -31,6 +33,12 @@ contract CampaignBankTest is EcosystemAwareTest {
     /* -------------------------------------------------------------------------- */
     /*                                 States test                                */
     /* -------------------------------------------------------------------------- */
+
+    function test_config() public view {
+        (uint256 _productId, address tokenAddr) = campaignBank.getConfig();
+        assertEq(productId, _productId);
+        assertEq(address(token), tokenAddr);
+    }
 
     function test_startDisabled() public view {
         assertFalse(campaignBank.isDistributionEnabled());

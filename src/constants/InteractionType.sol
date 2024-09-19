@@ -149,6 +149,6 @@ library PurchaseInteractions {
     /// @dev `bytes4(keccak256("frak.purchase.interaction.purchase_started"))`
     InteractionType constant PURCHASE_STARTED = InteractionType.wrap(0xd87e90c3);
 
-    /// @dev `bytes4(keccak256("frak.purchase.interaction.purchase_confirmed"))`
-    InteractionType constant PURCHASE_CONFIRMED = InteractionType.wrap(0xff153a38);
+    /// @dev `bytes4(keccak256("frak.purchase.interaction.purchase_completed"))`
+    InteractionType constant PURCHASE_COMPLETED = InteractionType.wrap(0x8403aeb4);
 }

@@ -70,7 +70,7 @@ contract ReferralCampaign is InteractionCampaign {
     uint256 private constant MAX_EXPLORATION_LEVEL = 5;
 
     /// @dev The fixed frak fee rate
-    uint256 private constant FRAK_FEE = 2_000; // 20%
+    uint256 private constant FRAK_FEE = 2000; // 20%
 
     /// @dev The referral tree for the current product id
     bytes32 private immutable REFERRAL_TREE;

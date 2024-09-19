@@ -333,7 +333,8 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
     }
 
     /// P256 curve order n/2 for malleability check
-    uint256 constant P256_N_DIV_2 = 57896044605178124381348723474703786764998477612067880171211129530534256022184;
+    uint256 constant P256_N_DIV_2 =
+        57_896_044_605_178_124_381_348_723_474_703_786_764_998_477_612_067_880_171_211_129_530_534_256_022_184;
 
     /// @dev Generate a p256 signature, from the given `_privateKey` on the given `_hash`
     function _getP256Signature(uint256 _privateKey, bytes32 _hash) internal pure returns (uint256, uint256) {

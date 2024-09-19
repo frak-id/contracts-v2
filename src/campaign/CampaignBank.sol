@@ -65,7 +65,6 @@ contract CampaignBank is PushPullModule {
     /// @param _rewards Rewards to be pushed
     function pushRewards(Reward[] calldata _rewards) external onlyApprovedCampaign {
         if (!_campaignBankStorage().isDistributionEnable) revert BankIsntOpen();
-
         _pushRewardsCd(_rewards);
     }
 
@@ -119,6 +118,11 @@ contract CampaignBank is PushPullModule {
 
         // Then check if we got enough token
         return TOKEN.balanceOf(address(this)) > getTotalPending();
+    }
+
+    /// @notice Get config info
+    function getConfig() external view returns (uint256 productId, address token) {
+        return (PRODUCT_ID, address(TOKEN));
     }
 
     /* -------------------------------------------------------------------------- */

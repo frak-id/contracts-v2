@@ -1,24 +1,27 @@
+# Global default config
 [profile.default]
-src = "src"
-out = "out"
-libs = ["lib"]
 fs_permissions = [{ access = "read-write", path = "./external"}]
-
-fmt.sort_imports = true
-fmt.line_length = 120
-
-# Remove bytecode hash at the end of compiled bytecode
 bytecode_hash = "none"
 
 # Optimizer config
 optimizer = true
 optimizer_runs = 100_000
 via-ir = false
+optimizer_details = { yul = true, constantOptimizer = true }
 
-[profile.default.optimizer_details]
-constantOptimizer = true
-yul = true
+# Testing
+fuzz = { runs = 128, seed = "0xacab" }
+invariant = { runs = 128, seed = "0xacab", depth = 500, call_override = true }
 
+# Formatter config
+fmt = { sort_imports = true, line_length = 120, number_underscore = "thousands" }
+
+# Heavy profile fat testing
+[profile.heavy]
+Fuzz = { runs = 1024, seed = "0xacab" }
+invariant = { runs = 1024, seed = "0xacab", depth = 10_000, call_override = true }
+
+# Etherscan keys
 [etherscan]
   mainnet = { key = "${API_KEY_ETHERSCAN}" }
   goerli = { key = "${API_KEY_ETHERSCAN}", url = "https://api-goerli.etherscan.io/api" }

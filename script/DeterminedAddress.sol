@@ -51,8 +51,10 @@ contract DeterminedAddress is Script {
     address internal productOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
 
     // news paper product
-    uint256 internal pNewsPaper = 20376791661718660580662410765070640284736320707848823176694931891585259913409;
-    uint256 internal pEthccWallet = 33953649417576654953995537313820306697747390492794311279756157547821320957282;
+    uint256 internal pNewsPaper =
+        20_376_791_661_718_660_580_662_410_765_070_640_284_736_320_707_848_823_176_694_931_891_585_259_913_409;
+    uint256 internal pEthccWallet =
+        33_953_649_417_576_654_953_995_537_313_820_306_697_747_390_492_794_311_279_756_157_547_821_320_957_282;
 
     function _getAddresses() internal returns (Addresses memory) {
         // Check if the file exist
@@ -107,7 +109,7 @@ contract DeterminedAddress is Script {
     }
 
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {
-        return DeploymentBlocks({arbSepolia: 66229858});
+        return DeploymentBlocks({arbSepolia: 66_229_858});
     }
 
     /// @dev Save the addresses in a json file

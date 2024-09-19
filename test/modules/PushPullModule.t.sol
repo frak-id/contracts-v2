@@ -20,6 +20,10 @@ contract PushPullModuleTest is Test {
         pushPullModule = new MockPushPull(address(token));
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                                Adding reward                               */
+    /* -------------------------------------------------------------------------- */
+
     /// @dev Test the addReward method, ensure it's failing if it hasn't enough token
     function test_addReward_NotEnoughToken() public {
         // Add some token to the user
@@ -31,7 +35,7 @@ contract PushPullModuleTest is Test {
     }
 
     /// @dev Test the addReward method, ensure it's failing if it hasn't enough token
-    function test_fuzz_addReward_NotEnoughToken(uint256 amount) public {
+    function testFuzz_addReward_NotEnoughToken(uint256 amount) public {
         vm.assume(amount < 5_000_000 ether);
 
         // Add some token to the user
@@ -52,6 +56,19 @@ contract PushPullModuleTest is Test {
         assertEq(50 ether, pushPullModule.getPendingAmount(bob));
         assertEq(100 ether, pushPullModule.getTotalPending());
     }
+
+    function testFuzz_addReward(address user, uint256 amount) public {
+        vm.assume(amount < 5_000_000 ether);
+        token.mint(address(pushPullModule), amount);
+
+        pushPullModule.addReward(user, amount);
+
+        assertEq(amount, pushPullModule.getPendingAmount(user));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                           Adding multiple rewards                          */
+    /* -------------------------------------------------------------------------- */
 
     function test_addRewards() public {
         token.mint(address(pushPullModule), 100 ether);
@@ -80,14 +97,9 @@ contract PushPullModuleTest is Test {
         pushPullModule.addRewards(rewards);
     }
 
-    function test_fuzz_addReward(address user, uint256 amount) public {
-        vm.assume(amount < 5_000_000 ether);
-        token.mint(address(pushPullModule), amount);
-
-        pushPullModule.addReward(user, amount);
-
-        assertEq(amount, pushPullModule.getPendingAmount(user));
-    }
+    /* -------------------------------------------------------------------------- */
+    /*                                  Claiming                                  */
+    /* -------------------------------------------------------------------------- */
 
     function test_claim_single() public {
         token.mint(address(pushPullModule), 100 ether);
@@ -123,6 +135,17 @@ contract PushPullModuleTest is Test {
 
         assertEq(0, pushPullModule.getPendingAmount(user));
         assertEq(amount, token.balanceOf(user));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  Invariant                                 */
+    /* -------------------------------------------------------------------------- */
+
+    function invariant_totalPendingLtBalance() public view {
+        uint256 totalPending = pushPullModule.getTotalPending();
+        uint256 balance = token.balanceOf(address(pushPullModule));
+
+        assertLe(totalPending, balance);
     }
 }
 

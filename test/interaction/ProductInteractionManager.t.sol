@@ -44,7 +44,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         campaignBank = new CampaignBank(adminRegistry, productIdDapp, address(token));
 
         // Mint a few test tokens to the campaign
-        token.mint(address(campaignBank), 1_000 ether);
+        token.mint(address(campaignBank), 1000 ether);
 
         // Start our bank
         vm.prank(productOwner);
@@ -331,8 +331,8 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         triggers[0] = ReferralCampaignTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
-            userPercent: 5_000, // 50%
-            deperditionPerLevel: 8_000, // 80%
+            userPercent: 5000, // 50%
+            deperditionPerLevel: 8000, // 80%
             maxCountPerUser: 1
         });
 
