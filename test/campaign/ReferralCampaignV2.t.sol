@@ -74,6 +74,24 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                               Test construct                               */
+    /* -------------------------------------------------------------------------- */
+
+    function test_construct_InvalidConfig_emptyTrigger() public {
+        ReferralCampaignV2.ReferralCampaignV2Config memory config = ReferralCampaignV2.ReferralCampaignV2Config({
+            name: "test",
+            triggers: new ReferralCampaignV2.ReferralCampaignV2TriggerConfig[](0),
+            capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)})
+        });
+
+        vm.expectRevert(ReferralCampaignV2.InvalidConfig.selector);
+        new ReferralCampaignV2(
+            config, referralRegistry, adminRegistry, campaignBank, frakCampaignWallet, productInteraction
+        );
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                             Test metadata setup                            */
     /* -------------------------------------------------------------------------- */
 
@@ -140,11 +158,81 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
     /*                          Test campaign activation                          */
     /* -------------------------------------------------------------------------- */
 
-    // todo: Should test every parameters that could disable the campaign here
-    //  - !isRunning
-    //  - activationPeriod.start > now
-    //  - activationPeriod.end < now
-    //  - campaignBank not able to distribute rewards
+    function test_setup_isActive() public withSimpleConfig {
+        // Ensure the campaign is running
+        assertTrue(referralCampaign.isActive());
+    }
+
+    function test_isActive_interactionCampaignInactive() public withSimpleConfig {
+        vm.prank(productOwner);
+        referralCampaign.setRunningStatus(false);
+
+        // Ensure the campaign is running
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_isActive_withActivationPeriod() public withActivationConfig(80, 120) {
+        assertTrue(referralCampaign.isActive());
+    }
+
+    function test_isActive_withActivationStartNotPassed() public withActivationConfig(80, 120) {
+        vm.warp(75);
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_isActive_withActivationEndPassed() public withActivationConfig(80, 120) {
+        vm.warp(125);
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_isActive_withBankDisabled() public withSimpleConfig {
+        vm.prank(campaignManager);
+        campaignBank.updateCampaignAllowance(address(referralCampaign), false);
+
+        assertFalse(referralCampaign.isActive());
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Test config update                             */
+    /* -------------------------------------------------------------------------- */
+
+    function test_updateActivationPeriod_Unauthorized() public withSimpleConfig {
+        vm.expectRevert(InteractionCampaign.Unauthorized.selector);
+        referralCampaign.updateActivationPeriod(ReferralCampaignV2.ActivationPeriod(uint48(0), uint48(0)));
+    }
+
+    function test_updateCapConfig_Unauthorized() public withSimpleConfig {
+        vm.expectRevert(InteractionCampaign.Unauthorized.selector);
+        referralCampaign.updateCapConfig(ReferralCampaignV2.CapConfig(uint48(0), uint208(0)));
+    }
+
+    function test_updateActivationPeriod() public withSimpleConfig {
+        assertTrue(referralCampaign.isActive());
+
+        uint48 time = uint48(block.timestamp);
+
+        vm.prank(campaignManager);
+        referralCampaign.updateActivationPeriod(ReferralCampaignV2.ActivationPeriod(time - 1, time + 1));
+        assertTrue(referralCampaign.isActive());
+
+        // Get config
+        (, ReferralCampaignV2.ActivationPeriod memory config) = referralCampaign.getConfig();
+        assertEq(config.start, time - 1);
+        assertEq(config.end, time + 1);
+
+        vm.warp(time + 2);
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_updateCapConfig() public withSimpleConfig {
+        vm.prank(campaignManager);
+        referralCampaign.updateCapConfig(ReferralCampaignV2.CapConfig(uint48(1312), uint208(10 ether)));
+
+        // Get config
+        (ReferralCampaignV2.CapConfig memory config,) = referralCampaign.getConfig();
+        assertEq(config.period, uint48(1312));
+        assertEq(config.amount, uint208(10 ether));
+    }
 
     /* -------------------------------------------------------------------------- */
     /*                          Test interaction handling                         */
@@ -349,6 +437,22 @@ contract ReferralCampaignV2Test is EcosystemAwareTest {
             triggers: _buildTriggers(),
             capConfig: ReferralCampaignV2.CapConfig({period: uint48(capPeriod), amount: uint208(capAmount)}),
             activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)})
+        });
+
+        // Continue the execution
+        _campaignSetup(config);
+        vm.resumeGasMetering();
+        _;
+    }
+
+    modifier withActivationConfig(uint256 start, uint256 end) {
+        vm.pauseGasMetering();
+        // Build a config
+        ReferralCampaignV2.ReferralCampaignV2Config memory config = ReferralCampaignV2.ReferralCampaignV2Config({
+            name: "test",
+            triggers: _buildTriggers(),
+            capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(start), end: uint48(end)})
         });
 
         // Continue the execution

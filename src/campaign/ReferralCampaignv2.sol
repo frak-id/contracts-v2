@@ -206,16 +206,11 @@ contract ReferralCampaignV2 is InteractionCampaign {
     }
 
     /// @dev Get the campaign config
-    function getConfig()
-        public
-        view
-        returns (CapConfig memory capConfig, ActivationPeriod memory activationPeriod, bytes32 name)
-    {
+    function getConfig() public view returns (CapConfig memory capConfig, ActivationPeriod memory activationPeriod) {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
 
         capConfig = campaignStorage.capConfig;
         activationPeriod = campaignStorage.activationPeriod;
-        name = _interactionCampaignStorage().name;
     }
 
     /// @dev Check if the campaign is active or not
@@ -252,7 +247,8 @@ contract ReferralCampaignV2 is InteractionCampaign {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Handle the given interaction
-    function innerHandleInteraction(bytes calldata _data) internal override {
+    /// todo: nonreetrant should be moved up a level
+    function innerHandleInteraction(bytes calldata _data) internal override nonReentrant {
         // Extract the data
         (InteractionType interactionType, address user,) = _data.unpackForCampaign();
 
@@ -375,9 +371,13 @@ contract ReferralCampaignV2 is InteractionCampaign {
     /*                           Campaign Administration                          */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Update the campaign activation date
-    function setActivationDate(uint48 _startDate, uint48 _endDate) external nonReentrant onlyAllowedManager {
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        campaignStorage.activationPeriod = ActivationPeriod(_startDate, _endDate);
+    /// @dev Update the campaign activation period
+    function updateActivationPeriod(ActivationPeriod calldata _activationPeriod) external onlyAllowedManager {
+        _referralCampaignStorage().activationPeriod = _activationPeriod;
+    }
+
+    /// @dev Update the campaign activation period
+    function updateCapConfig(CapConfig calldata _capConfig) external onlyAllowedManager {
+        _referralCampaignStorage().capConfig = _capConfig;
     }
 }
