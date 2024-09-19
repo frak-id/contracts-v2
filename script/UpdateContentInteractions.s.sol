@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {Addresses, DeterminedAddress, ProductIds} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
     PRODUCT_TYPE_DAPP,
     PRODUCT_TYPE_FEATURE_REFERRAL,

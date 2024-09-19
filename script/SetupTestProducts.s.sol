@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
 import {
     PRODUCT_TYPE_DAPP,
     PRODUCT_TYPE_FEATURE_REFERRAL,
@@ -32,8 +31,6 @@ contract SetupTestProducts is Script, DeterminedAddress {
 
         // Setup the interactions
         _setupInteractions(productInteractionManager, productIds);
-
-        _setupCampaigns(productInteractionManager, addresses, productIds);
     }
 
     /// @dev Mint the test products
@@ -80,45 +77,5 @@ contract SetupTestProducts is Script, DeterminedAddress {
             _interactionManager.deployInteractionContract(_productIds[i]);
         }
         vm.stopBroadcast();
-    }
-
-    bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = bytes4(keccak256("frak.campaign.referral"));
-
-    /// @dev Setup the itneraction campaigns for the given products
-    function _setupCampaigns(
-        ProductInteractionManager _interactionManager,
-        Addresses memory addresses,
-        uint256[] memory _productIds
-    ) internal {
-        console.log("Setting up campaigns");
-        for (uint256 i = 0; i < _productIds.length; i++) {
-            uint256 productId = _productIds[i];
-
-            vm.startBroadcast();
-
-            address campaign = _interactionManager.deployCampaign(
-                productId, REFERRAL_CAMPAIGN_IDENTIFIER, _campaignDeploymentData(addresses)
-            );
-
-            // Add a few mUSD to the deployed campaign
-            mUSDToken(addresses.mUSDToken).mint(address(campaign), 100_000 ether);
-
-            vm.stopBroadcast();
-        }
-    }
-
-    function _campaignDeploymentData(Addresses memory addresses) private pure returns (bytes memory) {
-        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
-            token: addresses.mUSDToken,
-            initialReward: 10 ether,
-            userRewardPercent: 5_000, // 50%
-            distributionCapPeriod: 1 days,
-            distributionCap: 500 ether,
-            startDate: uint48(0),
-            endDate: uint48(0),
-            name: ""
-        });
-
-        return abi.encode(config);
     }
 }

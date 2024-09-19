@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
-import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
+import {
+    ReferralCampaignV2,
+    ReferralCampaignV2Config,
+    ReferralCampaignV2TriggerConfig
+} from "src/campaign/ReferralCampaignV2.sol";
+
+import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     DENOMINATOR_DAPP,
     DENOMINATOR_PRESS,
@@ -24,55 +32,33 @@ import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorReg
 import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
-contract ProductInteractionManagerTest is Test {
-    address private owner = makeAddr("owner");
-    address private operator = makeAddr("operator");
-
-    ProductRegistry private productRegistry;
-    ReferralRegistry private referralRegistry;
-    ProductAdministratorRegistry private adminRegistry;
-    PurchaseOracle internal purchaseOracle;
-
-    InteractionFacetsFactory private facetFactory;
-    CampaignFactory private campaignFactory;
-
+contract ProductInteractionManagerTest is EcosystemAwareTest {
     uint256 private productIdDapp;
     uint256 private productIdPress;
     uint256 private productIdMulti;
     uint256 private productIdUnknown;
 
-    ProductInteractionManager private productInteractionManager;
+    /// @dev The bank we will use
+    CampaignBank private campaignBank;
 
     function setUp() public {
-        productRegistry = new ProductRegistry(owner);
-        referralRegistry = new ReferralRegistry(owner);
-        adminRegistry = new ProductAdministratorRegistry(productRegistry);
-        purchaseOracle = new PurchaseOracle();
+        _initEcosystemAwareTest();
 
-        facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry, purchaseOracle);
-        campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
+        productIdDapp = _mintProduct(PRODUCT_TYPE_DAPP, "name", "dapp-domain");
+        productIdPress = _mintProduct(PRODUCT_TYPE_PRESS, "name", "press-domain");
+        productIdMulti = _mintProduct(PRODUCT_TYPE_DAPP | PRODUCT_TYPE_PRESS, "name", "multi-domain");
+        productIdUnknown = _mintProduct(ProductTypes.wrap(uint256(1 << 99)), "name", "unknown-domain");
 
-        address implem = address(new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry));
-        address proxy = LibClone.deployERC1967(implem);
-        productInteractionManager = ProductInteractionManager(proxy);
-        productInteractionManager.init(owner, facetFactory, campaignFactory);
+        // Deploy a single bank
+        // We don't rly need to productId here since every product has the same roles
+        campaignBank = new CampaignBank(adminRegistry, productIdDapp, address(token));
 
-        // Grant the right roles to the product interaction manager
-        vm.prank(owner);
-        referralRegistry.grantRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
+        // Mint a few test tokens to the campaign
+        token.mint(address(campaignBank), 1_000 ether);
 
-        vm.startPrank(owner);
-        productIdDapp = productRegistry.mint(PRODUCT_TYPE_DAPP, "name", "dapp-domain", owner);
-        productIdPress = productRegistry.mint(PRODUCT_TYPE_PRESS, "name", "press-domain", owner);
-        productIdMulti = productRegistry.mint(PRODUCT_TYPE_DAPP | PRODUCT_TYPE_PRESS, "name", "multi-domain", owner);
-        productIdUnknown = productRegistry.mint(ProductTypes.wrap(uint256(1 << 99)), "name", "unknown-domain", owner);
-
-        // Grant the roles
-        adminRegistry.grantRoles(productIdDapp, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
-        adminRegistry.grantRoles(productIdPress, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
-        adminRegistry.grantRoles(productIdMulti, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
-        adminRegistry.grantRoles(productIdUnknown, operator, PRODUCT_MANAGER_ROLE | CAMPAIGN_MANAGER_ROLE);
-        vm.stopPrank();
+        // Start our bank
+        vm.prank(productOwner);
+        campaignBank.updateDistributionState(true);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -88,7 +74,7 @@ contract ProductInteractionManagerTest is Test {
         adminRegistry.grantRoles(productIdPress, testOperator, PRODUCT_MANAGER_ROLE);
 
         // Add it
-        vm.prank(owner);
+        vm.prank(productOwner);
         adminRegistry.grantRoles(productIdPress, testOperator, PRODUCT_MANAGER_ROLE);
 
         assertTrue(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator, PRODUCT_MANAGER_ROLE));
@@ -110,13 +96,13 @@ contract ProductInteractionManagerTest is Test {
         address testOperator1 = makeAddr("testOperator");
         address testOperator2 = makeAddr("testOperator2");
 
-        vm.startPrank(owner);
+        vm.startPrank(productOwner);
         adminRegistry.grantRoles(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE);
         adminRegistry.grantRoles(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE);
         vm.stopPrank();
 
         // Admin doing a remove
-        vm.prank(owner);
+        vm.prank(productOwner);
         adminRegistry.revokeRoles(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE);
 
         assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE));
@@ -138,49 +124,49 @@ contract ProductInteractionManagerTest is Test {
     }
 
     function test_deployInteractionContract_CantHandleProductTypes() public {
-        vm.prank(operator);
+        vm.prank(productOwner);
         vm.expectRevert(ProductInteractionManager.CantHandleProductTypes.selector);
         productInteractionManager.deployInteractionContract(productIdUnknown);
     }
 
     function test_deployInteractionContract_InteractionContractAlreadyDeployed() public {
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
         assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
 
-        vm.prank(operator);
+        vm.prank(productOwner);
         vm.expectRevert(ProductInteractionManager.InteractionContractAlreadyDeployed.selector);
         productInteractionManager.deployInteractionContract(productIdPress);
     }
 
     function test_deployInteractionContract_SaltClash() public {
         // Deploy and delete the interaction contract
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deleteInteractionContract(productIdPress);
 
         // Try to redeploy it
-        vm.prank(operator);
+        vm.prank(productOwner);
         vm.expectRevert();
         productInteractionManager.deployInteractionContract(productIdPress);
 
         // Try to redeploy it using another salt
         bytes32 _salt = keccak256(abi.encodePacked("salt"));
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress, _salt);
     }
 
     function test_deployInteractionContract() public {
         // Deploy the interaction contract
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
 
         // Assert it's deployed
         assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
 
         // Deploy the interaction contract for a product with multiple types
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdMulti);
         ProductInteractionDiamond interaction = productInteractionManager.getInteractionContract(productIdMulti);
         assertNotEq(address(interaction), address(0));
@@ -194,7 +180,7 @@ contract ProductInteractionManagerTest is Test {
         vm.expectRevert(ProductInteractionManager.NoInteractionContractFound.selector);
         productInteractionManager.getInteractionContract(productIdPress);
 
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
         address deployedAddress = address(productInteractionManager.getInteractionContract(productIdPress));
         assertNotEq(deployedAddress, address(0));
@@ -207,19 +193,19 @@ contract ProductInteractionManagerTest is Test {
 
     function test_updateInteractionContract_NoInteractionContractFound() public {
         vm.expectRevert(ProductInteractionManager.NoInteractionContractFound.selector);
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.updateInteractionContract(productIdDapp);
     }
 
     function test_updateInteractionContract() public {
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.updateInteractionContract(productIdPress);
     }
 
     function test_deleteInteractionContract() public {
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
 
         ProductInteractionDiamond interactionContract =
@@ -227,7 +213,7 @@ contract ProductInteractionManagerTest is Test {
         bytes32 tree = interactionContract.getReferralTree();
         assertTrue(referralRegistry.isAllowedOnTree(tree, address(interactionContract)));
 
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deleteInteractionContract(productIdPress);
 
         assertFalse(referralRegistry.isAllowedOnTree(tree, address(interactionContract)));
@@ -238,7 +224,7 @@ contract ProductInteractionManagerTest is Test {
     }
 
     function test_deleteInteractionContract_Unauthorized() public {
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
 
         vm.expectRevert(Ownable.Unauthorized.selector);
@@ -261,20 +247,10 @@ contract ProductInteractionManagerTest is Test {
 
     function test_detachCampaigns_multi() public {
         bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
-        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
-            token: makeAddr("testToken"),
-            initialReward: 10 ether,
-            userRewardPercent: 5_000, // 50%
-            distributionCapPeriod: 1 days,
-            distributionCap: 100 ether,
-            startDate: uint48(0),
-            endDate: uint48(0),
-            name: "test"
-        });
-        bytes memory initData = abi.encode(config);
+        bytes memory initData = _getReferralCampaignConfigInitData();
 
         // Deploy interaction and add campaign
-        vm.startPrank(operator);
+        vm.startPrank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
         ProductInteractionDiamond interactionContract =
             ProductInteractionDiamond(productInteractionManager.getInteractionContract(productIdPress));
@@ -289,7 +265,7 @@ contract ProductInteractionManagerTest is Test {
         toRemove[0] = InteractionCampaign(campaign1);
 
         // Test ok with reordering
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.detachCampaigns(productIdPress, toRemove);
         assertEq(interactionContract.getCampaigns().length, 3);
         assertEq(address(interactionContract.getCampaigns()[0]), campaign4);
@@ -303,7 +279,7 @@ contract ProductInteractionManagerTest is Test {
         toRemove[2] = InteractionCampaign(campaign3);
         toRemove[3] = InteractionCampaign(campaign4);
 
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.detachCampaigns(productIdPress, toRemove);
 
         assertEq(interactionContract.getCampaigns().length, 0);
@@ -311,20 +287,10 @@ contract ProductInteractionManagerTest is Test {
 
     function test_deployCampaign() public {
         bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
-        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
-            token: makeAddr("testToken"),
-            initialReward: 10 ether,
-            userRewardPercent: 5_000, // 50%
-            distributionCapPeriod: 1 days,
-            distributionCap: 100 ether,
-            startDate: uint48(0),
-            endDate: uint48(0),
-            name: ""
-        });
-        bytes memory initData = abi.encode(config);
+        bytes memory initData = _getReferralCampaignConfigInitData();
 
         // Deploy interaction
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployInteractionContract(productIdPress);
         ProductInteractionDiamond interactionContract =
             ProductInteractionDiamond(productInteractionManager.getInteractionContract(productIdPress));
@@ -334,7 +300,7 @@ contract ProductInteractionManagerTest is Test {
         productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
 
         // Test ok
-        vm.prank(operator);
+        vm.prank(productOwner);
         productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
 
         assertEq(interactionContract.getCampaigns().length, 1);
@@ -363,5 +329,31 @@ contract ProductInteractionManagerTest is Test {
 
         vm.prank(owner);
         productInteractionManager.upgradeToAndCall(newImplem, "");
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Helpers                                  */
+    /* -------------------------------------------------------------------------- */
+
+    function _getReferralCampaignConfigInitData() internal returns (bytes memory initData) {
+        vm.pauseGasMetering();
+        ReferralCampaignV2TriggerConfig[] memory triggers = new ReferralCampaignV2TriggerConfig[](1);
+        triggers[0] = ReferralCampaignV2TriggerConfig({
+            interactionType: ReferralInteractions.REFERRED,
+            baseReward: 10 ether,
+            userPercent: 5_000, // 50%
+            deperditionPerLevel: 8_000, // 80%
+            maxCountPerUser: 1
+        });
+
+        ReferralCampaignV2Config memory config = ReferralCampaignV2Config({
+            name: "test",
+            triggers: triggers,
+            capConfig: ReferralCampaignV2.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaignV2.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
+        });
+        initData = abi.encode(config);
+        vm.resumeGasMetering();
     }
 }
