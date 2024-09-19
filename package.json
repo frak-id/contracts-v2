@@ -8,12 +8,18 @@
     "preinstall": "npx only-allow bun",
     "clean": "forge clean",
     "build": "forge build",
-    "generate": "wagmi generate"
+    "generate": "wagmi generate",
+    "lint": "solhint src/**/*.sol",
+    "lint:test": "solhint test/**/*.sol",
+    "lint:script": "solhint script/**/*.sol"
   },
   "devDependencies": {
     "@wagmi/cli": "2.1.10"
   },
   "engines": {
     "node": "^18.16.0"
+  },
+  "dependencies": {
+    "solhint": "^5.0.3"
   }
 }

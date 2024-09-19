@@ -1,0 +1,10 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "no-inline-assembly": "off",
+    "func-visibility": ["warn",{"ignoreConstructors":true}],
+    "reason-string": "off",
+    "gas-custom-errors": "off",
+    "avoid-low-level-calls": "off"
+  }
+}

@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {InteractionType, InteractionTypeLib, ReferralInteractions} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
-import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {PushPullModule, Reward} from "../modules/PushPullModule.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";

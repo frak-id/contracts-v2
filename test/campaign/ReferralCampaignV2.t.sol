@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ReferralCampaignV2} from "src/campaign/ReferralCampaignv2.sol";

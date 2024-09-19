@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {InvalidSignature} from "../constants/Errors.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 
 /// @dev The role for the referral allowance manager

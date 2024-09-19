@@ -5,6 +5,7 @@ libs = ["lib"]
 fs_permissions = [{ access = "read-write", path = "./external"}]
 
 fmt.sort_imports = true
+fmt.line_length = 120
 
 # Remove bytecode hash at the end of compiled bytecode
 bytecode_hash = "none"

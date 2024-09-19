@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {Addresses, DeterminedAddress, ProductIds} from "../DeterminedAddress.sol";
+import {Addresses, DeterminedAddress} from "../DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";

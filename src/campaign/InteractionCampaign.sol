@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {InteractionType} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
 import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
-import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 

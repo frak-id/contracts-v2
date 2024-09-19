@@ -2,10 +2,9 @@
 pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
-import {MockErc20} from "../utils/MockErc20.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
-import {PushPullModule, Reward} from "src/modules/PushPullModule.sol";
+import {Reward} from "src/modules/PushPullModule.sol";
 
 contract CampaignBankTest is EcosystemAwareTest {
     address internal alice = makeAddr("alice");
