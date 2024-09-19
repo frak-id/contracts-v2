@@ -7,6 +7,8 @@ import {stdJson} from "forge-std/StdJson.sol";
 import "forge-std/Vm.sol";
 import "forge-std/console.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+
+import {CampaignBankFactory} from "src/campaign/CampaignBankFactory.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
@@ -52,6 +54,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - ProductInteractionManager: %s", addresses.productInteractionManager);
         console.log(" - FacetFactory: %s", addresses.facetFactory);
         console.log(" - CampaignFactory: %s", addresses.campaignFactory);
+        console.log(" - CampaignBankFactory: %s", addresses.campaignBankFactory);
         console.log(" - MUSDToken: %s", addresses.mUSDToken);
         console.log();
 
@@ -128,6 +131,12 @@ contract Deploy is Script, DeterminedAddress {
                 airdropper
             );
             addresses.campaignFactory = address(campaignFactory);
+        }
+        if (_shouldDeploy(addresses.campaignBankFactory)) {
+            console.log(" * Deploying CampaignBankFactory");
+            CampaignBankFactory campaignBankFactory =
+                new CampaignBankFactory{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorlRegistry));
+            addresses.campaignBankFactory = address(campaignBankFactory);
         }
 
         // Deploy the interaction manager if needed

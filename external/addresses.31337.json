@@ -1,5 +1,6 @@
 {
-  "campaignFactory": "0x13E8b953c4D3A8eE31C2cC8Fb5f79DAbDf4b74E0",
+  "campaignBankFactory": "0x3c918Db94Bee50A546db86a4c4fa5600b4088c5F",
+  "campaignFactory": "0xeE80aD1A868a8a3FcA466937d1bCf4CE6977bC33",
   "facetFactory": "0x66567667b7B6425C753d73A4af2405Eef9d76a2B",
   "mUSDToken": "0x56039fa1a804F614eBD714139F29a3ff4DB57ad6",
   "productAdministratorlRegistry": "0x62254d732C078BF0484EA7dBd61f7F620184F95e",

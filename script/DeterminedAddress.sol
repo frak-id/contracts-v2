@@ -16,6 +16,7 @@ struct Addresses {
     address productInteractionManager;
     // Campaigns
     address campaignFactory;
+    address campaignBankFactory;
     // Token
     address mUSDToken;
 }
@@ -67,6 +68,7 @@ contract DeterminedAddress is Script {
                 productInteractionManager: address(0),
                 facetFactory: address(0),
                 campaignFactory: address(0),
+                campaignBankFactory: address(0),
                 mUSDToken: address(0)
             });
         }
@@ -122,6 +124,7 @@ contract DeterminedAddress is Script {
         vm.serializeAddress(jsonKey, "productInteractionManager", addresses.productInteractionManager);
         vm.serializeAddress(jsonKey, "facetFactory", addresses.facetFactory);
         vm.serializeAddress(jsonKey, "campaignFactory", addresses.campaignFactory);
+        vm.serializeAddress(jsonKey, "campaignBankFactory", addresses.campaignBankFactory);
         string memory finalJson = vm.serializeAddress(jsonKey, "mUSDToken", addresses.mUSDToken);
 
         // Write it to the file

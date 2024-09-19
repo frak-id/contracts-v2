@@ -260,6 +260,17 @@ contract CampaignBankTest is EcosystemAwareTest {
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                                  Invariant                                 */
+    /* -------------------------------------------------------------------------- */
+
+    function invariant_totalPendingLtBalance() public view {
+        uint256 totalPending = campaignBank.getTotalPending();
+        uint256 balance = token.balanceOf(address(campaignBank));
+
+        assertLe(totalPending, balance);
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                                   Heleprs                                  */
     /* -------------------------------------------------------------------------- */
 
