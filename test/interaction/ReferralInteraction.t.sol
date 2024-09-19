@@ -25,14 +25,12 @@ contract ReferralInteractionTest is InteractionTest {
     ReferralFeatureFacet private rawFacet;
 
     function setUp() public {
-        // TODO: Setup with a more granular approach
-        vm.prank(owner);
-        productId = productRegistry.mint(PRODUCT_TYPE_FEATURE_REFERRAL, "name", "referral-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
         // Deploy the press interaction contract
-        _initInteractionTest();
+        (uint256 _pid, ProductInteractionDiamond _productInteraction) =
+            _mintProductWithInteraction(PRODUCT_TYPE_FEATURE_REFERRAL, "name", "referral-domain");
+        _initInteractionTest(_pid, _productInteraction);
 
         // Extract the press facet
         rawFacet = ReferralFeatureFacet(address(productInteraction.getFacet(DENOMINATOR_FEATURE_REFERRAL)));
@@ -61,7 +59,7 @@ contract ReferralInteractionTest is InteractionTest {
     /*                         Test referral link creation                        */
     /* -------------------------------------------------------------------------- */
 
-    function test_referralLinkCreation_simple() public {
+    function test_referralLinkCreation() public {
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
             DENOMINATOR_FEATURE_REFERRAL, ReferralInteractions.REFERRAL_LINK_CREATION, _linkCreationData(), alice
         );
@@ -78,7 +76,7 @@ contract ReferralInteractionTest is InteractionTest {
     /*                                Test referred                               */
     /* -------------------------------------------------------------------------- */
 
-    function test_referred_simple() public {
+    function test_referred() public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_FEATURE_REFERRAL, ReferralInteractions.REFERRED, _referredData(bob), alice);
 
@@ -92,7 +90,7 @@ contract ReferralInteractionTest is InteractionTest {
         assertEq(referralRegistry.getReferrer(referralTree, alice), bob);
     }
 
-    function test_referred_simple(address _user, address _referrer) public {
+    function testFuzz_referred(address _user, address _referrer) public {
         vm.assume(_user != address(0) && _referrer != address(0) && _user != _referrer);
         (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
             DENOMINATOR_FEATURE_REFERRAL, ReferralInteractions.REFERRED, _referredData(_referrer), _user

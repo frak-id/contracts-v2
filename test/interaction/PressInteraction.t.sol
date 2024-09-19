@@ -19,14 +19,12 @@ contract PressInteractionTest is InteractionTest {
     PressInteractionFacet private rawFacet;
 
     function setUp() public {
-        // TODO: Setup with a more granular approach
-        vm.prank(owner);
-        productId = productRegistry.mint(PRODUCT_TYPE_PRESS, "name", "press-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
         // Deploy the press interaction contract
-        _initInteractionTest();
+        (uint256 _pid, ProductInteractionDiamond _productInteraction) =
+            _mintProductWithInteraction(PRODUCT_TYPE_PRESS, "name", "press-domain");
+        _initInteractionTest(_pid, _productInteraction);
 
         // Extract the press facet
         rawFacet = PressInteractionFacet(address(productInteraction.getFacet(DENOMINATOR_PRESS)));
@@ -98,7 +96,7 @@ contract PressInteractionTest is InteractionTest {
         productInteraction.handleInteraction(packedInteraction, signature);
     }
 
-    function test_articleRead(bytes32 _articleId, address _user) public {
+    function testFuzz_articleRead(bytes32 _articleId, address _user) public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(_articleId), _user);
 
@@ -134,7 +132,7 @@ contract PressInteractionTest is InteractionTest {
     /*                              Test open article                             */
     /* -------------------------------------------------------------------------- */
 
-    function w() public {
+    function test_articleOpened() public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(0), alice);
 
@@ -146,7 +144,7 @@ contract PressInteractionTest is InteractionTest {
         productInteraction.handleInteraction(packedInteraction, signature);
     }
 
-    function test_articleOpened_simple(bytes32 _articleId, address _user) public {
+    function testFuzz_articleOpened(bytes32 _articleId, address _user) public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(_articleId), _user);
 

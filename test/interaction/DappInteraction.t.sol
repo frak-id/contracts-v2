@@ -34,14 +34,12 @@ contract DappInteractionTest is InteractionTest {
         bytes4(keccak256(abi.encodePacked(address(mockStorage), MockStorageContract.getMockedFailing.selector)));
 
     function setUp() public {
-        // TODO: Setup with a more granular approach
-        vm.prank(owner);
-        productId = productRegistry.mint(PRODUCT_TYPE_DAPP, "name", "dapp-storage-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
         // Deploy the press interaction contract
-        _initInteractionTest();
+        (uint256 _pid, ProductInteractionDiamond _productInteraction) =
+            _mintProductWithInteraction(PRODUCT_TYPE_DAPP, "name", "dapp-storage-domain");
+        _initInteractionTest(_pid, _productInteraction);
 
         // Extract the press facet
         rawFacet = DappInteractionFacet(address(productInteraction.getFacet(DENOMINATOR_DAPP)));

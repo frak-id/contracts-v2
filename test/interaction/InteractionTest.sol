@@ -1,37 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {LibClone} from "solady/utils/LibClone.sol";
-import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
-import {PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
-import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
-import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
-import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
-import {ProductRegistry} from "src/registry/ProductRegistry.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 /// @dev Generic contract to test interaction
-abstract contract InteractionTest is Test {
+abstract contract InteractionTest is EcosystemAwareTest {
     uint256 internal productId;
-
-    address internal owner = makeAddr("owner");
-    address internal operator = makeAddr("operator");
-
-    ProductRegistry internal productRegistry = new ProductRegistry(owner);
-    ReferralRegistry internal referralRegistry = new ReferralRegistry(owner);
-    ProductAdministratorRegistry internal adminRegistry = new ProductAdministratorRegistry(productRegistry);
-    PurchaseOracle internal purchaseOracle = new PurchaseOracle();
-
-    ProductInteractionManager internal productInteractionManager;
-    InteractionFacetsFactory internal facetFactory;
-    CampaignFactory internal campaignFactory;
 
     uint256 internal validatorPrivKey;
     address internal validator;
@@ -40,47 +18,41 @@ abstract contract InteractionTest is Test {
 
     bytes32 internal referralTree;
 
-    function _initInteractionTest() internal {
+    /// @dev Initialize the test
+    function _initInteractionTest(uint256 _productId, ProductInteractionDiamond _productInteraction) internal {
         // Create our validator ECDSA
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
 
-        facetFactory = new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry, purchaseOracle);
-        campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, owner);
-
-        // Create our product interaction
-        address implem = address(new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry));
-        address proxy = LibClone.deployERC1967(implem);
-        productInteractionManager = ProductInteractionManager(proxy);
-        productInteractionManager.init(owner, facetFactory, campaignFactory);
-
-        // Grant the right roles to the product interaction manager
-        vm.prank(owner);
-        referralRegistry.grantRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
-
-        // Allow the operator
-        vm.prank(owner);
-        adminRegistry.grantRoles(productId, operator, PRODUCT_MANAGER_ROLE);
-
-        // Deploy the interaction contract
-        vm.prank(operator);
-        productInteractionManager.deployInteractionContract(productId);
-        productInteraction = productInteractionManager.getInteractionContract(productId);
-        vm.label(address(productInteraction), "ProductInteractionDiamond");
-
-        referralTree = productInteraction.getReferralTree();
+        productId = _productId;
+        productInteraction = _productInteraction;
+        referralTree = _productInteraction.getReferralTree();
 
         // Grant the validator roles
-        vm.prank(owner);
-        productInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
+        vm.prank(productOwner);
+        _productInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
     }
 
     // Validation type hash
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
         keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user,uint256 nonce)");
 
+    /// @dev Prepare some interaction data
+    function _prepareInteraction(
+        uint8 productTypeDenominator,
+        InteractionType action,
+        bytes memory interactionData,
+        address user
+    ) internal returns (bytes memory data, bytes memory signature) {
+        vm.pauseGasMetering();
+        bytes memory facetData = abi.encodePacked(action, interactionData);
+        data = abi.encodePacked(productTypeDenominator, facetData);
+        signature = _getInteractionSignature(facetData, user);
+        vm.resumeGasMetering();
+    }
+
     /// @dev Generate an interaction signature for the given interaction data
     function _getInteractionSignature(bytes memory _interactionData, address _user)
-        internal
+        private
         view
         returns (bytes memory signature)
     {
@@ -101,19 +73,6 @@ abstract contract InteractionTest is Test {
 
         // Compact the signature into a single byte
         signature = abi.encodePacked(r, s);
-    }
-
-    function _prepareInteraction(
-        uint8 productTypeDenominator,
-        InteractionType action,
-        bytes memory interactionData,
-        address user
-    ) internal returns (bytes memory data, bytes memory signature) {
-        vm.pauseGasMetering();
-        bytes memory facetData = abi.encodePacked(action, interactionData);
-        data = abi.encodePacked(productTypeDenominator, facetData);
-        signature = _getInteractionSignature(facetData, user);
-        vm.resumeGasMetering();
     }
 
     /* -------------------------------------------------------------------------- */

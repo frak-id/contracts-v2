@@ -20,13 +20,12 @@ contract PurchaseFeatureInteractionTest is InteractionTest {
     PurchaseFeatureFacet private rawFacet;
 
     function setUp() public {
-        vm.prank(owner);
-        productId = productRegistry.mint(PRODUCT_TYPE_FEATURE_PURCHASE, "name", "purchase-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
         // Deploy the press interaction contract
-        _initInteractionTest();
+        (uint256 _pid, ProductInteractionDiamond _productInteraction) =
+            _mintProductWithInteraction(PRODUCT_TYPE_FEATURE_PURCHASE, "name", "purchase-domain");
+        _initInteractionTest(_pid, _productInteraction);
 
         // Extract the press facet
         rawFacet = PurchaseFeatureFacet(address(productInteraction.getFacet(DENOMINATOR_FEATURE_PURCHASE)));

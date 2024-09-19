@@ -17,13 +17,11 @@ contract WebShopInteractionTest is InteractionTest {
     WebShopInteractionFacet private rawFacet;
 
     function setUp() public {
-        vm.prank(owner);
-        productId = productRegistry.mint(PRODUCT_TYPE_WEB_SHOP, "name", "webshop-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
-        // Deploy the press interaction contract
-        _initInteractionTest();
+        (uint256 _pid, ProductInteractionDiamond _productInteraction) =
+            _mintProductWithInteraction(PRODUCT_TYPE_WEB_SHOP, "name", "webshop-domain");
+        _initInteractionTest(_pid, _productInteraction);
 
         // Extract the press facet
         rawFacet = WebShopInteractionFacet(address(productInteraction.getFacet(DENOMINATOR_WEB_SHOP)));
