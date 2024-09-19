@@ -65,7 +65,7 @@ contract CampaignBank is PushPullModule {
     /// @param _rewards Rewards to be pushed
     function pushRewards(Reward[] calldata _rewards) external onlyApprovedCampaign {
         if (!_campaignBankStorage().isDistributionEnable) revert BankIsntOpen();
-        _pushRewardsCd(_rewards);
+        _pushRewards(_rewards);
     }
 
     /* -------------------------------------------------------------------------- */

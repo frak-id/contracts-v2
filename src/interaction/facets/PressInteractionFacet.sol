@@ -18,10 +18,10 @@ contract PressInteractionFacet is ProductInteractionStorageLib, IInteractionFace
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event when an article is opened by the given `user`
-    event ArticleOpened(bytes32 indexed articleId, address user);
+    event ArticleOpened(bytes32 articleId, address user);
 
     /// @dev Event when an article is read by the given `user`
-    event ArticleRead(bytes32 indexed articleId, address user);
+    event ArticleRead(bytes32 articleId, address user);
 
     /// @dev High level interaction router
     fallback(bytes calldata _data) external returns (bytes memory) {

@@ -38,10 +38,10 @@ contract DappInteractionFacet is ProductInteractionStorageLib, IInteractionFacet
     event ContractUnRegistered(bytes4 indexed id);
 
     /// @dev Event when a storage at `slot` is updated to `value` on another contract
-    event ProofStorageUpdated(address indexed smartContract, uint256 slot, uint256 value);
+    event ProofStorageUpdated(address smartContract, uint256 slot, uint256 value);
 
     /// @dev Event when a storage at `slot` is updated to `value` on another contract
-    event CallableStorageUpdated(address indexed smartContract, uint256 value);
+    event CallableStorageUpdated(address smartContract, uint256 value);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */

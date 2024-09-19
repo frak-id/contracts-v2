@@ -19,10 +19,10 @@ contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event emitted when a `user` created a referral link
-    event ReferralLinkCreation(address indexed user);
+    event ReferralLinkCreation(address user);
 
     /// @dev Event emitted when a `user` was referred by `referrer`
-    event UserReferred(address indexed user, address indexed referrer);
+    event UserReferred(address user, address referrer);
 
     /// @dev The referral registry
     ReferralRegistry internal immutable REFERRAL_REGISTRY;
@@ -86,17 +86,16 @@ contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
         }
 
         bytes32 tree = _referralTree();
-        address user = msg.sender;
 
         // Check if the user can have a referrer on this platform
-        if (_isUserAlreadyReferred(tree, user)) {
+        if (_isUserAlreadyReferred(tree, msg.sender)) {
             return "";
         }
 
         // Save the info inside the right referral tree
-        _saveReferrer(tree, user, referrer);
+        _saveReferrer(tree, msg.sender, referrer);
         // Emit the share link used event
-        emit UserReferred(user, referrer);
+        emit UserReferred(msg.sender, referrer);
         // Just resend the data
         return ReferralInteractions.REFERRED.packForCampaign(msg.sender, _data);
     }

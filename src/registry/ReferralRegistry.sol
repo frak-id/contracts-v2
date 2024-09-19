@@ -16,7 +16,7 @@ contract ReferralRegistry is OwnableRoles {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Emitted when a user is referred by another user
-    event UserReferred(bytes32 indexed tree, address indexed referer, address indexed referee);
+    event UserReferred(bytes32 tree, address referer, address referee);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */

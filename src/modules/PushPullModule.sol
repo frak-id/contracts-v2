@@ -22,7 +22,7 @@ abstract contract PushPullModule is ReentrancyGuard {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Emitted when a reward is added for a user
-    event RewardAdded(address indexed user, uint256 amount);
+    event RewardAdded(address indexed user, address emitter, uint256 amount);
 
     /// @dev Emitted when a reward is claimed by a user
     event RewardClaimed(address indexed user, uint256 amount);
@@ -85,41 +85,11 @@ abstract contract PushPullModule is ReentrancyGuard {
         tokenStorage.totalPending = newTotalPending;
 
         // Emit the event
-        emit RewardAdded(_user, _amount);
-    }
-
-    /// @notice Add multiple rewards for the given `_user` with the given `_amount`
-    function _pushRewards(Reward[] memory _rewards) internal nonReentrant {
-        // Get the given storage for the token
-        PushPullModuleStorage storage tokenStorage = _pushPullStorage();
-
-        // Get our control var
-        uint256 newTotalPending = tokenStorage.totalPending;
-        uint256 currentBalance = TOKEN.balanceOf(address(this));
-
-        // Iterate over each rewards
-        for (uint256 i = 0; i < _rewards.length; i++) {
-            Reward memory reward = _rewards[i];
-
-            // Compute the new pending total amount
-            newTotalPending += reward.amount;
-            if (newTotalPending > currentBalance) {
-                revert NotEnoughToken();
-            }
-
-            // Set the reward for the user
-            tokenStorage.pendingAmount[reward.user] += reward.amount;
-
-            // Emit the event
-            emit RewardAdded(reward.user, reward.amount);
-        }
-
-        // Update the total pending amount
-        tokenStorage.totalPending = newTotalPending;
+        emit RewardAdded(_user, msg.sender, _amount);
     }
 
     /// @notice Add multiple rewards for the given `_user` with the given `_amount` via calldata
-    function _pushRewardsCd(Reward[] calldata _rewards) internal nonReentrant {
+    function _pushRewards(Reward[] calldata _rewards) internal nonReentrant {
         // Get the given storage for the token
         PushPullModuleStorage storage tokenStorage = _pushPullStorage();
 
@@ -141,7 +111,7 @@ abstract contract PushPullModule is ReentrancyGuard {
             tokenStorage.pendingAmount[reward.user] += reward.amount;
 
             // Emit the event
-            emit RewardAdded(reward.user, reward.amount);
+            emit RewardAdded(reward.user, msg.sender, reward.amount);
         }
 
         // Update the total pending amount

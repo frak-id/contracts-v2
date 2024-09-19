@@ -156,7 +156,7 @@ contract MockPushPull is PushPullModule {
         _pushReward(user, amount);
     }
 
-    function addRewards(Reward[] memory rewards) public {
+    function addRewards(Reward[] calldata rewards) public {
         _pushRewards(rewards);
     }
 }
