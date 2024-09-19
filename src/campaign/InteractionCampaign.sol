@@ -109,7 +109,7 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     }
 
     /// @dev Update the campaign running status
-    function setRunningStatus(bool _isRunning) external nonReentrant onlyAllowedManager {
+    function setRunningStatus(bool _isRunning) external onlyAllowedManager {
         _interactionCampaignStorage().isRunning = _isRunning;
     }
 

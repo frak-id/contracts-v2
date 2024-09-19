@@ -289,7 +289,7 @@ contract ReferralCampaignV2 is InteractionCampaign {
         // Get all the referrers
         address[] memory referrers = REFERRAL_REGISTRY.getCappedReferrers(REFERRAL_TREE, _user, MAX_EXPLORATION_LEVEL);
 
-        // Early exit if no saved referrers (shouldn't be the case, be safety first)
+        // Early exit if no saved referrers
         if (referrers.length == 0) {
             return;
         }

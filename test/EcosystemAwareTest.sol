@@ -16,7 +16,7 @@ import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
 /// @dev Test with all the frak ecosystem context
-contract EcosystemAwareTest is Test {
+abstract contract EcosystemAwareTest is Test {
     // Setup a few wallet that could be used almost everywhere
     address internal owner = makeAddr("owner");
     address internal productOwner = makeAddr("productOwner");
@@ -57,6 +57,23 @@ contract EcosystemAwareTest is Test {
         // Grant the right roles to the product interaction manager
         vm.prank(owner);
         referralRegistry.grantRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                         Test to ensure proper setup                        */
+    /* -------------------------------------------------------------------------- */
+    function test_ecosystemSetup() public view {
+        // Ensure everything is deployed
+        assertNotEq(address(productRegistry), address(0));
+        assertNotEq(address(referralRegistry), address(0));
+        assertNotEq(address(adminRegistry), address(0));
+        assertNotEq(address(purchaseOracle), address(0));
+        assertNotEq(address(facetFactory), address(0));
+        assertNotEq(address(campaignFactory), address(0));
+        assertNotEq(address(productInteractionManager), address(0));
+
+        // Ensore role is granted as needed
+        assertTrue(referralRegistry.hasAllRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE));
     }
 
     /* -------------------------------------------------------------------------- */
