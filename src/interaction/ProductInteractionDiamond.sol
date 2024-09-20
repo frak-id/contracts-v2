@@ -105,6 +105,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
             tree := keccak256(0, 0x40)
         }
         _productInteractionStorage().referralTree = tree;
+        _productInteractionStorage().productId = _productId;
     }
 
     /* -------------------------------------------------------------------------- */

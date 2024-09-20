@@ -52,7 +52,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     event InteractionContractDeployed(uint256 indexed productId, ProductInteractionDiamond interactionContract);
 
     /// @dev Event emitted when an interaction contract is updated
-    event InteractionContractUpdated(uint256 productId, ProductInteractionDiamond interactionContract);
+    event InteractionContractUpdated(uint256 indexed productId, ProductInteractionDiamond interactionContract);
 
     /// @dev Event emitted when an interaction contract is deleted
     event InteractionContractDeleted(uint256 indexed productId, ProductInteractionDiamond interactionContract);

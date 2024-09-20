@@ -1,10 +1,10 @@
 {
-  "campaignBankFactory": "0x3c918Db94Bee50A546db86a4c4fa5600b4088c5F",
-  "campaignFactory": "0xeE80aD1A868a8a3FcA466937d1bCf4CE6977bC33",
-  "facetFactory": "0x66567667b7B6425C753d73A4af2405Eef9d76a2B",
+  "campaignBankFactory": "0x0389A8bF219f73df3fEC17E6ed3735b0a73146Dd",
+  "campaignFactory": "0x23CbD3d1574c90012E69cbA01C8b6b6F6625ff39",
+  "facetFactory": "0xA886f7A9A8A2c7A1B3E52f321a01812B46cDBD82",
   "mUSDToken": "0x56039fa1a804F614eBD714139F29a3ff4DB57ad6",
   "productAdministratorlRegistry": "0x62254d732C078BF0484EA7dBd61f7F620184F95e",
-  "productInteractionManager": "0x33BaeBFfe46133DDcfa8a76c62c3A115b46C9ab2",
+  "productInteractionManager": "0x7E328974649540BBB883bADC382d2476855C1180",
   "productRegistry": "0xdA7fBD02eb048bDf6f1607122eEe071e44f0b9F2",
-  "referralRegistry": "0x8039B768BbD6e5f7e9d084c60e32F888fA9faf08"
+  "referralRegistry": "0x80B0385e97263A60BafB554B0C4152261D45785A"
 }

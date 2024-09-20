@@ -107,6 +107,7 @@ contract ReferralInteractionTest is InteractionTest {
         );
 
         // Call the referral method
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
         vm.prank(alice);
         productInteraction.handleInteraction(packedInteraction, signature);
 
@@ -125,6 +126,7 @@ contract ReferralInteractionTest is InteractionTest {
         (packedInteraction, signature) = _prepareInteraction(
             DENOMINATOR_FEATURE_REFERRAL, ReferralInteractions.REFERRED, _referredData(charlie), alice
         );
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
         vm.prank(alice);
         productInteraction.handleInteraction(packedInteraction, signature);
 

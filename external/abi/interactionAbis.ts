@@ -144,7 +144,7 @@ export const dappInteractionFacetAbi = [
         name: 'smartContract',
         internalType: 'address',
         type: 'address',
-        indexed: true,
+        indexed: false,
       },
       {
         name: 'value',
@@ -236,7 +236,7 @@ export const dappInteractionFacetAbi = [
         name: 'smartContract',
         internalType: 'address',
         type: 'address',
-        indexed: true,
+        indexed: false,
       },
       {
         name: 'slot',
@@ -303,7 +303,7 @@ export const pressInteractionFacetAbi = [
         name: 'articleId',
         internalType: 'bytes32',
         type: 'bytes32',
-        indexed: true,
+        indexed: false,
       },
       {
         name: 'user',
@@ -322,7 +322,7 @@ export const pressInteractionFacetAbi = [
         name: 'articleId',
         internalType: 'bytes32',
         type: 'bytes32',
-        indexed: true,
+        indexed: false,
       },
       {
         name: 'user',
@@ -332,20 +332,6 @@ export const pressInteractionFacetAbi = [
       },
     ],
     name: 'ArticleRead',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
-      {
-        name: 'referrer',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'UserReferred',
   },
   { type: 'error', inputs: [], name: 'UnknownInteraction' },
 ] as const
@@ -1013,13 +999,6 @@ export const productInteractionManagerAbi = [
     stateMutability: 'payable',
   },
   {
-    type: 'function',
-    inputs: [{ name: '_newWallet', internalType: 'address', type: 'address' }],
-    name: 'walletLinked',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
     type: 'event',
     anonymous: false,
     inputs: [
@@ -1161,25 +1140,6 @@ export const productInteractionManagerAbi = [
     ],
     name: 'Upgraded',
   },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
-        name: 'prevWallet',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-      {
-        name: 'newWallet',
-        internalType: 'address',
-        type: 'address',
-        indexed: true,
-      },
-    ],
-    name: 'WalletLinked',
-  },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
   { type: 'error', inputs: [], name: 'CantHandleProductTypes' },
   { type: 'error', inputs: [], name: 'InteractionContractAlreadyDeployed' },
@@ -1191,6 +1151,73 @@ export const productInteractionManagerAbi = [
   { type: 'error', inputs: [], name: 'Unauthorized' },
   { type: 'error', inputs: [], name: 'UnauthorizedCallContext' },
   { type: 'error', inputs: [], name: 'UpgradeFailed' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PurchaseFeatureFacet
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const purchaseFeatureFacetAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      {
+        name: '_purchaseOracle',
+        internalType: 'contract IPurchaseOracle',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  { type: 'fallback', stateMutability: 'nonpayable' },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'productTypeDenominator',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'purchaseId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'user',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'PurchaseCompleted',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'purchaseId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+      {
+        name: 'user',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'PurchaseStarted',
+  },
+  { type: 'error', inputs: [], name: 'PurchaseAlreadyProcessed' },
+  { type: 'error', inputs: [], name: 'PurchaseNotCompleted' },
+  { type: 'error', inputs: [], name: 'UnknownInteraction' },
 ] as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1221,7 +1248,12 @@ export const referralFeatureFacetAbi = [
     type: 'event',
     anonymous: false,
     inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'user',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
     ],
     name: 'ReferralLinkCreation',
   },
@@ -1229,15 +1261,37 @@ export const referralFeatureFacetAbi = [
     type: 'event',
     anonymous: false,
     inputs: [
-      { name: 'user', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'user',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
       {
         name: 'referrer',
         internalType: 'address',
         type: 'address',
-        indexed: true,
+        indexed: false,
       },
     ],
     name: 'UserReferred',
+  },
+  { type: 'error', inputs: [], name: 'InvalidReferrer' },
+  { type: 'error', inputs: [], name: 'UnknownInteraction' },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// WebShopInteractionFacet
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const webShopInteractionFacetAbi = [
+  { type: 'fallback', stateMutability: 'nonpayable' },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'productTypeDenominator',
+    outputs: [{ name: '', internalType: 'uint8', type: 'uint8' }],
+    stateMutability: 'pure',
   },
   { type: 'error', inputs: [], name: 'UnknownInteraction' },
 ] as const

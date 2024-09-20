@@ -94,6 +94,20 @@ contract PurchaseOracleTest is EcosystemAwareTest {
         assertEq(purchaseOracle.verifyPurchase(productId, purchaseId, PurchaseStatus.Pending, proof), true);
     }
 
+    function test_verifyPurchase_invalidProof() public {
+        // Generate a merkle tree and proof
+        (bytes32 root, bytes32[] memory proof) = _generateMekleTreeAndProof(0, PurchaseStatus.Pending);
+
+        proof[0] = bytes32(0);
+
+        // Update the merkle root
+        vm.prank(oracleOperator);
+        purchaseOracle.updateMerkleRoot(productId, root);
+
+        // Verify the purchase
+        assertEq(purchaseOracle.verifyPurchase(productId, 0, PurchaseStatus.Pending, proof), false);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                   Helpers                                  */
     /* -------------------------------------------------------------------------- */

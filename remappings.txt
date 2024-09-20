@@ -5,4 +5,3 @@ kernel/=lib/kernel/src/
 kernel-v2/=lib/kernel-v2/src/
 FreshCryptoLib/=lib/FreshCryptoLib/solidity/src/
 rlp=lib/solidity-rlp/contracts/
-murky=lib/murky/src/

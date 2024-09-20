@@ -22,11 +22,11 @@ interface IPurchaseOracle {
 
     /// @notice Verifies the purchase status using a Merkle proof for a specific product
     /// @param _productId The product ID
-    /// @param purchaseId The ID of the purchase
-    /// @param status The status of the purchase
-    /// @param proof The Merkle proof array
+    /// @param _purchaseId The ID of the purchase
+    /// @param _status The status of the purchase
+    /// @param _proof The Merkle proof array
     /// @return isValid True if the proof is valid and the status is confirmed
-    function verifyPurchase(uint256 _productId, uint256 purchaseId, PurchaseStatus status, bytes32[] calldata proof)
+    function verifyPurchase(uint256 _productId, uint256 _purchaseId, PurchaseStatus _status, bytes32[] calldata _proof)
         external
         view
         returns (bool isValid);

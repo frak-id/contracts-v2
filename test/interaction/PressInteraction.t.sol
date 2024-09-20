@@ -86,7 +86,7 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(0), alice);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleRead(0, alice);
         // Call the open article method
         vm.prank(alice);
@@ -98,7 +98,7 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(_articleId), _user);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleRead(_articleId, _user);
         // Call the open article method
         vm.prank(_user);
@@ -134,7 +134,7 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(0), alice);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleOpened(0, alice);
         // Call the open article method
         vm.prank(alice);
@@ -146,7 +146,7 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(_articleId), _user);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleOpened(_articleId, _user);
         // Call the open article method
         vm.prank(_user);

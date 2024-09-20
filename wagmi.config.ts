@@ -15,43 +15,41 @@ export default defineConfig(
     [
         // Frak registry abis
         {
-            out: "external/abi/frak-registry-abis.ts",
+            out: "external/abi/registryAbis.ts",
             plugins: foundryPlugin([
                 'ProductRegistry.json',
                 'ReferralRegistry.json',
                 'ProductAdministratorRegistry.json',
+                'PurchaseOracle.json',
             ]),
         },
         // Frak interaction abis
         {
-            out: "external/abi/frak-interaction-abis.ts",
+            out: "external/abi/interactionAbis.ts",
             plugins: foundryPlugin([
                 'ProductInteractionManager.json',
                 'ProductInteractionDiamond.json',
+                'WebShopInteractionFacet.json',
                 'PressInteractionFacet.json',
-                'ReferralFeatureFacet.json',
                 'DappInteractionFacet.json',
+                'ReferralFeatureFacet.json',
+                'PurchaseFeatureFacet.json',
             ]),
         },
         // Frak campaign abi
         {
-            out: "external/abi/frak-campaign-abis.ts",
+            out: "external/abi/campaignAbis.ts",
             plugins: foundryPlugin([
+                'CampaignBank.json',
+                'CampaignBankFactory.json',
                 'CampaignFactory.json',
                 'InteractionCampaign.json',
                 'ReferralCampaign.json',
             ]),
         },
-        // Frak campaign abi
-        {
-            out: "external/abi/stylus-abis.ts",
-            plugins: foundryPlugin([
-                'StylusFlattened.json',
-            ]),
-        },
         // Kernel v2 abis
         {
-            out: "external/abi/kernel-v2-abis.ts",
+            out: "external/abi/kernelV2Abis.ts",
             plugins: foundryPlugin([
                 'MultiWebAuthNRecoveryAction.json',
                 'MultiWebAuthNValidatorV2.json',
