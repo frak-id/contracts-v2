@@ -1057,7 +1057,7 @@ export const productInteractionManagerAbi = [
         name: 'productId',
         internalType: 'uint256',
         type: 'uint256',
-        indexed: false,
+        indexed: true,
       },
       {
         name: 'interactionContract',
@@ -1185,7 +1185,7 @@ export const purchaseFeatureFacetAbi = [
         name: 'purchaseId',
         internalType: 'uint256',
         type: 'uint256',
-        indexed: true,
+        indexed: false,
       },
       {
         name: 'user',
@@ -1204,7 +1204,7 @@ export const purchaseFeatureFacetAbi = [
         name: 'purchaseId',
         internalType: 'uint256',
         type: 'uint256',
-        indexed: true,
+        indexed: false,
       },
       {
         name: 'user',

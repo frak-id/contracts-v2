@@ -45,13 +45,13 @@ contract CampaignBankTest is EcosystemAwareTest {
     }
 
     function test_campaignAllowance() public {
-        assertFalse(campaignBank.isCampaignAllowed(campaign));
+        assertFalse(campaignBank.isCampaignAuthorised(campaign));
 
         // The campaign manager can change the status
         vm.prank(campaignManager);
         campaignBank.updateCampaignAllowance(campaign, true);
 
-        assertTrue(campaignBank.isCampaignAllowed(campaign));
+        assertTrue(campaignBank.isCampaignAuthorised(campaign));
 
         // No random ppl could change this status
         vm.expectRevert(CampaignBank.Unauthorized.selector);
@@ -66,7 +66,7 @@ contract CampaignBankTest is EcosystemAwareTest {
         vm.prank(productOwner);
         campaignBank.updateCampaignAllowance(campaign, false);
 
-        assertFalse(campaignBank.isCampaignAllowed(campaign));
+        assertFalse(campaignBank.isCampaignAuthorised(campaign));
     }
 
     function test_distributionState() public {
@@ -237,16 +237,16 @@ contract CampaignBankTest is EcosystemAwareTest {
     /* -------------------------------------------------------------------------- */
 
     function test_isAbleToDistribute() public {
-        assertFalse(campaignBank.isAbleToDistributeForCampaign(campaign));
+        assertFalse(campaignBank.canDistributeToken(campaign));
 
         vm.prank(campaignManager);
         campaignBank.updateCampaignAllowance(campaign, true);
 
-        assertFalse(campaignBank.isAbleToDistributeForCampaign(campaign));
+        assertFalse(campaignBank.canDistributeToken(campaign));
 
         vm.prank(productOwner);
         campaignBank.updateDistributionState(true);
-        assertTrue(campaignBank.isAbleToDistributeForCampaign(campaign));
+        assertTrue(campaignBank.canDistributeToken(campaign));
 
         vm.prank(productOwner);
         campaignBank.updateDistributionState(false);
@@ -256,7 +256,7 @@ contract CampaignBankTest is EcosystemAwareTest {
         vm.prank(productOwner);
         campaignBank.updateDistributionState(true);
 
-        assertFalse(campaignBank.isAbleToDistributeForCampaign(campaign));
+        assertFalse(campaignBank.canDistributeToken(campaign));
     }
 
     /* -------------------------------------------------------------------------- */

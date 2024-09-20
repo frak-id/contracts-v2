@@ -14,6 +14,13 @@ contract CampaignBank is PushPullModule {
     using SafeTransferLib for address;
 
     /* -------------------------------------------------------------------------- */
+    /*                               Events emitted                               */
+    /* -------------------------------------------------------------------------- */
+
+    event CampaignAuthorisationUpdated(address campaign, bool isAllowed);
+    event DistributionStateUpdated(bool isDistributing);
+
+    /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
 
@@ -39,8 +46,8 @@ contract CampaignBank is PushPullModule {
     struct CampaignBankStorage {
         /// @dev Is the bank active or not (could be frozen, thus no distribution)
         bool isDistributionEnable;
-        /// @dev Mapping of campaign to the allowed distribution state
-        mapping(address campaign => bool allowedToDistribute) allowedCampaign;
+        /// @dev Mapping of campaign to the is allowed for distribution
+        mapping(address campaign => bool isAllowed) distributionAuthorisation;
     }
 
     function _campaignBankStorage() internal pure returns (CampaignBankStorage storage storagePtr) {
@@ -75,12 +82,14 @@ contract CampaignBank is PushPullModule {
     /// @notice Update a campaign allowance for token distribution
     /// @param _campaign The campaign to approve
     function updateCampaignAllowance(address _campaign, bool _isAllowed) external onlyAllowedCampaignManager {
-        _campaignBankStorage().allowedCampaign[_campaign] = _isAllowed;
+        _campaignBankStorage().distributionAuthorisation[_campaign] = _isAllowed;
+        emit CampaignAuthorisationUpdated(_campaign, _isAllowed);
     }
 
     /// @notice Update the distribution state
     function updateDistributionState(bool _state) external onlyAllowedProductManager {
         _campaignBankStorage().isDistributionEnable = _state;
+        emit DistributionStateUpdated(_state);
     }
 
     /// @dev Withdraw the remaining token from the campaign
@@ -100,8 +109,8 @@ contract CampaignBank is PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @notice Check if the campaign is allowed for distribution
-    function isCampaignAllowed(address _campaign) external view returns (bool) {
-        return _campaignBankStorage().allowedCampaign[_campaign];
+    function isCampaignAuthorised(address _campaign) external view returns (bool) {
+        return _campaignBankStorage().distributionAuthorisation[_campaign];
     }
 
     /// @notice Check if the distribution is enabled
@@ -110,11 +119,11 @@ contract CampaignBank is PushPullModule {
     }
 
     /// @notice Check if the campaign is able to distribute tokens
-    function isAbleToDistributeForCampaign(address _campaign) external view returns (bool) {
+    function canDistributeToken(address _campaign) external view returns (bool) {
         CampaignBankStorage storage bankStorage = _campaignBankStorage();
 
         // Check from the storage first
-        if (!bankStorage.allowedCampaign[_campaign] || !bankStorage.isDistributionEnable) return false;
+        if (!bankStorage.distributionAuthorisation[_campaign] || !bankStorage.isDistributionEnable) return false;
 
         // Then check if we got enough token
         return TOKEN.balanceOf(address(this)) > getTotalPending();
@@ -146,7 +155,7 @@ contract CampaignBank is PushPullModule {
 
     /// @dev Only allow the call for an authorised mananger
     modifier onlyApprovedCampaign() {
-        if (!_campaignBankStorage().allowedCampaign[msg.sender]) revert Unauthorized();
+        if (!_campaignBankStorage().distributionAuthorisation[msg.sender]) revert Unauthorized();
         _;
     }
 }

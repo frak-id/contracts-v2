@@ -239,7 +239,7 @@ contract ReferralCampaign is InteractionCampaign {
         }
 
         // Check if the campaign bank is able to distribute tokens
-        return CAMPAIGN_BANK.isAbleToDistributeForCampaign(address(this));
+        return CAMPAIGN_BANK.canDistributeToken(address(this));
     }
 
     /// @dev Check if the given campaign support the `_productType`
