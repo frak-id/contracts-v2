@@ -18,7 +18,7 @@ contract PurchaseOracle is IPurchaseOracle {
     /// @notice Emitted when a product's Merkle root is updated
     /// @param productId The product ID
     /// @param newMerkleRoot The new Merkle root
-    event MerkleRootUpdated(uint256 indexed productId, bytes32 indexed newMerkleRoot);
+    event MerkleRootUpdated(uint256 indexed productId, bytes32 newMerkleRoot);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
@@ -79,7 +79,6 @@ contract PurchaseOracle is IPurchaseOracle {
     /// @return merkleRoot The Merkle root associated with the product
     function getMerkleRoot(uint256 _productId) external view returns (bytes32 merkleRoot) {
         merkleRoot = _purchaseOracleStorage().merkleRoots[_productId];
-        if (merkleRoot == bytes32(0)) revert MerkleRootNotSet();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -88,20 +87,20 @@ contract PurchaseOracle is IPurchaseOracle {
 
     /// @notice Verifies the purchase status using a Merkle proof for a specific product
     /// @param _productId The product ID
-    /// @param purchaseId The ID of the purchase
-    /// @param status The status of the purchase
-    /// @param proof The Merkle proof array
+    /// @param _purchaseId The ID of the purchase
+    /// @param _status The status of the purchase
+    /// @param _proof The Merkle proof array
     /// @return isValid True if the proof is valid and the status is confirmed
-    function verifyPurchase(uint256 _productId, uint256 purchaseId, PurchaseStatus status, bytes32[] calldata proof)
+    function verifyPurchase(uint256 _productId, uint256 _purchaseId, PurchaseStatus _status, bytes32[] calldata _proof)
         external
         view
         returns (bool isValid)
     {
-        bytes32 leaf = keccak256(abi.encodePacked(purchaseId, status));
+        bytes32 leaf = keccak256(abi.encodePacked(_purchaseId, _status));
         bytes32 root = _purchaseOracleStorage().merkleRoots[_productId];
         if (root == bytes32(0)) revert MerkleRootNotSet();
 
-        isValid = MerkleProofLib.verifyCalldata(proof, root, leaf);
+        isValid = MerkleProofLib.verifyCalldata(_proof, root, leaf);
     }
 
     /* -------------------------------------------------------------------------- */
