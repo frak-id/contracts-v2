@@ -1,48 +1,119 @@
-// SPDX-License-Identifier: GNU GPLv3
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import {IPurchaseOracle} from "./IPurchaseOracle.sol";
-import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+import {PURCHASE_ORACLE_OPERATOR_ROLE} from "../constants/Roles.sol";
+import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
+import {IPurchaseOracle, PurchaseStatus} from "./IPurchaseOracle.sol";
+import {MerkleProofLib} from "solady/utils/MerkleProofLib.sol";
 
-/// @title PurchsaeOracle
 /// @author @KONFeature
-/// @notice Contract acting as an oracle for purchase states accross the products networks
+/// @title PurchaseOracle
+/// @notice Contract managing purchase verification using per-product Merkle roots.
 /// @custom:security-contact contact@frak.id
-contract PurchaseOracle is OwnableRoles, IPurchaseOracle {
-    /// @dev Struct representing a purchase representing a simple purchase
-    struct Purchase {
-        // todo: should be custom type or enum
-        // todo: Could be concated with user or currency
-        bytes2 state;
-        // User who performed the purchase
-        address user;
-        // Internal purchase id (could be shopify `order.id` or stripe `paymentIntent.id` for example)
-        bytes32 internalId;
-        // Currency amount, with 6 decimals (on uint232 so it can be stored in a bytes32 with the currency)
-        uint232 amount;
-        // three letter currency code matching ISO 4217 standard
-        bytes3 currency;
-    }
+contract PurchaseOracle is IPurchaseOracle {
+    /* -------------------------------------------------------------------------- */
+    /*                                    Events                                  */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Emitted when a product's Merkle root is updated
+    /// @param productId The product ID
+    /// @param newMerkleRoot The new Merkle root
+    event MerkleRootUpdated(uint256 indexed productId, bytes32 indexed newMerkleRoot);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
+
+    error Unauthorized();
+    error MerkleRootNotSet();
+
+    /* -------------------------------------------------------------------------- */
+    /*                               Immutable State                              */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev The product administrator registry
+    ProductAdministratorRegistry private immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev bytes32(uint256(keccak256('frak.purchase_oracle')) - 1)
-    bytes32 private constant PURCHASE_ORACLE_STORAGE_SLOT =
-        0x7604630823fe740cd249174fdd8aaffc7f3bd2a8dffc7d7da7625ddeb9cbed9e;
+    /// @dev Storage slot for the PurchaseOracle storage structure
+    /// bytes32(uint256(keccak256('yourdomain.purchase.oracle')) - 1)
+    bytes32 private constant _PURCHASE_ORACLE_STORAGE_SLOT =
+        0x073848f6bc84ccc0ecb2ca2e50704da03f5aee77a333a180b76b990454311e36;
 
-    /// @custom:storage-location erc7201:frak.registry.referral
+    /// @custom:storage-location erc7201:yourdomain.purchase.oracle
     struct PurchaseOracleStorage {
-        /// @dev Mapping of product ids to purchase id to purchase struct
-        mapping(uint256 productId => mapping(bytes32 purchaseId => Purchase)) purchases;
-        /// @dev Mapping of product ids to purchase update hooks
-        mapping(uint256 productId => address[]) purchaseUpdateHooks;
+        /// @dev Mapping from product ID to Merkle root
+        mapping(uint256 _productId => bytes32 _merkleRoot) merkleRoots;
     }
 
-    function _purchaseOracleStorage() private pure returns (PurchaseOracleStorage storage storagePtr) {
+    function _purchaseOracleStorage() internal pure returns (PurchaseOracleStorage storage s) {
+        bytes32 position = _PURCHASE_ORACLE_STORAGE_SLOT;
         assembly {
-            storagePtr.slot := PURCHASE_ORACLE_STORAGE_SLOT
+            s.slot := position
         }
+    }
+
+    /// @dev Constructs the PurchaseOracle contract
+    /// @param _adminRegistry The address of the ProductAdministratorRegistry
+    constructor(ProductAdministratorRegistry _adminRegistry) {
+        PRODUCT_ADMINISTRATOR_REGISTRY = _adminRegistry;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Merkle Root Management                         */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Updates the Merkle root for a specific product
+    /// @param _productId The product ID
+    /// @param _merkleRoot The new Merkle root
+    function updateMerkleRoot(uint256 _productId, bytes32 _merkleRoot) external onlyOperator(_productId) {
+        _purchaseOracleStorage().merkleRoots[_productId] = _merkleRoot;
+        emit MerkleRootUpdated(_productId, _merkleRoot);
+    }
+
+    /// @notice Retrieves the Merkle root for a specific product
+    /// @param _productId The product ID
+    /// @return merkleRoot The Merkle root associated with the product
+    function getMerkleRoot(uint256 _productId) external view returns (bytes32 merkleRoot) {
+        merkleRoot = _purchaseOracleStorage().merkleRoots[_productId];
+        if (merkleRoot == bytes32(0)) revert MerkleRootNotSet();
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                              Purchase Verification                         */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Verifies the purchase status using a Merkle proof for a specific product
+    /// @param _productId The product ID
+    /// @param purchaseId The ID of the purchase
+    /// @param status The status of the purchase
+    /// @param proof The Merkle proof array
+    /// @return isValid True if the proof is valid and the status is confirmed
+    function verifyPurchase(uint256 _productId, uint256 purchaseId, PurchaseStatus status, bytes32[] calldata proof)
+        external
+        view
+        returns (bool isValid)
+    {
+        bytes32 leaf = keccak256(abi.encodePacked(purchaseId, status));
+        bytes32 root = _purchaseOracleStorage().merkleRoots[_productId];
+        if (root == bytes32(0)) revert MerkleRootNotSet();
+
+        isValid = MerkleProofLib.verifyCalldata(proof, root, leaf);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                              Access Control Modifiers                      */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Only allow calls from an authorized operator for the given product
+    /// @param _productId The product ID
+    modifier onlyOperator(uint256 _productId) {
+        bool isAllowed =
+            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(_productId, msg.sender, PURCHASE_ORACLE_OPERATOR_ROLE);
+        if (!isAllowed) revert Unauthorized();
+        _;
     }
 }

@@ -7,7 +7,6 @@ import {stdJson} from "forge-std/StdJson.sol";
 import "forge-std/Vm.sol";
 import "forge-std/console.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
-
 import {CampaignBankFactory} from "src/campaign/CampaignBankFactory.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE} from "src/constants/Roles.sol";
@@ -106,7 +105,8 @@ contract Deploy is Script, DeterminedAddress {
         // Deploy the oracle
         if (_shouldDeploy(addresses.purchaseOracle)) {
             console.log(" * Deploying PurchaseOracle");
-            PurchaseOracle purchaseOracle = new PurchaseOracle{salt: 0}();
+            PurchaseOracle purchaseOracle =
+                new PurchaseOracle{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorlRegistry));
             addresses.purchaseOracle = address(purchaseOracle);
         }
 

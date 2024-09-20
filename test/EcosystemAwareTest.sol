@@ -33,7 +33,7 @@ abstract contract EcosystemAwareTest is Test {
     ProductAdministratorRegistry internal adminRegistry = new ProductAdministratorRegistry(productRegistry);
 
     /// @dev The purchase oracle
-    PurchaseOracle internal purchaseOracle = new PurchaseOracle();
+    PurchaseOracle internal purchaseOracle = new PurchaseOracle(adminRegistry);
 
     /// @dev The different factories
     InteractionFacetsFactory internal facetFactory =

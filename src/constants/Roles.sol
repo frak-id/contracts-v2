@@ -19,3 +19,6 @@ uint256 constant CAMPAIGN_MANAGER_ROLE = 1 << 3;
 
 /// @dev The role that can validate a user interaction
 uint256 constant INTERCATION_VALIDATOR_ROLE = 1 << 4;
+
+/// @dev The role that can operate the purchase oracle
+uint256 constant PURCHASE_ORACLE_OPERATOR_ROLE = 1 << 5;
