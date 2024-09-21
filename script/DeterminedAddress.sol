@@ -48,6 +48,10 @@ struct DeploymentBlocks {
 contract DeterminedAddress is Script {
     using stdJson for string;
 
+    // JSON files
+    string internal addressesFile = "./external/addresses.json";
+    string internal kernelFile = "./external/kernelAddresses.json";
+
     // Config
     address internal airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
     address internal productOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
@@ -75,6 +79,9 @@ contract DeterminedAddress is Script {
 
         // Check if the file exist
         if (!vm.exists(file)) {
+            file = addressesFile;
+        }
+        if (!vm.exists(file)) {
             console.log("File does not exist: %s", file);
             return emptyAddress;
         }
@@ -82,7 +89,11 @@ contract DeterminedAddress is Script {
         // Get the addresses for the current chain
         string memory json = vm.readFile(file);
         if (bytes(json).length == 0) {
-            console.log("File is empty: %s", file);
+            console.log("Per chain file is empty: %s", file);
+            json = vm.readFile(addressesFile);
+        }
+        if (bytes(json).length == 0) {
+            console.log("Global file is empty: %s", addressesFile);
             return emptyAddress;
         }
 
@@ -113,12 +124,21 @@ contract DeterminedAddress is Script {
 
         // Check if the file exist
         if (!vm.exists(file)) {
+            file = kernelFile;
+        }
+        if (!vm.exists(file)) {
+            console.log("File does not exist: %s", file);
             return emptyAddress;
         }
 
         // Read the json
         string memory json = vm.readFile(file);
         if (bytes(json).length == 0) {
+            console.log("Per chain file is empty: %s", file);
+            json = vm.readFile(kernelFile);
+        }
+        if (bytes(json).length == 0) {
+            console.log("Global file is empty: %s", kernelFile);
             return emptyAddress;
         }
 
@@ -161,6 +181,7 @@ contract DeterminedAddress is Script {
         string memory finalJson = vm.serializeAddress(jsonKey, "mUSDToken", addresses.mUSDToken);
 
         // Write it to the file
+        vm.writeJson(finalJson, addressesFile);
         vm.writeJson(finalJson, _nexusChainFile());
     }
 
@@ -176,6 +197,7 @@ contract DeterminedAddress is Script {
         string memory finalJson =
             vm.serializeAddress(jsonKey, "interactionDelegatorAction", addresses.interactionDelegatorAction);
 
+        vm.writeJson(finalJson, kernelFile);
         vm.writeJson(finalJson, _kernelChainFile());
     }
 

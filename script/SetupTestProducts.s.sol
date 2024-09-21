@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
+import {CampaignBankFactory} from "src/campaign/CampaignBankFactory.sol";
 import {
     PRODUCT_TYPE_DAPP,
     PRODUCT_TYPE_FEATURE_REFERRAL,
@@ -31,6 +32,9 @@ contract SetupTestProducts is Script, DeterminedAddress {
 
         // Setup the interactions
         _setupInteractions(productInteractionManager, productIds);
+
+        // Setup the campaign banks
+        _setupBanks(addresses, productIds);
     }
 
     /// @dev Mint the test products
@@ -75,6 +79,18 @@ contract SetupTestProducts is Script, DeterminedAddress {
         for (uint256 i = 0; i < _productIds.length; i++) {
             // Deploy the interaction contract
             _interactionManager.deployInteractionContract(_productIds[i]);
+        }
+        vm.stopBroadcast();
+    }
+
+    /// @dev Setup the interaction contracts for the given products
+    function _setupBanks(Addresses memory addresses, uint256[] memory _productIds) internal {
+        console.log("Setting up banks");
+        CampaignBankFactory campaignBankFactory = CampaignBankFactory(addresses.campaignBankFactory);
+        vm.startBroadcast();
+        for (uint256 i = 0; i < _productIds.length; i++) {
+            // Deploy the interaction contract
+            campaignBankFactory.deployCampaignBank(_productIds[i], addresses.mUSDToken);
         }
         vm.stopBroadcast();
     }
