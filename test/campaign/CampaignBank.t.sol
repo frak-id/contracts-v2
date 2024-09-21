@@ -49,22 +49,22 @@ contract CampaignBankTest is EcosystemAwareTest {
 
         // The campaign manager can change the status
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAllowance(campaign, true);
+        campaignBank.updateCampaignAuthorisation(campaign, true);
 
         assertTrue(campaignBank.isCampaignAuthorised(campaign));
 
         // No random ppl could change this status
         vm.expectRevert(CampaignBank.Unauthorized.selector);
-        campaignBank.updateCampaignAllowance(campaign, true);
+        campaignBank.updateCampaignAuthorisation(campaign, true);
 
         // The product manager can';t change the status
         vm.expectRevert(CampaignBank.Unauthorized.selector);
         vm.prank(productManager);
-        campaignBank.updateCampaignAllowance(campaign, true);
+        campaignBank.updateCampaignAuthorisation(campaign, true);
 
         // The product owner can change the status
         vm.prank(productOwner);
-        campaignBank.updateCampaignAllowance(campaign, false);
+        campaignBank.updateCampaignAuthorisation(campaign, false);
 
         assertFalse(campaignBank.isCampaignAuthorised(campaign));
     }
@@ -119,13 +119,13 @@ contract CampaignBankTest is EcosystemAwareTest {
 
         // If campaignj not allowed, it can't distribute rewards
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAllowance(campaign, false);
+        campaignBank.updateCampaignAuthorisation(campaign, false);
         vm.expectRevert(CampaignBank.Unauthorized.selector);
         campaignBank.pushRewards(rewards);
 
         // If campaign allowed, it can distribute rewards
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAllowance(campaign, true);
+        campaignBank.updateCampaignAuthorisation(campaign, true);
 
         // If the bank isnt running, cant distribute rewards
         vm.prank(campaign);
@@ -190,7 +190,7 @@ contract CampaignBankTest is EcosystemAwareTest {
 
     function test_withdraw_withPendingRewards() public {
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAllowance(campaign, true);
+        campaignBank.updateCampaignAuthorisation(campaign, true);
         vm.prank(productOwner);
         campaignBank.updateDistributionState(true);
 
@@ -240,7 +240,7 @@ contract CampaignBankTest is EcosystemAwareTest {
         assertFalse(campaignBank.canDistributeToken(campaign));
 
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAllowance(campaign, true);
+        campaignBank.updateCampaignAuthorisation(campaign, true);
 
         assertFalse(campaignBank.canDistributeToken(campaign));
 

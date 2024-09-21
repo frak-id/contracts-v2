@@ -199,7 +199,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
     function test_isActive_withBankDisabled() public withSimpleConfig {
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAllowance(address(referralCampaign), false);
+        campaignBank.updateCampaignAuthorisation(address(referralCampaign), false);
 
         assertFalse(referralCampaign.isActive());
     }
@@ -228,7 +228,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         assertTrue(referralCampaign.isActive());
 
         // Get config
-        (, ReferralCampaign.ActivationPeriod memory config) = referralCampaign.getConfig();
+        (, ReferralCampaign.ActivationPeriod memory config,) = referralCampaign.getConfig();
         assertEq(config.start, time - 1);
         assertEq(config.end, time + 1);
 
@@ -241,7 +241,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         referralCampaign.updateCapConfig(ReferralCampaign.CapConfig(uint48(1312), uint208(10 ether)));
 
         // Get config
-        (ReferralCampaign.CapConfig memory config,) = referralCampaign.getConfig();
+        (ReferralCampaign.CapConfig memory config,,) = referralCampaign.getConfig();
         assertEq(config.period, uint48(1312));
         assertEq(config.amount, uint208(10 ether));
     }
@@ -502,7 +502,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
         // Allow the campaign bank to distribute rewards
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAllowance(address(referralCampaign), true);
+        campaignBank.updateCampaignAuthorisation(address(referralCampaign), true);
     }
 
     modifier withReferralChain() {

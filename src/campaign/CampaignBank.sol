@@ -81,7 +81,7 @@ contract CampaignBank is PushPullModule {
 
     /// @notice Update a campaign allowance for token distribution
     /// @param _campaign The campaign to approve
-    function updateCampaignAllowance(address _campaign, bool _isAllowed) external onlyAllowedCampaignManager {
+    function updateCampaignAuthorisation(address _campaign, bool _isAllowed) external onlyAllowedCampaignManager {
         _campaignBankStorage().distributionAuthorisation[_campaign] = _isAllowed;
         emit CampaignAuthorisationUpdated(_campaign, _isAllowed);
     }

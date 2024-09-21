@@ -212,11 +212,16 @@ contract ReferralCampaign is InteractionCampaign {
     }
 
     /// @dev Get the campaign config
-    function getConfig() public view returns (CapConfig memory capConfig, ActivationPeriod memory activationPeriod) {
+    function getConfig()
+        public
+        view
+        returns (CapConfig memory capConfig, ActivationPeriod memory activationPeriod, CampaignBank bank)
+    {
         ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
 
         capConfig = campaignStorage.capConfig;
         activationPeriod = campaignStorage.activationPeriod;
+        bank = CAMPAIGN_BANK;
     }
 
     /// @dev Check if the campaign is active or not
