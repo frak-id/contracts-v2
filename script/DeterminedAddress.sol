@@ -11,7 +11,7 @@ struct Addresses {
     // Core
     address productRegistry;
     address referralRegistry;
-    address productAdministratorlRegistry;
+    address productAdministratorRegistry;
     // Oracle
     address purchaseOracle;
     // Interactions
@@ -68,7 +68,7 @@ contract DeterminedAddress is Script {
         Addresses memory emptyAddress = Addresses({
             productRegistry: address(0),
             referralRegistry: address(0),
-            productAdministratorlRegistry: address(0),
+            productAdministratorRegistry: address(0),
             purchaseOracle: address(0),
             productInteractionManager: address(0),
             facetFactory: address(0),
@@ -100,7 +100,7 @@ contract DeterminedAddress is Script {
         return Addresses({
             productRegistry: json.readAddress(".productRegistry"),
             referralRegistry: json.readAddress(".referralRegistry"),
-            productAdministratorlRegistry: json.readAddress(".productAdministratorlRegistry"),
+            productAdministratorRegistry: json.readAddress(".productAdministratorRegistry"),
             purchaseOracle: json.readAddress(".purchaseOracle"),
             productInteractionManager: json.readAddress(".productInteractionManager"),
             facetFactory: json.readAddress(".facetFactory"),
@@ -172,7 +172,7 @@ contract DeterminedAddress is Script {
         string memory jsonKey = "ADDRESSES_JSON";
         vm.serializeAddress(jsonKey, "productRegistry", addresses.productRegistry);
         vm.serializeAddress(jsonKey, "referralRegistry", addresses.referralRegistry);
-        vm.serializeAddress(jsonKey, "productAdministratorlRegistry", addresses.productAdministratorlRegistry);
+        vm.serializeAddress(jsonKey, "productAdministratorRegistry", addresses.productAdministratorRegistry);
         vm.serializeAddress(jsonKey, "purchaseOracle", addresses.purchaseOracle);
         vm.serializeAddress(jsonKey, "facetFactory", addresses.facetFactory);
         vm.serializeAddress(jsonKey, "productInteractionManager", addresses.productInteractionManager);

@@ -27,7 +27,7 @@ contract AddOperator is Script, DeterminedAddress {
             uint256 cId = productIds[i];
 
             // Get the interaction contract and the active campaigns
-            _addOperator(ProductAdministratorRegistry(addresses.productAdministratorlRegistry), cId);
+            _addOperator(ProductAdministratorRegistry(addresses.productAdministratorRegistry), cId);
         }
     }
 

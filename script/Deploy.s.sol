@@ -48,7 +48,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log("Addresses:");
         console.log(" - ProductRegistry: %s", addresses.productRegistry);
         console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
-        console.log(" - ProductAdministratorRegistry: %s", addresses.productAdministratorlRegistry);
+        console.log(" - ProductAdministratorRegistry: %s", addresses.productAdministratorRegistry);
         console.log(" - PurchaseOracle: %s", addresses.purchaseOracle);
         console.log(" - ProductInteractionManager: %s", addresses.productInteractionManager);
         console.log(" - FacetFactory: %s", addresses.facetFactory);
@@ -95,18 +95,18 @@ contract Deploy is Script, DeterminedAddress {
             ReferralRegistry referralRegistry = new ReferralRegistry{salt: 0}(msg.sender);
             addresses.referralRegistry = address(referralRegistry);
         }
-        if (_shouldDeploy(addresses.productAdministratorlRegistry)) {
+        if (_shouldDeploy(addresses.productAdministratorRegistry)) {
             console.log(" * Deploying ProductAdministratorRegistry");
             ProductAdministratorRegistry adminRegistry =
                 new ProductAdministratorRegistry{salt: 0}(ProductRegistry(addresses.productRegistry));
-            addresses.productAdministratorlRegistry = address(adminRegistry);
+            addresses.productAdministratorRegistry = address(adminRegistry);
         }
 
         // Deploy the oracle
         if (_shouldDeploy(addresses.purchaseOracle)) {
             console.log(" * Deploying PurchaseOracle");
             PurchaseOracle purchaseOracle =
-                new PurchaseOracle{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorlRegistry));
+                new PurchaseOracle{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorRegistry));
             addresses.purchaseOracle = address(purchaseOracle);
         }
 
@@ -116,7 +116,7 @@ contract Deploy is Script, DeterminedAddress {
             InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{salt: 0}(
                 ReferralRegistry(addresses.referralRegistry),
                 ProductRegistry(addresses.productRegistry),
-                ProductAdministratorRegistry(addresses.productAdministratorlRegistry),
+                ProductAdministratorRegistry(addresses.productAdministratorRegistry),
                 PurchaseOracle(addresses.purchaseOracle)
             );
             addresses.facetFactory = address(facetFactory);
@@ -127,7 +127,7 @@ contract Deploy is Script, DeterminedAddress {
             console.log(" * Deploying CampaignFactory");
             CampaignFactory campaignFactory = new CampaignFactory{salt: 0}(
                 ReferralRegistry(addresses.referralRegistry),
-                ProductAdministratorRegistry(addresses.productAdministratorlRegistry),
+                ProductAdministratorRegistry(addresses.productAdministratorRegistry),
                 airdropper
             );
             addresses.campaignFactory = address(campaignFactory);
@@ -135,7 +135,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(addresses.campaignBankFactory)) {
             console.log(" * Deploying CampaignBankFactory");
             CampaignBankFactory campaignBankFactory =
-                new CampaignBankFactory{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorlRegistry));
+                new CampaignBankFactory{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorRegistry));
             addresses.campaignBankFactory = address(campaignBankFactory);
         }
 
@@ -147,7 +147,7 @@ contract Deploy is Script, DeterminedAddress {
                 new ProductInteractionManager{salt: 0}(
                     ProductRegistry(addresses.productRegistry),
                     ReferralRegistry(addresses.referralRegistry),
-                    ProductAdministratorRegistry(addresses.productAdministratorlRegistry)
+                    ProductAdministratorRegistry(addresses.productAdministratorRegistry)
                 )
             );
             // Deploy and register proxy

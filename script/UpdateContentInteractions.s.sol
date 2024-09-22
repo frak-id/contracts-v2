@@ -38,7 +38,7 @@ contract UpdateProductInteractions is Script, DeterminedAddress {
             new ProductInteractionManager{salt: 0}(
                 ProductRegistry(addresses.productRegistry),
                 ReferralRegistry(addresses.referralRegistry),
-                ProductAdministratorRegistry(addresses.productAdministratorlRegistry)
+                ProductAdministratorRegistry(addresses.productAdministratorRegistry)
             )
         );
         currentManager.upgradeToAndCall(newImplem, "");
