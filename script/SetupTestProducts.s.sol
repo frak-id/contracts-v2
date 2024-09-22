@@ -4,6 +4,8 @@ pragma solidity 0.8.23;
 import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
+
+import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {CampaignBankFactory} from "src/campaign/CampaignBankFactory.sol";
 import {
     PRODUCT_TYPE_DAPP,
@@ -31,7 +33,7 @@ contract SetupTestProducts is Script, DeterminedAddress {
         uint256[] memory productIds = _getProductIdsArr();
 
         // Setup the interactions
-        _setupInteractions(productInteractionManager, productIds);
+        // _setupInteractions(productInteractionManager, productIds);
 
         // Setup the campaign banks
         _setupBanks(addresses, productIds);
@@ -90,7 +92,11 @@ contract SetupTestProducts is Script, DeterminedAddress {
         vm.startBroadcast();
         for (uint256 i = 0; i < _productIds.length; i++) {
             // Deploy the interaction contract
-            campaignBankFactory.deployCampaignBank(_productIds[i], addresses.mUSDToken);
+            CampaignBank bank = campaignBankFactory.deployCampaignBank(_productIds[i], addresses.mUSDToken);
+            // Mint a few tokens to the bank
+            mUSDToken(addresses.mUSDToken).mint(address(bank), 10_000 ether);
+            // Enable the bank to distribute tokens
+            bank.updateDistributionState(true);
         }
         vm.stopBroadcast();
     }
