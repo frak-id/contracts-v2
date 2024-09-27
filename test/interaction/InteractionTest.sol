@@ -34,7 +34,7 @@ abstract contract InteractionTest is EcosystemAwareTest {
 
     // Validation type hash
     bytes32 private constant _VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user,uint256 nonce)");
+        keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user)");
 
     /// @dev Prepare some interaction data
     function _prepareInteraction(
@@ -56,12 +56,11 @@ abstract contract InteractionTest is EcosystemAwareTest {
         view
         returns (bytes memory signature)
     {
-        uint256 nonce = productInteraction.getNonceForInteraction(keccak256(_interactionData), _user);
         bytes32 domainSeparator = productInteraction.getDomainSeparator();
 
         // Build the digest
         bytes32 dataHash =
-            keccak256(abi.encode(_VALIDATE_INTERACTION_TYPEHASH, productId, keccak256(_interactionData), _user, nonce));
+            keccak256(abi.encode(_VALIDATE_INTERACTION_TYPEHASH, productId, keccak256(_interactionData), _user));
         bytes32 fullHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, dataHash));
 
         // Sign the full hash

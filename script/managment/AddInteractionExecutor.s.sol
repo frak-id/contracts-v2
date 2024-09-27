@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import {DELEGATION_EXECUTOR_ROLE, InteractionDelegator} from "src/kernel/interaction/InteractionDelegator.sol";
 
 contract AddInteractionExecutor is Script, DeterminedAddress {
-    address private operator = 0xDd2926b47A2ea470632a45143CB2b45d4b1B60eC;
+    address private operator = 0x0612994c389F253f22AF91B63DD622049b7D42C5;
 
     function run() public {
         KernelAddresses memory addresses = _getKernelAddresses();

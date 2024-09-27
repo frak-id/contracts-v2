@@ -23,8 +23,6 @@ abstract contract ProductInteractionStorageLib {
         uint256 productId;
         /// @dev The referral tree for this product
         bytes32 referralTree;
-        /// @dev Nonce for the validation of the interaction
-        mapping(bytes32 nonceKey => uint256 nonce) nonces;
         /// @dev Array of all the current active campaigns
         InteractionCampaign[] campaigns;
         /// @dev Array of our logic "facets"

@@ -22,7 +22,7 @@ Addresses of the Frak contracts, deployed on Arbitrum and Arbitrum Sepolia.
 
 ### Kernel plugins
 
-Plugins for the Kernel smart accounts. They can be deployed on any chain via the `deploy/` folder, using [orchestra](https://github.com/zerodevapp/orchestra).
+Plugins for the Kernel smart accounts.
 
 | Name                                  | Address                                       |
 |---------------------------------------|-----------------------------------------------|

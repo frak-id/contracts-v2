@@ -108,6 +108,24 @@ contract PurchaseOracleTest is EcosystemAwareTest {
         assertEq(purchaseOracle.verifyPurchase(productId, 0, PurchaseStatus.Pending, proof), false);
     }
 
+    function test_externalMerkleProof() public {
+        bytes32 root = 0x8c7d70a2964e3e1c23c32608fad68a1644f03a907a29a20c40882b974211e5d9;
+        bytes32[] memory proof = new bytes32[](3);
+        proof[0] = 0x2b9541cf091e03c7b39ebaaaaa40a48a7ee38c096699597d252a4c29c60ccdcc;
+        proof[1] = 0xc80f55fd4d983034b99fdef3502e96602f7e2979479ecce39422ba5fddd99058;
+        proof[2] = 0x746e5bca15f1186939079013eff1ae0039c7d3fe66a1a3006eed366dda1080a9;
+
+        // Update the merkle root
+        vm.prank(oracleOperator);
+        purchaseOracle.updateMerkleRoot(productId, root);
+
+        bytes32 purchaseId = 0x7a496194c33181c51d7f8fe91dcc4e7be7ea9e026abff6d97685107a89b5dbd0;
+        PurchaseStatus status = PurchaseStatus.Completed;
+
+        // Verify the purchase
+        assertEq(m.verifyProof(root, proof, keccak256(abi.encodePacked(purchaseId, status))), true);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                   Helpers                                  */
     /* -------------------------------------------------------------------------- */

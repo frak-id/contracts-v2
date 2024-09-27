@@ -57,7 +57,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user,uint256 nonce)");
+        keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user)");
 
     /// @dev The base product referral tree: `keccak256("product-referral-tree")`
     bytes32 private constant BASE_PRODUCT_TREE = 0x256d49b597bf37ff9c8c4e75b5975d725441598c9cc7249f4726439b6b7971bb;
@@ -212,17 +212,8 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         }
 
         // Rebuild the full typehash
-        bytes32 digest = _hashTypedData(
-            keccak256(
-                abi.encode(
-                    VALIDATE_INTERACTION_TYPEHASH,
-                    PRODUCT_ID,
-                    _interactionData,
-                    _user,
-                    _productInteractionStorage().nonces[nonceKey]++
-                )
-            )
-        );
+        bytes32 digest =
+            _hashTypedData(keccak256(abi.encode(VALIDATE_INTERACTION_TYPEHASH, PRODUCT_ID, _interactionData, _user)));
 
         // Retreive the signer
         address signer = ECDSA.tryRecoverCalldata(digest, _signature);
@@ -232,18 +223,6 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         if (!isValidSigner) {
             revert WrongInteractionSigner();
         }
-    }
-
-    /// @dev Get the current user nonce for the given interaction
-    function getNonceForInteraction(bytes32 _interactionData, address _user) external view returns (uint256) {
-        bytes32 nonceKey;
-        assembly {
-            mstore(0, _interactionData)
-            mstore(0x20, _user)
-            nonceKey := keccak256(0, 0x40)
-        }
-
-        return _productInteractionStorage().nonces[nonceKey];
     }
 
     /* -------------------------------------------------------------------------- */

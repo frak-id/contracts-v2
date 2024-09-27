@@ -10,7 +10,7 @@ import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
 contract AddOperator is Script, DeterminedAddress {
-    address private operator = 0x16300eAe310603BA80c537A7e2d514b69B8A015E;
+    address private operator = 0xCf4990bBa0B9A56500501d0c6eF139B92a050352;
 
     address private productMinter = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
 
