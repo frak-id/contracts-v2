@@ -29,8 +29,8 @@ contract SetupTestProducts is Script, DeterminedAddress {
             ProductInteractionManager(addresses.productInteractionManager);
 
         // Mint the products
-        // uint256[] memory productIds = _mintProducts(ProductRegistry(addresses.productRegistry));
-        uint256[] memory productIds = _getProductIdsArr();
+        uint256[] memory productIds = _mintProducts(ProductRegistry(addresses.productRegistry));
+        // uint256[] memory productIds = _getProductIdsArr();
 
         // Setup the interactions
         // _setupInteractions(productInteractionManager, productIds);
