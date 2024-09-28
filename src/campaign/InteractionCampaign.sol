@@ -116,7 +116,7 @@ abstract contract InteractionCampaign is ReentrancyGuard {
 
     /// @dev Only allow the call for an authorised mananger
     modifier onlyAllowedManager() {
-        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_MANAGER_ROLE);
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_OR_ADMINISTRATOR);
         _;
     }
 

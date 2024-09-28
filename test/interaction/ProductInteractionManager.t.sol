@@ -68,7 +68,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         adminRegistry.grantRoles(productIdPress, testOperator, ProductRoles.INTERACTION_MANAGER_ROLE);
 
         assertTrue(
-            adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator, ProductRoles.INTERACTION_MANAGER_ROLE)
+            adminRegistry.hasAllRolesOrOwner(productIdPress, testOperator, ProductRoles.INTERACTION_MANAGER_ROLE)
         );
 
         // Ensure it can't add other operator
@@ -77,7 +77,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         adminRegistry.grantRoles(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE);
 
         assertFalse(
-            adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE)
+            adminRegistry.hasAllRolesOrOwner(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE)
         );
 
         // Ensure the operator can deploy stuff
@@ -100,7 +100,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         adminRegistry.revokeRoles(productIdPress, testOperator1, ProductRoles.INTERACTION_MANAGER_ROLE);
 
         assertFalse(
-            adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator1, ProductRoles.INTERACTION_MANAGER_ROLE)
+            adminRegistry.hasAllRolesOrOwner(productIdPress, testOperator1, ProductRoles.INTERACTION_MANAGER_ROLE)
         );
 
         // Self removing
@@ -108,7 +108,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         adminRegistry.renounceRoles(productIdPress, ProductRoles.INTERACTION_MANAGER_ROLE);
 
         assertFalse(
-            adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE)
+            adminRegistry.hasAllRolesOrOwner(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE)
         );
     }
 

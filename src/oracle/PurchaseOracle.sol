@@ -108,7 +108,7 @@ contract PurchaseOracle is IPurchaseOracle {
     /// @dev Only allow calls from an authorized operator for the given product
     /// @param _productId The product ID
     modifier onlyOperator(uint256 _productId) {
-        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrOwner(
             _productId, msg.sender, ProductRoles.PURCHASE_ORACLE_OPERATOR_ROLE
         );
         _;

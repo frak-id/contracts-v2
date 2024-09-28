@@ -268,15 +268,15 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     /// @dev Modifier to only allow call from an allowed product manager
     modifier onlyInteractionManager(uint256 _productId) {
-        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(
-            _productId, msg.sender, ProductRoles.INTERACTION_MANAGER_ROLE
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
+            _productId, msg.sender, ProductRoles.INTERACTION_OR_ADMINISTRATOR
         );
         _;
     }
 
     /// @dev Modifier to only allow call from an allowed campaign manager
     modifier onlyCampaignManager(uint256 _productId) {
-        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(_productId, msg.sender, ProductRoles.CAMPAIGN_MANAGER_ROLE);
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(_productId, msg.sender, ProductRoles.CAMPAIGN_OR_ADMINISTRATOR);
         _;
     }
 }

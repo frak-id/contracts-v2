@@ -252,7 +252,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Activate a new campaign
-    function attachCampaign(InteractionCampaign _campaign) external onlyAllowedCampaignManager {
+    function attachCampaign(InteractionCampaign _campaign) external onlyCampaignManager {
         InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
 
         // Ensure we don't already have this campaign attached
@@ -268,7 +268,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Detach multiple campaigns
-    function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyAllowedCampaignManager {
+    function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyCampaignManager {
         InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
 
         for (uint256 i = 0; i < _campaigns.length; i++) {
@@ -334,21 +334,21 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
 
     /// @dev Restrict the execution to the campaign manager or an approved manager
     modifier onlyInteractionManager() {
-        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(
-            PRODUCT_ID, msg.sender, ProductRoles.INTERACTION_MANAGER_ROLE
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
+            PRODUCT_ID, msg.sender, ProductRoles.INTERACTION_OR_ADMINISTRATOR
         );
         _;
     }
 
     /// @dev Restrict the execution to the campaign manager or an approved manager
-    modifier onlyAllowedCampaignManager() {
-        bool isAllowed = msg.sender == INTERACTION_MANAGER;
-        if (!isAllowed) {
-            isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
-                PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_MANAGER_ROLE
+    modifier onlyCampaignManager() {
+        // If the interaction manager is calling, we don't need to check the roles
+        if (msg.sender != INTERACTION_MANAGER) {
+            // Otherwise, we need to check the roles
+            PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
+                PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_OR_ADMINISTRATOR
             );
         }
-        if (!isAllowed) revert Unauthorized();
         _;
     }
 }

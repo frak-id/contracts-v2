@@ -24,10 +24,13 @@ library ProductRoles {
     uint256 constant PRODUCT_ADMINISTRATOR = 1 << 0;
     uint256 constant INTERACTION_MANAGER_ROLE = 1 << 1;
     uint256 constant CAMPAIGN_MANAGER_ROLE = 1 << 2;
-    uint256 constant CAMPAIGN_BANK_MANAGER_ROLE = 1 << 3;
 
     /// @dev The role that can operate the purchase oracle
-    uint256 constant PURCHASE_ORACLE_OPERATOR_ROLE = 1 << 4;
+    uint256 constant PURCHASE_ORACLE_OPERATOR_ROLE = 1 << 3;
+
+    /// @dev Roles prebuilt
+    uint256 constant INTERACTION_OR_ADMINISTRATOR = INTERACTION_MANAGER_ROLE | PRODUCT_ADMINISTRATOR;
+    uint256 constant CAMPAIGN_OR_ADMINISTRATOR = CAMPAIGN_MANAGER_ROLE | PRODUCT_ADMINISTRATOR;
 }
 
 /// @author @KONFeature
@@ -183,12 +186,22 @@ contract ProductAdministratorRegistry {
     }
 
     /// @dev Returns whether `user` has all of `roles`.
+    function onlyAnyRolesOrOwner(uint256 _productId, address _user, uint256 _roles) public view {
+        // If he has all the roles, directly exit
+        if (rolesOf(_productId, _user) & _roles != 0) return;
+        // Otherwise, check if he is the owner
+        if (PRODUCT_REGISTRY.ownerOf(_productId) == _user) return;
+        // Otherwise, revert
+        revert Unauthorized();
+    }
+
+    /// @dev Returns whether `user` has all of `roles`.
     function hasAllRoles(uint256 productId, address user, uint256 roles) public view returns (bool) {
         return rolesOf(productId, user) & roles == roles;
     }
 
     /// @dev Returns whether `user` has all of `roles`.
-    function hasAllRolesOrAdmin(uint256 _productId, address _user, uint256 _roles) public view returns (bool) {
+    function hasAllRolesOrOwner(uint256 _productId, address _user, uint256 _roles) public view returns (bool) {
         // If he has all the roles, directly return true
         if (rolesOf(_productId, _user) & _roles == _roles) return true;
         // Otherwise, check if he is the owner
@@ -196,7 +209,7 @@ contract ProductAdministratorRegistry {
     }
 
     /// @dev Returns whether `user` has all of `roles`.
-    function onlyAllRolesOrAdmin(uint256 _productId, address _user, uint256 _roles) public view {
+    function onlyAllRolesOrOwner(uint256 _productId, address _user, uint256 _roles) public view {
         // If he has all the roles, directly exit
         if (rolesOf(_productId, _user) & _roles == _roles) return;
         // Otherwise, check if he is the owner
@@ -210,7 +223,20 @@ contract ProductAdministratorRegistry {
     /* -------------------------------------------------------------------------- */
 
     modifier onlyProductAdmin(uint256 _productId) {
-        if (PRODUCT_REGISTRY.ownerOf(_productId) != msg.sender) revert Unauthorized();
-        _;
+        // Case of a product admin
+        if (rolesOf(_productId, msg.sender) & ProductRoles.PRODUCT_ADMINISTRATOR == ProductRoles.PRODUCT_ADMINISTRATOR)
+        {
+            _;
+            return;
+        }
+
+        // Case of a product owner
+        if (PRODUCT_REGISTRY.ownerOf(_productId) == msg.sender) {
+            _;
+            return;
+        }
+
+        // Otherwise, revert
+        revert Unauthorized();
     }
 }

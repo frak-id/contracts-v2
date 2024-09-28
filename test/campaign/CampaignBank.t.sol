@@ -43,7 +43,6 @@ contract CampaignBankTest is EcosystemAwareTest {
     function test_startDisabled() public view {
         assertFalse(campaignBank.isDistributionEnabled());
     }
-
     function test_campaignAllowance() public {
         assertFalse(campaignBank.isCampaignAuthorised(campaign));
 
@@ -57,9 +56,9 @@ contract CampaignBankTest is EcosystemAwareTest {
         vm.expectRevert(CampaignBank.Unauthorized.selector);
         campaignBank.updateCampaignAuthorisation(campaign, true);
 
-        // The product manager can';t change the status
+        // The campaign manager can';t change the status
         vm.expectRevert(CampaignBank.Unauthorized.selector);
-        vm.prank(productAdmin);
+        vm.prank(interactionManager);
         campaignBank.updateCampaignAuthorisation(campaign, true);
 
         // The product owner can change the status
@@ -67,6 +66,12 @@ contract CampaignBankTest is EcosystemAwareTest {
         campaignBank.updateCampaignAuthorisation(campaign, false);
 
         assertFalse(campaignBank.isCampaignAuthorised(campaign));
+
+        // The product admin can change the status
+        vm.prank(productAdmin);
+        campaignBank.updateCampaignAuthorisation(campaign, true);
+
+        assertTrue(campaignBank.isCampaignAuthorised(campaign));
     }
 
     function test_distributionState() public {
