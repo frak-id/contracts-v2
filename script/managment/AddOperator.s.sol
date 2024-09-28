@@ -33,7 +33,12 @@ contract AddOperator is Script, DeterminedAddress {
 
     function _addOperator(ProductAdministratorRegistry _adminRegistry, uint256 _cId) internal {
         vm.startBroadcast();
-        _adminRegistry.grantRoles(_cId, operator, ProductRoles.PRODUCT_ADMINISTRATOR | ProductRoles.CAMPAIGN_MANAGER_ROLE | ProductRoles.INTERACTION_MANAGER_ROLE);
+        _adminRegistry.grantRoles(
+            _cId,
+            operator,
+            ProductRoles.PRODUCT_ADMINISTRATOR | ProductRoles.CAMPAIGN_MANAGER_ROLE
+                | ProductRoles.INTERACTION_MANAGER_ROLE
+        );
         vm.stopBroadcast();
     }
 

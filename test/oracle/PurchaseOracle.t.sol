@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import {Merkle} from "lib/murky/src/Merkle.sol";
+import {Ownable} from "solady/auth/Ownable.sol";
 import {PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
 import {PurchaseStatus} from "src/oracle/IPurchaseOracle.sol";
 import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
@@ -25,7 +26,7 @@ contract PurchaseOracleTest is EcosystemAwareTest {
     /* -------------------------------------------------------------------------- */
 
     function test_updateMerkleRoot_Unauthorized() public {
-        vm.expectRevert(PurchaseOracle.Unauthorized.selector);
+        vm.expectRevert(Ownable.Unauthorized.selector);
         purchaseOracle.updateMerkleRoot(productId, "0xdeadbeef");
     }
 

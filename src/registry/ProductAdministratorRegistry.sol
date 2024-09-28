@@ -82,7 +82,7 @@ contract ProductAdministratorRegistry {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Overwrite the roles directly without authorization guard.
-    function _setRoles(uint256 productId, address user, uint256 roles) internal virtual {
+    function _setRoles(uint256 productId, address user, uint256 roles) internal {
         /// @solidity memory-safe-assembly
         assembly {
             mstore(0x0c, _ROLE_SLOT_SEED)
@@ -101,7 +101,7 @@ contract ProductAdministratorRegistry {
     /// @dev Updates the roles directly without authorization guard.
     /// If `on` is true, each set bit of `roles` will be turned on,
     /// otherwise, each set bit of `roles` will be turned off.
-    function _updateRoles(uint256 productId, address user, uint256 roles, bool on) internal virtual {
+    function _updateRoles(uint256 productId, address user, uint256 roles, bool on) internal {
         /// @solidity memory-safe-assembly
         assembly {
             mstore(0x0c, _ROLE_SLOT_SEED)
@@ -132,41 +132,31 @@ contract ProductAdministratorRegistry {
 
     /// @dev Allows the owner to grant `user` `roles`.
     /// If the `user` already has a role, then it will be an no-op for the role.
-    function grantRoles(uint256 productId, address user, uint256 roles)
-        public
-        payable
-        virtual
-        onlyProductAdmin(productId)
-    {
+    function grantRoles(uint256 productId, address user, uint256 roles) public payable onlyProductAdmin(productId) {
         _updateRoles(productId, user, roles, true);
     }
 
     /// @dev Allow the caller to remove their own roles.
     /// If the caller does not have a role, then it will be an no-op for the role.
-    function renounceRoles(uint256 productId, uint256 roles) public payable virtual {
+    function renounceRoles(uint256 productId, uint256 roles) public payable {
         _updateRoles(productId, msg.sender, roles, false);
     }
 
     /// @dev Allow the caller to remove their own roles.
     /// If the caller does not have a role, then it will be an no-op for the role.
-    function renounceAllRoles(uint256 productId) public payable virtual {
+    function renounceAllRoles(uint256 productId) public payable {
         _setRoles(productId, msg.sender, 0);
     }
 
     /// @dev Allows the owner to remove `user` `roles`.
     /// If the `user` does not have a role, then it will be an no-op for the role.
-    function revokeRoles(uint256 productId, address user, uint256 roles)
-        public
-        payable
-        virtual
-        onlyProductAdmin(productId)
-    {
+    function revokeRoles(uint256 productId, address user, uint256 roles) public payable onlyProductAdmin(productId) {
         _updateRoles(productId, user, roles, false);
     }
 
     /// @dev Allows the owner to remove all the `user` roles.
     /// If the `user` does not have a role, then it will be an no-op for the role.
-    function revokeAllRoles(uint256 productId, address user) public payable virtual onlyProductAdmin(productId) {
+    function revokeAllRoles(uint256 productId, address user) public payable onlyProductAdmin(productId) {
         _setRoles(productId, user, 0);
     }
 
@@ -175,7 +165,7 @@ contract ProductAdministratorRegistry {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Returns the roles of `user`.
-    function rolesOf(uint256 productId, address user) public view virtual returns (uint256 roles) {
+    function rolesOf(uint256 productId, address user) public view returns (uint256 roles) {
         /// @solidity memory-safe-assembly
         assembly {
             // Compute the role slot.
@@ -188,21 +178,31 @@ contract ProductAdministratorRegistry {
     }
 
     /// @dev Returns whether `user` has any of `roles`.
-    function hasAnyRole(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
+    function hasAnyRole(uint256 productId, address user, uint256 roles) public view returns (bool) {
         return rolesOf(productId, user) & roles != 0;
     }
 
     /// @dev Returns whether `user` has all of `roles`.
-    function hasAllRoles(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
+    function hasAllRoles(uint256 productId, address user, uint256 roles) public view returns (bool) {
         return rolesOf(productId, user) & roles == roles;
     }
 
     /// @dev Returns whether `user` has all of `roles`.
-    function hasAllRolesOrAdmin(uint256 _productId, address _user, uint256 _roles) public view virtual returns (bool) {
+    function hasAllRolesOrAdmin(uint256 _productId, address _user, uint256 _roles) public view returns (bool) {
         // If he has all the roles, directly return true
         if (rolesOf(_productId, _user) & _roles == _roles) return true;
         // Otherwise, check if he is the owner
         return PRODUCT_REGISTRY.ownerOf(_productId) == _user;
+    }
+
+    /// @dev Returns whether `user` has all of `roles`.
+    function onlyAllRolesOrAdmin(uint256 _productId, address _user, uint256 _roles) public view {
+        // If he has all the roles, directly exit
+        if (rolesOf(_productId, _user) & _roles == _roles) return;
+        // Otherwise, check if he is the owner
+        if (PRODUCT_REGISTRY.ownerOf(_productId) == _user) return;
+        // Otherwise, revert
+        revert Unauthorized();
     }
 
     /* -------------------------------------------------------------------------- */

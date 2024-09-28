@@ -4,10 +4,7 @@ pragma solidity 0.8.23;
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {InteractionTypeLib} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
-import {
-    INTERCATION_VALIDATOR_ROLE,
-    UPGRADE_ROLE
-} from "../constants/Roles.sol";
+import {INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ProductAdministratorRegistry, ProductRoles} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
@@ -200,7 +197,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Check if the provided interaction is valid
-    function _validateInteraction(bytes32 _interactionData, address _user, bytes calldata _signature) internal {
+    function _validateInteraction(bytes32 _interactionData, address _user, bytes calldata _signature) internal view {
         // Get the key for our nonce
         bytes32 nonceKey;
         assembly {
@@ -337,10 +334,9 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
 
     /// @dev Restrict the execution to the campaign manager or an approved manager
     modifier onlyInteractionManager() {
-        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(
             PRODUCT_ID, msg.sender, ProductRoles.INTERACTION_MANAGER_ROLE
         );
-        if (!isAllowed) revert Unauthorized();
         _;
     }
 

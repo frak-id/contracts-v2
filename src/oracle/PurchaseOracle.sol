@@ -23,7 +23,6 @@ contract PurchaseOracle is IPurchaseOracle {
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
 
-    error Unauthorized();
     error MerkleRootNotSet();
 
     /* -------------------------------------------------------------------------- */
@@ -109,10 +108,9 @@ contract PurchaseOracle is IPurchaseOracle {
     /// @dev Only allow calls from an authorized operator for the given product
     /// @param _productId The product ID
     modifier onlyOperator(uint256 _productId) {
-        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(
             _productId, msg.sender, ProductRoles.PURCHASE_ORACLE_OPERATOR_ROLE
         );
-        if (!isAllowed) revert Unauthorized();
         _;
     }
 }

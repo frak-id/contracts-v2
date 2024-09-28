@@ -139,19 +139,13 @@ contract CampaignBank is PushPullModule {
 
     /// @dev Only allow the call for an authorised mananger
     modifier onlyCampaignManager() {
-        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
-            PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_MANAGER_ROLE
-        );
-        if (!isAllowed) revert Unauthorized();
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_MANAGER_ROLE);
         _;
     }
 
     /// @dev Only allow the call for an authorised mananger
     modifier onlyProductAdmin() {
-        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
-            PRODUCT_ID, msg.sender, ProductRoles.PRODUCT_ADMINISTRATOR
-        );
-        if (!isAllowed) revert Unauthorized();
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAllRolesOrAdmin(PRODUCT_ID, msg.sender, ProductRoles.PRODUCT_ADMINISTRATOR);
         _;
     }
 
