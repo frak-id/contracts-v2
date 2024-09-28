@@ -158,7 +158,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         referralCampaign.setRunningStatus(false);
 
         // Try to stop the campaign, ensure failing if we don't have the right roles
-        vm.prank(productManager);
+        vm.prank(interactionManager);
         vm.expectRevert(InteractionCampaign.Unauthorized.selector);
         referralCampaign.setRunningStatus(false);
 

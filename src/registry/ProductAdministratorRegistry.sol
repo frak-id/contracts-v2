@@ -3,6 +3,33 @@ pragma solidity 0.8.23;
 
 import {ProductRegistry} from "./ProductRegistry.sol";
 
+/// @notice Roles used for the product registry
+///  - Product administrator:
+///     - Has all the right mentioned below
+///     - Can't do anything on the product registry (update product metadata's, transfer etc), only the owner can do
+/// that
+///     - Can update campaign bank state (distribution state + withdraw pending tokens)
+///  - Interaction Manger:
+///     - Can update the roles on the deployed interactions contracts (ex: add new validator or upgrader)
+///     - Can manage the interaction contracts from the InteractionManager (deploy it, update it, delete it)
+///  - Campaign Manager:
+///     - Can manage the campaigns (update running status + some config depending on the cammpaign implementation)
+///     - Can attach / detach campaigns to a interactions contracts (either via the Manager or directly on the
+/// interaction contract)
+///     - Can deploy campaign and directly attach them via the product manager
+///     - Can allow a campaign to distribute from a campaign treasury (campaign bank)
+///  - Purchase Oracle:
+///     - Can operate the purchase oracle (change the merkle root for the product id)
+library ProductRoles {
+    uint256 constant PRODUCT_ADMINISTRATOR = 1 << 0;
+    uint256 constant INTERACTION_MANAGER_ROLE = 1 << 1;
+    uint256 constant CAMPAIGN_MANAGER_ROLE = 1 << 2;
+    uint256 constant CAMPAIGN_BANK_MANAGER_ROLE = 1 << 3;
+
+    /// @dev The role that can operate the purchase oracle
+    uint256 constant PURCHASE_ORACLE_OPERATOR_ROLE = 1 << 4;
+}
+
 /// @author @KONFeature
 /// @title ProductAdministratorRegistry
 /// @notice Registery for the roles associated per users around a product

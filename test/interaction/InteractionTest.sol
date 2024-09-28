@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
 import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
-import {INTERCATION_VALIDATOR_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
+import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 
 /// @dev Generic contract to test interaction

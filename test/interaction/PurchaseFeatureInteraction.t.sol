@@ -13,15 +13,13 @@ import {
     PRODUCT_TYPE_FEATURE_PURCHASE,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {INTERCATION_VALIDATOR_ROLE, PURCHASE_ORACLE_OPERATOR_ROLE} from "src/constants/Roles.sol";
+import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {PurchaseFeatureFacet} from "src/interaction/facets/PurchaseFeatureFacet.sol";
 import {PurchaseStatus} from "src/oracle/IPurchaseOracle.sol";
 
 contract PurchaseFeatureInteractionTest is InteractionTest {
     address private alice = makeAddr("alice");
-
-    address internal oracleOperator = makeAddr("oracleOperator");
 
     PurchaseFeatureFacet private rawFacet;
 
@@ -38,10 +36,6 @@ contract PurchaseFeatureInteractionTest is InteractionTest {
 
         // Extract the press facet
         rawFacet = PurchaseFeatureFacet(address(productInteraction.getFacet(DENOMINATOR_FEATURE_PURCHASE)));
-
-        // Grant the right roles to the purchase oracle
-        vm.prank(productOwner);
-        adminRegistry.grantRoles(_pid, oracleOperator, PURCHASE_ORACLE_OPERATOR_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -199,7 +193,7 @@ contract PurchaseFeatureInteractionTest is InteractionTest {
         );
 
         // Reset the oracle
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, bytes32(0));
 
         // Expect a revert error
@@ -243,7 +237,7 @@ contract PurchaseFeatureInteractionTest is InteractionTest {
         proof = m.getProof(data, 9);
 
         // Update the oracle tree
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, root);
 
         vm.resetGasMetering();

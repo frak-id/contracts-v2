@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 import {Addresses, DeterminedAddress} from "../DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import {CAMPAIGN_MANAGER_ROLE, MINTER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
+import {MINTER_ROLE} from "src/constants/Roles.sol";
+import {ProductAdministratorRegistry, ProductRoles} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {mUSDToken} from "src/tokens/mUSDToken.sol";
 
@@ -33,7 +33,7 @@ contract AddOperator is Script, DeterminedAddress {
 
     function _addOperator(ProductAdministratorRegistry _adminRegistry, uint256 _cId) internal {
         vm.startBroadcast();
-        _adminRegistry.grantRoles(_cId, operator, CAMPAIGN_MANAGER_ROLE | PRODUCT_MANAGER_ROLE);
+        _adminRegistry.grantRoles(_cId, operator, ProductRoles.PRODUCT_ADMINISTRATOR | ProductRoles.CAMPAIGN_MANAGER_ROLE | ProductRoles.INTERACTION_MANAGER_ROLE);
         vm.stopBroadcast();
     }
 

@@ -17,10 +17,10 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
+import {ProductRoles} from "src/registry/ProductAdministratorRegistry.sol";
 
 contract ProductInteractionManagerTest is EcosystemAwareTest {
     uint256 private productIdDapp;
@@ -55,26 +55,30 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
     /*                             Operator management                            */
     /* -------------------------------------------------------------------------- */
 
-    function test_addOperator() public {
+    function test_addInteractionMananger() public {
         address testOperator = makeAddr("testOperator");
         address testOperator2 = makeAddr("testOperator2");
 
         // Ensure only admin can do it
         vm.expectRevert(Ownable.Unauthorized.selector);
-        adminRegistry.grantRoles(productIdPress, testOperator, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, testOperator, ProductRoles.INTERACTION_MANAGER_ROLE);
 
         // Add it
         vm.prank(productOwner);
-        adminRegistry.grantRoles(productIdPress, testOperator, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, testOperator, ProductRoles.INTERACTION_MANAGER_ROLE);
 
-        assertTrue(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator, PRODUCT_MANAGER_ROLE));
+        assertTrue(
+            adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator, ProductRoles.INTERACTION_MANAGER_ROLE)
+        );
 
         // Ensure it can't add other operator
         vm.prank(testOperator);
         vm.expectRevert(Ownable.Unauthorized.selector);
-        adminRegistry.grantRoles(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE);
 
-        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE));
+        assertFalse(
+            adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE)
+        );
 
         // Ensure the operator can deploy stuff
         vm.prank(testOperator);
@@ -82,26 +86,26 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
     }
 
-    function test_deleteOperator() public {
+    function test_deleteInteractionManager() public {
         address testOperator1 = makeAddr("testOperator");
         address testOperator2 = makeAddr("testOperator2");
 
         vm.startPrank(productOwner);
-        adminRegistry.grantRoles(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE);
-        adminRegistry.grantRoles(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, testOperator1, ProductRoles.INTERACTION_MANAGER_ROLE);
+        adminRegistry.grantRoles(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE);
         vm.stopPrank();
 
         // Admin doing a remove
         vm.prank(productOwner);
-        adminRegistry.revokeRoles(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE);
+        adminRegistry.revokeRoles(productIdPress, testOperator1, ProductRoles.INTERACTION_MANAGER_ROLE);
 
-        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator1, PRODUCT_MANAGER_ROLE));
+        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator1, ProductRoles.INTERACTION_MANAGER_ROLE));
 
         // Self removing
         vm.prank(testOperator2);
-        adminRegistry.renounceRoles(productIdPress, PRODUCT_MANAGER_ROLE);
+        adminRegistry.renounceRoles(productIdPress, ProductRoles.INTERACTION_MANAGER_ROLE);
 
-        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, PRODUCT_MANAGER_ROLE));
+        assertFalse(adminRegistry.hasAllRolesOrAdmin(productIdPress, testOperator2, ProductRoles.INTERACTION_MANAGER_ROLE));
     }
 
     /* -------------------------------------------------------------------------- */

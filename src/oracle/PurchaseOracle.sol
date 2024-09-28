@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import {PURCHASE_ORACLE_OPERATOR_ROLE} from "../constants/Roles.sol";
-import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
+import {ProductAdministratorRegistry, ProductRoles} from "../registry/ProductAdministratorRegistry.sol";
 import {IPurchaseOracle, PurchaseStatus} from "./IPurchaseOracle.sol";
 import {MerkleProofLib} from "solady/utils/MerkleProofLib.sol";
 
@@ -110,8 +109,9 @@ contract PurchaseOracle is IPurchaseOracle {
     /// @dev Only allow calls from an authorized operator for the given product
     /// @param _productId The product ID
     modifier onlyOperator(uint256 _productId) {
-        bool isAllowed =
-            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(_productId, msg.sender, PURCHASE_ORACLE_OPERATOR_ROLE);
+        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
+            _productId, msg.sender, ProductRoles.PURCHASE_ORACLE_OPERATOR_ROLE
+        );
         if (!isAllowed) revert Unauthorized();
         _;
     }

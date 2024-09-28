@@ -59,7 +59,7 @@ contract CampaignBankTest is EcosystemAwareTest {
 
         // The product manager can';t change the status
         vm.expectRevert(CampaignBank.Unauthorized.selector);
-        vm.prank(productManager);
+        vm.prank(productAdmin);
         campaignBank.updateCampaignAuthorisation(campaign, true);
 
         // The product owner can change the status
@@ -73,7 +73,7 @@ contract CampaignBankTest is EcosystemAwareTest {
         assertFalse(campaignBank.isDistributionEnabled());
 
         // The product manager can change the status
-        vm.prank(productManager);
+        vm.prank(productAdmin);
         campaignBank.updateDistributionState(true);
 
         assertTrue(campaignBank.isDistributionEnabled());
@@ -109,7 +109,7 @@ contract CampaignBankTest is EcosystemAwareTest {
 
         // The product manager can't distribute rewards
         vm.expectRevert(CampaignBank.Unauthorized.selector);
-        vm.prank(productManager);
+        vm.prank(interactionManager);
         campaignBank.pushRewards(rewards);
 
         // The product owner can't distribute rewards
@@ -166,9 +166,9 @@ contract CampaignBankTest is EcosystemAwareTest {
         campaignBank.withdraw();
 
         // If the distribution is enabled, it can't withdraw
-        vm.prank(productManager);
+        vm.prank(productAdmin);
         campaignBank.updateDistributionState(true);
-        vm.prank(productManager);
+        vm.prank(productAdmin);
         vm.expectRevert(CampaignBank.BankIsStillOpen.selector);
         campaignBank.withdraw();
 

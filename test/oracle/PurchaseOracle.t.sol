@@ -4,13 +4,10 @@ pragma solidity ^0.8.0;
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import {Merkle} from "lib/murky/src/Merkle.sol";
 import {PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
-import {PURCHASE_ORACLE_OPERATOR_ROLE} from "src/constants/Roles.sol";
 import {PurchaseStatus} from "src/oracle/IPurchaseOracle.sol";
 import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 
 contract PurchaseOracleTest is EcosystemAwareTest {
-    address internal oracleOperator = makeAddr("oracleOperator");
-
     uint256 productId;
 
     /// Murky merkle helper
@@ -21,10 +18,6 @@ contract PurchaseOracleTest is EcosystemAwareTest {
 
         // Setup a random product
         productId = _mintProduct(PRODUCT_TYPE_PRESS, "name", "random-domain");
-
-        // Grant the right roles to the purchase oracle
-        vm.prank(productOwner);
-        adminRegistry.grantRoles(productId, oracleOperator, PURCHASE_ORACLE_OPERATOR_ROLE);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -37,21 +30,21 @@ contract PurchaseOracleTest is EcosystemAwareTest {
     }
 
     function test_updateMerkleRoot() public {
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, "0xdeadbeef");
 
         assertEq(purchaseOracle.getMerkleRoot(productId), "0xdeadbeef");
     }
 
     function test_updateMerkleRoot_toZero() public {
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, bytes32(0));
 
         assertEq(purchaseOracle.getMerkleRoot(productId), bytes32(0));
     }
 
     function testFuzz_updateMerkleRoot(bytes32 root) public {
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, root);
 
         assertEq(purchaseOracle.getMerkleRoot(productId), root);
@@ -75,7 +68,7 @@ contract PurchaseOracleTest is EcosystemAwareTest {
         (bytes32 root, bytes32[] memory proof) = _generateMekleTreeAndProof(0, PurchaseStatus.Pending);
 
         // Update the merkle root
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, root);
 
         // Verify the purchase
@@ -87,7 +80,7 @@ contract PurchaseOracleTest is EcosystemAwareTest {
         (bytes32 root, bytes32[] memory proof) = _generateMekleTreeAndProof(purchaseId, PurchaseStatus.Pending);
 
         // Update the merkle root
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, root);
 
         // Verify the purchase
@@ -101,7 +94,7 @@ contract PurchaseOracleTest is EcosystemAwareTest {
         proof[0] = bytes32(0);
 
         // Update the merkle root
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, root);
 
         // Verify the purchase
@@ -116,7 +109,7 @@ contract PurchaseOracleTest is EcosystemAwareTest {
         proof[2] = 0x746e5bca15f1186939079013eff1ae0039c7d3fe66a1a3006eed366dda1080a9;
 
         // Update the merkle root
-        vm.prank(oracleOperator);
+        vm.prank(purchaseOracleOperator);
         purchaseOracle.updateMerkleRoot(productId, root);
 
         bytes32 purchaseId = 0x7a496194c33181c51d7f8fe91dcc4e7be7ea9e026abff6d97685107a89b5dbd0;

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "../constants/Roles.sol";
 import {PushPullModule, Reward} from "../modules/PushPullModule.sol";
-import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
+import {ProductAdministratorRegistry, ProductRoles} from "../registry/ProductAdministratorRegistry.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /// @author @KONFeature
@@ -81,19 +80,19 @@ contract CampaignBank is PushPullModule {
 
     /// @notice Update a campaign allowance for token distribution
     /// @param _campaign The campaign to approve
-    function updateCampaignAuthorisation(address _campaign, bool _isAllowed) external onlyAllowedCampaignManager {
+    function updateCampaignAuthorisation(address _campaign, bool _isAllowed) external onlyCampaignManager {
         _campaignBankStorage().distributionAuthorisation[_campaign] = _isAllowed;
         emit CampaignAuthorisationUpdated(_campaign, _isAllowed);
     }
 
     /// @notice Update the distribution state
-    function updateDistributionState(bool _state) external onlyAllowedProductManager {
+    function updateDistributionState(bool _state) external onlyProductAdmin {
         _campaignBankStorage().isDistributionEnable = _state;
         emit DistributionStateUpdated(_state);
     }
 
     /// @dev Withdraw the remaining token from the campaign
-    function withdraw() external nonReentrant onlyAllowedProductManager {
+    function withdraw() external nonReentrant onlyProductAdmin {
         if (_campaignBankStorage().isDistributionEnable) revert BankIsStillOpen();
 
         // Compute the amount withdrawable
@@ -139,16 +138,19 @@ contract CampaignBank is PushPullModule {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Only allow the call for an authorised mananger
-    modifier onlyAllowedCampaignManager() {
-        bool isAllowed =
-            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
+    modifier onlyCampaignManager() {
+        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
+            PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_MANAGER_ROLE
+        );
         if (!isAllowed) revert Unauthorized();
         _;
     }
 
     /// @dev Only allow the call for an authorised mananger
-    modifier onlyAllowedProductManager() {
-        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, PRODUCT_MANAGER_ROLE);
+    modifier onlyProductAdmin() {
+        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(
+            PRODUCT_ID, msg.sender, ProductRoles.PRODUCT_ADMINISTRATOR
+        );
         if (!isAllowed) revert Unauthorized();
         _;
     }

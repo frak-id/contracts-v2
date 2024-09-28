@@ -6,12 +6,11 @@ import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {ProductTypes} from "src/constants/ProductTypes.sol";
-import {CAMPAIGN_MANAGER_ROLE, PRODUCT_MANAGER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
-import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
+import {ProductAdministratorRegistry, ProductRoles} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 
@@ -20,8 +19,11 @@ abstract contract EcosystemAwareTest is Test {
     // Setup a few wallet that could be used almost everywhere
     address internal owner = makeAddr("owner");
     address internal productOwner = makeAddr("productOwner");
-    address internal productManager = makeAddr("productManager");
+    address internal productAdmin = makeAddr("productAdmin");
+    address internal interactionManager = makeAddr("interactionManager");
     address internal campaignManager = makeAddr("campaignManager");
+    address internal purchaseOracleOperator = makeAddr("purchaseOracleOperator");
+
     address internal frakCampaignWallet = makeAddr("frakCampaignWallet");
 
     /// @dev A mocked erc20 token
@@ -90,8 +92,10 @@ abstract contract EcosystemAwareTest is Test {
 
         // Grant the right roles to the product interaction manager
         vm.startPrank(productOwner);
-        adminRegistry.grantRoles(productId, productManager, PRODUCT_MANAGER_ROLE);
-        adminRegistry.grantRoles(productId, campaignManager, CAMPAIGN_MANAGER_ROLE);
+        adminRegistry.grantRoles(productId, productAdmin, ProductRoles.PRODUCT_ADMINISTRATOR);
+        adminRegistry.grantRoles(productId, interactionManager, ProductRoles.INTERACTION_MANAGER_ROLE);
+        adminRegistry.grantRoles(productId, campaignManager, ProductRoles.CAMPAIGN_MANAGER_ROLE);
+        adminRegistry.grantRoles(productId, purchaseOracleOperator, ProductRoles.PURCHASE_ORACLE_OPERATOR_ROLE);
         vm.stopPrank();
     }
 
@@ -103,7 +107,7 @@ abstract contract EcosystemAwareTest is Test {
         productId = _mintProduct(_productTypes, _name, _domain);
 
         // Deploy the interaction contract
-        vm.prank(productManager);
+        vm.prank(interactionManager);
         productInteraction = productInteractionManager.deployInteractionContract(productId);
 
         // Label the interaction contract
