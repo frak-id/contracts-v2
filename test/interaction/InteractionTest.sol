@@ -3,13 +3,19 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-import {InteractionType, InteractionTypeLib, PressInteractions, ReferralInteractions} from "src/constants/InteractionType.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
-import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
+
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {
     ReferralCampaign, ReferralCampaignConfig, ReferralCampaignTriggerConfig
 } from "src/campaign/ReferralCampaign.sol";
+import {
+    InteractionType,
+    InteractionTypeLib,
+    PressInteractions,
+    ReferralInteractions
+} from "src/constants/InteractionType.sol";
+import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 
 /// @dev Generic contract to test interaction
 abstract contract InteractionTest is EcosystemAwareTest {
@@ -114,6 +120,8 @@ abstract contract InteractionTest is EcosystemAwareTest {
     }
 
     function test_singleCampaign() public {
+        bytes memory handleInteractionSelector =
+            abi.encodeWithSelector(0xc375ab13);
         // Deploy a campaign
         bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
         bytes memory initData = _getReferralCampaignConfigInitData();
@@ -123,11 +131,13 @@ abstract contract InteractionTest is EcosystemAwareTest {
         address campaign = productInteractionManager.deployCampaign(productId, campaignId, initData);
 
         // Perform the interaction and ensure the campaign is called
-        vm.expectCall(campaign, "");
+        vm.expectCall(campaign, handleInteractionSelector);
         performSingleInteraction();
     }
 
     function test_multiCampaign() public {
+        bytes memory handleInteractionSelector =
+            abi.encodeWithSelector(0xc375ab13);
         // Deploy a campaign
         bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
         bytes memory initData = _getReferralCampaignConfigInitData();
@@ -141,10 +151,10 @@ abstract contract InteractionTest is EcosystemAwareTest {
         vm.stopPrank();
 
         // Perform the interaction and ensure each campaigns is called
-        vm.expectCall(campaign1, "");
-        vm.expectCall(campaign2, "");
-        vm.expectCall(campaign3, "");
-        vm.expectCall(campaign4, "");
+        vm.expectCall(campaign1, handleInteractionSelector);
+        vm.expectCall(campaign2, handleInteractionSelector);
+        vm.expectCall(campaign3, handleInteractionSelector);
+        vm.expectCall(campaign4, handleInteractionSelector);
         performSingleInteraction();
     }
 

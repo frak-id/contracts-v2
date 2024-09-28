@@ -242,11 +242,46 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     function _sendInteractionToCampaign(bytes memory _data) internal {
         InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
         uint256 length = campaigns.length;
+        if (length == 0) {
+            return;
+        }
 
-        // Call the campaign using a try catch to avoid blocking the whole process if a campaign is locked
-        unchecked {
-            for (uint256 i = 0; i < length; i++) {
-                try campaigns[i].handleInteraction(_data) {} catch {}
+        // Treat it as mem safe assembly, even though it's not rly the case
+        //  since we are overwriting the two slots before the _data arr, but since that's the last function post execute we don't rly case
+        /// @solidity memory-safe-assembly
+        assembly {
+            // Store the handleInteraction selector + offset
+            mstore(sub(_data, 64), 0xc375ab13)
+            mstore(sub(_data, 32), 0x20)
+
+            // Build the calldata we will call the campaign with
+            let _dataLength := add(mload(_data), 0x60)
+            let _dataStart := sub(_data, 0x24)
+
+            // Build the iteration array
+            mstore(0, campaigns.slot)
+            let _currentOffset := keccak256(0, 0x20)
+            let _endOffset := add(_currentOffset, length)
+
+            // Iterate over each campaign and send the data to it
+            for {} 1 {} {
+                // Call the campaign
+                pop(
+                    call(
+                        gas(),
+                        // Campaign address
+                        sload(_currentOffset),
+                        0,
+                        _dataStart,
+                        _dataLength,
+                        0,
+                        0
+                    )
+                )
+                // Move to the next campaign
+                _currentOffset := add(_currentOffset, 1)
+                // If we reached the end, we exit
+                if iszero(lt(_currentOffset, _endOffset)) { break }
             }
         }
     }
