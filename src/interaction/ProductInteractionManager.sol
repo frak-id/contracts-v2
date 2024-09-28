@@ -276,7 +276,9 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
 
     /// @dev Modifier to only allow call from an allowed campaign manager
     modifier onlyCampaignManager(uint256 _productId) {
-        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(_productId, msg.sender, ProductRoles.CAMPAIGN_OR_ADMINISTRATOR);
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
+            _productId, msg.sender, ProductRoles.CAMPAIGN_OR_ADMINISTRATOR
+        );
         _;
     }
 }

@@ -43,6 +43,7 @@ contract CampaignBankTest is EcosystemAwareTest {
     function test_startDisabled() public view {
         assertFalse(campaignBank.isDistributionEnabled());
     }
+
     function test_campaignAllowance() public {
         assertFalse(campaignBank.isCampaignAuthorised(campaign));
 

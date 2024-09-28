@@ -3,9 +3,13 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
+import {InteractionType, InteractionTypeLib, PressInteractions, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
+import {CampaignBank} from "src/campaign/CampaignBank.sol";
+import {
+    ReferralCampaign, ReferralCampaignConfig, ReferralCampaignTriggerConfig
+} from "src/campaign/ReferralCampaign.sol";
 
 /// @dev Generic contract to test interaction
 abstract contract InteractionTest is EcosystemAwareTest {
@@ -17,6 +21,9 @@ abstract contract InteractionTest is EcosystemAwareTest {
     ProductInteractionDiamond internal productInteraction;
 
     bytes32 internal referralTree;
+
+    /// @dev The bank we will use
+    CampaignBank private campaignBank;
 
     /// @dev Initialize the test
     function _initInteractionTest(uint256 _productId, ProductInteractionDiamond _productInteraction) internal {
@@ -30,6 +37,16 @@ abstract contract InteractionTest is EcosystemAwareTest {
         // Grant the validator roles
         vm.prank(productOwner);
         _productInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
+
+        // Deploy a single bank
+        // We don't rly need to productId here since every product has the same roles
+        campaignBank = new CampaignBank(adminRegistry, productId, address(token));
+
+        // Mint a few test tokens to the campaign
+        token.mint(address(campaignBank), 1000 ether);
+        // Start our bank
+        vm.prank(productOwner);
+        campaignBank.updateDistributionState(true);
     }
 
     // Validation type hash
@@ -97,6 +114,63 @@ abstract contract InteractionTest is EcosystemAwareTest {
     }
 
     function test_singleCampaign() public {
+        // Deploy a campaign
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
+        bytes memory initData = _getReferralCampaignConfigInitData();
+
+        // Deploy the campaign
+        vm.prank(productOwner);
+        address campaign = productInteractionManager.deployCampaign(productId, campaignId, initData);
+
+        // Perform the interaction and ensure the campaign is called
+        vm.expectCall(campaign, "");
         performSingleInteraction();
+    }
+
+    function test_multiCampaign() public {
+        // Deploy a campaign
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
+        bytes memory initData = _getReferralCampaignConfigInitData();
+
+        // Deploy the campaign
+        vm.startPrank(productOwner);
+        address campaign1 = productInteractionManager.deployCampaign(productId, campaignId, initData);
+        address campaign2 = productInteractionManager.deployCampaign(productId, campaignId, initData);
+        address campaign3 = productInteractionManager.deployCampaign(productId, campaignId, initData);
+        address campaign4 = productInteractionManager.deployCampaign(productId, campaignId, initData);
+        vm.stopPrank();
+
+        // Perform the interaction and ensure each campaigns is called
+        vm.expectCall(campaign1, "");
+        vm.expectCall(campaign2, "");
+        vm.expectCall(campaign3, "");
+        vm.expectCall(campaign4, "");
+        performSingleInteraction();
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Helpers                                  */
+    /* -------------------------------------------------------------------------- */
+
+    function _getReferralCampaignConfigInitData() internal returns (bytes memory initData) {
+        vm.pauseGasMetering();
+        ReferralCampaignTriggerConfig[] memory triggers = new ReferralCampaignTriggerConfig[](1);
+        triggers[0] = ReferralCampaignTriggerConfig({
+            interactionType: ReferralInteractions.REFERRED,
+            baseReward: 10 ether,
+            userPercent: 5000, // 50%
+            deperditionPerLevel: 8000, // 80%
+            maxCountPerUser: 1
+        });
+
+        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+            name: "test",
+            triggers: triggers,
+            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
+        });
+        initData = abi.encode(config);
+        vm.resumeGasMetering();
     }
 }
