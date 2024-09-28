@@ -147,12 +147,6 @@ contract ProductAdministratorRegistry {
     /*                             Public role checks                             */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Check if the `_caller` is authorized to manage the `_productId` (basically if he have the admin right on
-    /// the product)
-    function isAuthorizedAdmin(uint256 _productId, address _caller) public view returns (bool) {
-        return PRODUCT_REGISTRY.isAuthorized(_productId, _caller);
-    }
-
     /// @dev Returns the roles of `user`.
     function rolesOf(uint256 productId, address user) public view virtual returns (uint256 roles) {
         /// @solidity memory-safe-assembly
@@ -177,18 +171,19 @@ contract ProductAdministratorRegistry {
     }
 
     /// @dev Returns whether `user` has all of `roles`.
-    function hasAllRolesOrAdmin(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
-        bool hasRoles = rolesOf(productId, user) & roles == roles;
-        if (hasRoles) return true;
-        return isAuthorizedAdmin(productId, user);
+    function hasAllRolesOrAdmin(uint256 _productId, address _user, uint256 _roles) public view virtual returns (bool) {
+        // If he has all the roles, directly return true
+        if (rolesOf(_productId, _user) & _roles == _roles) return true;
+        // Otherwise, check if he is the owner
+        return PRODUCT_REGISTRY.ownerOf(_productId) == _user;
     }
 
     /* -------------------------------------------------------------------------- */
     /*                                  Modifiers                                 */
     /* -------------------------------------------------------------------------- */
 
-    modifier onlyProductAdmin(uint256 productId) {
-        if (!isAuthorizedAdmin(productId, msg.sender)) revert Unauthorized();
+    modifier onlyProductAdmin(uint256 _productId) {
+        if (PRODUCT_REGISTRY.ownerOf(_productId) != msg.sender) revert Unauthorized();
         _;
     }
 }

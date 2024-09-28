@@ -140,13 +140,4 @@ contract ProductRegistry is ERC721, OwnableRoles {
         // Emit the event
         emit ProductUpdated(_productId, _productTypes, _name);
     }
-
-    /* -------------------------------------------------------------------------- */
-    /*                                Roles checker                               */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev Check if the `_caller` is authorized to manage the `_productId`
-    function isAuthorized(uint256 _productId, address _caller) public view returns (bool) {
-        return _ownerOf(_productId) == _caller;
-    }
 }

@@ -125,18 +125,13 @@ contract ProductRegistryTest is Test {
         vm.prank(minter);
         uint256 id = productRegistry.mint(PRODUCT_TYPE_DAPP, "name", "domain", minter);
 
-        assertEq(productRegistry.isAuthorized(id, minter), true);
-        assertEq(productRegistry.isAuthorized(id, owner), false);
+        assertEq(productRegistry.ownerOf(id), minter);
+        assertNotEq(productRegistry.ownerOf(id), owner);
 
         address operator = makeAddr("operator");
         vm.prank(minter);
         productRegistry.setApprovalForAll(operator, true);
 
-        assertEq(productRegistry.isAuthorized(id, operator), false);
-
-        vm.prank(minter);
-        productRegistry.setApprovalForAll(operator, false);
-
-        assertEq(productRegistry.isAuthorized(id, operator), false);
+        assertNotEq(productRegistry.ownerOf(id), operator);
     }
 }
