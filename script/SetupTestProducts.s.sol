@@ -4,7 +4,6 @@ pragma solidity 0.8.23;
 import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {CampaignBankFactory} from "src/campaign/CampaignBankFactory.sol";
 import {

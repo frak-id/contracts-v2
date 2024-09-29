@@ -162,14 +162,12 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         // Unpack the interaction
         (uint8 _productTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
-        // Get the facet matching the product type
-        IInteractionFacet facet = _getFacetForDenominator(_productTypeDenominator);
-
         // Validate the interaction
-        _validateInteraction(keccak256(_facetData), msg.sender, _signature);
+        _validateSenderInteraction(keccak256(_facetData), _signature);
 
         // Transmit the interaction to the facet
-        (bool success, bytes memory outputData) = address(facet).delegatecall(_facetData);
+        (bool success, bytes memory outputData) =
+            address(_getFacetForDenominator(_productTypeDenominator)).delegatecall(_facetData);
         if (!success) {
             revert InteractionHandlingFailed();
         }
@@ -197,25 +195,16 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Check if the provided interaction is valid
-    function _validateInteraction(bytes32 _interactionData, address _user, bytes calldata _signature) internal view {
-        // Get the key for our nonce
-        bytes32 nonceKey;
-        assembly {
-            mstore(0, _interactionData)
-            mstore(0x20, _user)
-            nonceKey := keccak256(0, 0x40)
-        }
-
+    function _validateSenderInteraction(bytes32 _interactionData, bytes calldata _signature) internal view {
         // Rebuild the full typehash
-        bytes32 digest =
-            _hashTypedData(keccak256(abi.encode(VALIDATE_INTERACTION_TYPEHASH, PRODUCT_ID, _interactionData, _user)));
-
-        // Retreive the signer
-        address signer = ECDSA.tryRecoverCalldata(digest, _signature);
+        bytes32 digest = _hashTypedData(
+            keccak256(abi.encode(VALIDATE_INTERACTION_TYPEHASH, PRODUCT_ID, _interactionData, msg.sender))
+        );
 
         // Check if the signer as the role to validate the interaction
-        bool isValidSigner = hasAllRoles(signer, INTERCATION_VALIDATOR_ROLE);
-        if (!isValidSigner) {
+        if (
+            !hasAnyRole(ECDSA.tryRecoverCalldata(digest, _signature), INTERCATION_VALIDATOR_ROLE)
+        ) {
             revert WrongInteractionSigner();
         }
     }
@@ -247,7 +236,8 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         }
 
         // Treat it as mem safe assembly, even though it's not rly the case
-        //  since we are overwriting the two slots before the _data arr, but since that's the last function post execute we don't rly case
+        //  since we are overwriting the two slots before the _data arr, but since that's the last function post execute
+        // we don't rly case
         /// @solidity memory-safe-assembly
         assembly {
             // Store the handleInteraction selector + offset

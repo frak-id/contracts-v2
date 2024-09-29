@@ -17,18 +17,18 @@ contract AddOperator is Script, DeterminedAddress {
     function run() public {
         Addresses memory addresses = _getAddresses();
 
-        // _addProductMinter(ProductRegistry(addresses.productRegistry));
+        _addProductMinter(ProductRegistry(addresses.productRegistry));
 
-        // _addMinter(mUSDToken(addresses.mUSDToken));
+        _addMinter(mUSDToken(addresses.mUSDToken));
 
         // Iterate over each product ids, and clean the attached campaigns
-        uint256[] memory productIds = _getProductIdsArr();
-        for (uint256 i = 0; i < productIds.length; i++) {
-            uint256 cId = productIds[i];
+        // uint256[] memory productIds = _getProductIdsArr();
+        // for (uint256 i = 0; i < productIds.length; i++) {
+        //     uint256 cId = productIds[i];
 
-            // Get the interaction contract and the active campaigns
-            _addOperator(ProductAdministratorRegistry(addresses.productAdministratorRegistry), cId);
-        }
+        //     // Get the interaction contract and the active campaigns
+        //     _addOperator(ProductAdministratorRegistry(addresses.productAdministratorRegistry), cId);
+        // }
     }
 
     function _addOperator(ProductAdministratorRegistry _adminRegistry, uint256 _cId) internal {
