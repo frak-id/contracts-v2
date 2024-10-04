@@ -1,7 +1,7 @@
 {
-  "name": "@frak-id/nexus-contracts",
+  "name": "@frak-id/contracts-v2",
   "version": "1.0.0",
-  "description": "All the smart contracts used for Nexus",
+  "description": "All the smart contracts used for Frak v2",
   "license": "GNU GPL 3.0",
   "private": true,
   "scripts": {

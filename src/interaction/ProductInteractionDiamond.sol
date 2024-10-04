@@ -202,9 +202,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         );
 
         // Check if the signer as the role to validate the interaction
-        if (
-            !hasAnyRole(ECDSA.tryRecoverCalldata(digest, _signature), INTERCATION_VALIDATOR_ROLE)
-        ) {
+        if (!hasAnyRole(ECDSA.tryRecoverCalldata(digest, _signature), INTERCATION_VALIDATOR_ROLE)) {
             revert WrongInteractionSigner();
         }
     }

@@ -14,6 +14,8 @@ contract AddOperator is Script, DeterminedAddress {
 
     address private productMinter = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
 
+    address private minter = 0x6A9553387Da23cbfFBdf58eC949c01580448F490;
+
     function run() public {
         Addresses memory addresses = _getAddresses();
 
@@ -44,13 +46,13 @@ contract AddOperator is Script, DeterminedAddress {
 
     function _addProductMinter(ProductRegistry _productRegistry) internal {
         vm.startBroadcast();
-        _productRegistry.grantRoles(productMinter, MINTER_ROLE);
+        _productRegistry.grantRoles(minter, MINTER_ROLE);
         vm.stopBroadcast();
     }
 
     function _addMinter(mUSDToken _musdToken) internal {
         vm.startBroadcast();
-        _musdToken.grantRoles(airdropper, MINTER_ROLE);
+        _musdToken.grantRoles(minter, MINTER_ROLE);
         vm.stopBroadcast();
     }
 }

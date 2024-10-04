@@ -1,7 +1,7 @@
 {
-  "interactionDelegator": "0x4b8350E6291063bF14ca1E4379147a3bd23714CB",
-  "interactionDelegatorAction": "0xDb814094B3CE4D0DCd4e3B44E584df6d0C265cE5",
-  "interactionDelegatorValidator": "0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C",
+  "interactionDelegator": "0xF6728220A504c4e80Ffe6B7c9bc44B21f2D6FBaf",
+  "interactionDelegatorAction": "0x2BA364989A8EF11072334dc7aADc9b5E77a021b1",
+  "interactionDelegatorValidator": "0x0A15995CA6C7a7a67a41e0EBff105326bbD55716",
   "p256Wrapper": "0x97A24c95E317c44c0694200dd0415dD6F556663D",
   "webAuthNRecoveryAction": "0x8b29229515D3e5b829D59617A791b5B3a2c32ff1",
   "webAuthNValidator": "0xF05f18D9312f10d1d417c45040B8497899f66A5E"

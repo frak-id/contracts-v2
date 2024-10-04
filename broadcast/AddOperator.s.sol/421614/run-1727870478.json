@@ -1,0 +1,55 @@
+{
+  "transactions": [
+    {
+      "hash": null,
+      "transactionType": "CALL",
+      "contractName": "ProductRegistry",
+      "contractAddress": "0x5752E0FB600C59E140CDAfDA7AC8933774c19280",
+      "function": "grantRoles(address,uint256)",
+      "arguments": [
+        "0xee310229c31e000292d14Add9d4c317095808661",
+        "1"
+      ],
+      "transaction": {
+        "from": "0x7caF754C934710D7C73bc453654552BEcA38223F",
+        "to": "0x5752E0FB600C59E140CDAfDA7AC8933774c19280",
+        "gas": "0x37d36",
+        "value": "0x0",
+        "input": "0x1c10893f000000000000000000000000ee310229c31e000292d14add9d4c3170958086610000000000000000000000000000000000000000000000000000000000000001",
+        "nonce": "0x324",
+        "chainId": "0x66eee"
+      },
+      "additionalContracts": [],
+      "isFixedGasLimit": false
+    },
+    {
+      "hash": null,
+      "transactionType": "CALL",
+      "contractName": "mUSDToken",
+      "contractAddress": "0x56039fa1a804F614eBD714139F29a3ff4DB57ad6",
+      "function": "grantRoles(address,uint256)",
+      "arguments": [
+        "0xee310229c31e000292d14Add9d4c317095808661",
+        "1"
+      ],
+      "transaction": {
+        "from": "0x7caF754C934710D7C73bc453654552BEcA38223F",
+        "to": "0x56039fa1a804F614eBD714139F29a3ff4DB57ad6",
+        "gas": "0x37d19",
+        "value": "0x0",
+        "input": "0x1c10893f000000000000000000000000ee310229c31e000292d14add9d4c3170958086610000000000000000000000000000000000000000000000000000000000000001",
+        "nonce": "0x325",
+        "chainId": "0x66eee"
+      },
+      "additionalContracts": [],
+      "isFixedGasLimit": false
+    }
+  ],
+  "receipts": [],
+  "libraries": [],
+  "pending": [],
+  "returns": {},
+  "timestamp": 1727870478,
+  "chain": 421614,
+  "commit": "cd935ca"
+}
