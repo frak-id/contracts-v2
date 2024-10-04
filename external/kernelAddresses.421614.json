@@ -1,6 +1,6 @@
 {
   "interactionDelegator": "0xF296fdB7F5a6E3aFdA1bce05365D08CF7835e6b0",
-  "interactionDelegatorAction": "0x00000000764A9D97B297EB63B45Ed58df94A3D7A",
+  "interactionDelegatorAction": "0xC44fbEc2132be12E7301Bf6f2f09a7108b24d231",
   "interactionDelegatorValidator": "0x030B731d835F407447B113bf493667516a1b33E2",
   "p256Wrapper": "0x97A24c95E317c44c0694200dd0415dD6F556663D",
   "webAuthNRecoveryAction": "0x8b29229515D3e5b829D59617A791b5B3a2c32ff1",

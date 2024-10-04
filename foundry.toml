@@ -1,6 +1,9 @@
 # Global default config
 [profile.default]
-fs_permissions = [{ access = "read-write", path = "./external"}]
+fs_permissions = [
+  { access = "read-write", path = "./external"},
+  { access = "read-write", path = "./bin"}
+]
 bytecode_hash = "none"
 
 # Optimizer config

@@ -35,6 +35,25 @@ struct KernelAddresses {
     address interactionDelegatorAction;
 }
 
+struct BinHashes {
+    // Frak
+    bytes32 productRegistry;
+    bytes32 referralRegistry;
+    bytes32 productAdministratorRegistry;
+    bytes32 purchaseOracle;
+    bytes32 facetFactory;
+    bytes32 productInteractionManager;
+    bytes32 campaignFactory;
+    bytes32 campaignBankFactory;
+    // Kernel
+    bytes32 p256Wrapper;
+    bytes32 webAuthNValidator;
+    bytes32 webAuthNRecoveryAction;
+    bytes32 interactionDelegator;
+    bytes32 interactionDelegatorValidator;
+    bytes32 interactionDelegatorAction;
+}
+
 struct ProductIds {
     uint256 pNewsPaper;
     uint256 pEthccDemo;
@@ -199,6 +218,66 @@ contract DeterminedAddress is Script {
 
         vm.writeJson(finalJson, kernelFile);
         vm.writeJson(finalJson, _kernelChainFile());
+    }
+
+    // Build an initial empty bin hash struct
+    function _emptyBinHash() internal returns (BinHashes memory _emptybinHashes) {
+        return BinHashes({
+            productRegistry: bytes32(0),
+            referralRegistry: bytes32(0),
+            productAdministratorRegistry: bytes32(0),
+            purchaseOracle: bytes32(0),
+            facetFactory: bytes32(0),
+            productInteractionManager: bytes32(0),
+            campaignFactory: bytes32(0),
+            campaignBankFactory: bytes32(0),
+            p256Wrapper: bytes32(0),
+            webAuthNValidator: bytes32(0),
+            webAuthNRecoveryAction: bytes32(0),
+            interactionDelegator: bytes32(0),
+            interactionDelegatorValidator: bytes32(0),
+            interactionDelegatorAction: bytes32(0)
+        });
+    }
+
+    /// @dev Save the addresses in a json file
+    function _saveBinHashes(BinHashes memory hashes) internal {
+        // Save the addresses in a json file
+        string memory jsonKey = "BIN_HASH_ADDRESSES_JSON";
+        vm.serializeBytes32(jsonKey, "productRegistry", hashes.productRegistry);
+        vm.serializeBytes32(jsonKey, "referralRegistry", hashes.referralRegistry);
+        vm.serializeBytes32(jsonKey, "productAdministratorRegistry", hashes.productAdministratorRegistry);
+        vm.serializeBytes32(jsonKey, "purchaseOracle", hashes.purchaseOracle);
+        vm.serializeBytes32(jsonKey, "facetFactory", hashes.facetFactory);
+        vm.serializeBytes32(jsonKey, "productInteractionManager", hashes.productInteractionManager);
+        vm.serializeBytes32(jsonKey, "campaignFactory", hashes.campaignFactory);
+        vm.serializeBytes32(jsonKey, "campaignBankFactory", hashes.campaignBankFactory);
+        vm.serializeBytes32(jsonKey, "p256Wrapper", hashes.p256Wrapper);
+        vm.serializeBytes32(jsonKey, "webAuthNValidator", hashes.webAuthNValidator);
+        vm.serializeBytes32(jsonKey, "webAuthNRecoveryAction", hashes.webAuthNRecoveryAction);
+        vm.serializeBytes32(jsonKey, "interactionDelegator", hashes.interactionDelegator);
+        vm.serializeBytes32(jsonKey, "interactionDelegatorValidator", hashes.interactionDelegatorValidator);
+        string memory finalJson =
+            vm.serializeBytes32(jsonKey, "interactionDelegatorAction", hashes.interactionDelegatorAction);
+
+        vm.writeJson(finalJson, string.concat("bin/hashes/", LibString.toString(block.chainid), ".json"));
+    }
+
+    /// @dev Save the binary of a contract to a file
+    function _saveBin(string memory name, bytes memory _creationCode) internal returns (bytes32 hash) {
+        return _saveBin(name, _creationCode, "");
+    }
+
+    /// @dev Save the binary of a contract to a file and return the binary hash
+    function _saveBin(string memory name, bytes memory _creationCode, bytes memory _initParams)
+        internal
+        returns (bytes32 hash)
+    {
+        string memory file = string.concat("bin/", LibString.toString(block.chainid), "/", name, ".bin");
+        bytes memory bin = abi.encodePacked(_creationCode, _initParams);
+        vm.writeFile(file, vm.toString(bin));
+
+        hash = keccak256(bin);
     }
 
     function _nexusChainFile() internal view returns (string memory) {

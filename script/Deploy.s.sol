@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {Addresses, DeterminedAddress, KernelAddresses} from "./DeterminedAddress.sol";
+import {Addresses, BinHashes, DeterminedAddress, KernelAddresses} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 import "forge-std/Vm.sol";
@@ -39,41 +39,47 @@ contract Deploy is Script, DeterminedAddress {
         // The pre computed contract addresses
         Addresses memory addresses = _getAddresses();
 
-        addresses = _deployCore(addresses);
+        // The empty initial bin hashes
+        BinHashes memory binHash = _emptyBinHash();
+
+        addresses = _deployCore(addresses, binHash);
         addresses = _deployTokens(addresses);
 
         // Log every deployed address
         console.log();
         console.log("Deployed all Frak contracts");
         console.log("Addresses:");
-        console.log(" - ProductRegistry: %s", addresses.productRegistry);
-        console.log(" - ReferralRegistry: %s", addresses.referralRegistry);
-        console.log(" - ProductAdministratorRegistry: %s", addresses.productAdministratorRegistry);
-        console.log(" - PurchaseOracle: %s", addresses.purchaseOracle);
-        console.log(" - ProductInteractionManager: %s", addresses.productInteractionManager);
-        console.log(" - FacetFactory: %s", addresses.facetFactory);
-        console.log(" - CampaignFactory: %s", addresses.campaignFactory);
-        console.log(" - CampaignBankFactory: %s", addresses.campaignBankFactory);
-        console.log(" - MUSDToken: %s", addresses.mUSDToken);
+        console.log(" - ProductRegistry:                %s", addresses.productRegistry);
+        console.log(" - ReferralRegistry:               %s", addresses.referralRegistry);
+        console.log(" - ProductAdministratorRegistry:   %s", addresses.productAdministratorRegistry);
+        console.log(" - PurchaseOracle:                 %s", addresses.purchaseOracle);
+        console.log(" - ProductInteractionManager:      %s", addresses.productInteractionManager);
+        console.log(" - FacetFactory:                   %s", addresses.facetFactory);
+        console.log(" - CampaignFactory:                %s", addresses.campaignFactory);
+        console.log(" - CampaignBankFactory:            %s", addresses.campaignBankFactory);
+        console.log(" - MUSDToken:                      %s", addresses.mUSDToken);
         console.log();
 
         // Save the addresses in a json file
         _saveAddresses(addresses);
 
         // Then handle kernel deployment
-        KernelAddresses memory kAddresses = _deployKernelModules(addresses);
+        KernelAddresses memory kAddresses = _deployKernelModules(addresses, binHash);
 
         console.log();
         console.log("Deployed all Kernel contracts");
         console.log("Kernel Addresses:");
-        console.log(" - P256VerifierWrapper: %s", kAddresses.p256Wrapper);
-        console.log(" - MultiWebAuthNValidator: %s", kAddresses.webAuthNValidator);
-        console.log(" - MultiWebAuthNRecoveryAction: %s", kAddresses.webAuthNRecoveryAction);
-        console.log(" - InteractionDelegator: %s", kAddresses.interactionDelegator);
-        console.log(" - InteractionDelegatorValidator: %s", kAddresses.interactionDelegatorValidator);
-        console.log(" - InteractionDelegatorAction: %s", kAddresses.interactionDelegatorAction);
+        console.log(" - P256VerifierWrapper:            %s", kAddresses.p256Wrapper);
+        console.log(" - MultiWebAuthNValidator:         %s", kAddresses.webAuthNValidator);
+        console.log(" - MultiWebAuthNRecoveryAction:    %s", kAddresses.webAuthNRecoveryAction);
+        console.log(" - InteractionDelegator:           %s", kAddresses.interactionDelegator);
+        console.log(" - InteractionDelegatorValidator:  %s", kAddresses.interactionDelegatorValidator);
+        console.log(" - InteractionDelegatorAction:     %s", kAddresses.interactionDelegatorAction);
 
         _saveKernelAddresses(kAddresses);
+
+        // Save the bin hashes
+        _saveBinHashes(binHash);
     }
 
     function _shouldDeploy(address addr) internal view returns (bool) {
@@ -81,31 +87,43 @@ contract Deploy is Script, DeterminedAddress {
     }
 
     /// @dev Deploy core ecosystem stuff (ProductRegistry, Community token)
-    function _deployCore(Addresses memory addresses) internal returns (Addresses memory) {
+    function _deployCore(Addresses memory addresses, BinHashes memory binHash) internal returns (Addresses memory) {
         vm.startBroadcast();
 
         // Deploy the registries
         if (_shouldDeploy(addresses.productRegistry)) {
             console.log(" * Deploying ProductRegistry");
             ProductRegistry productRegistry = new ProductRegistry{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c59ed75dc94a425451637437d
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908c25581d0a555444037bc5e827
             }(msg.sender);
             addresses.productRegistry = address(productRegistry);
         }
+        bytes32 currHash = _saveBin("ProductRegistry", type(ProductRegistry).creationCode, abi.encode(msg.sender));
+        binHash.productRegistry = currHash;
+
         if (_shouldDeploy(addresses.referralRegistry)) {
             console.log(" * Deploying ReferralRegistry");
             ReferralRegistry referralRegistry = new ReferralRegistry{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c27ea1090cbdde3109a73c0ca
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908ca9ff6c84e02ec0023e30aee1
             }(msg.sender);
             addresses.referralRegistry = address(referralRegistry);
         }
+        currHash = _saveBin("ReferralRegistry", type(ReferralRegistry).creationCode, abi.encode(msg.sender));
+        binHash.referralRegistry = currHash;
+
         if (_shouldDeploy(addresses.productAdministratorRegistry)) {
             console.log(" * Deploying ProductAdministratorRegistry");
             ProductAdministratorRegistry adminRegistry = new ProductAdministratorRegistry{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c0fb70d6ed9a3af080e01c6da
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908c97745d086842db00d5101c21
             }(ProductRegistry(addresses.productRegistry));
             addresses.productAdministratorRegistry = address(adminRegistry);
         }
+        currHash = _saveBin(
+            "ProductAdministratorRegistry",
+            type(ProductAdministratorRegistry).creationCode,
+            abi.encode(addresses.productRegistry)
+        );
+        binHash.productAdministratorRegistry = currHash;
 
         // Deploy the oracle
         if (_shouldDeploy(addresses.purchaseOracle)) {
@@ -114,6 +132,10 @@ contract Deploy is Script, DeterminedAddress {
                 new PurchaseOracle{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorRegistry));
             addresses.purchaseOracle = address(purchaseOracle);
         }
+        currHash = _saveBin(
+            "PurchaseOracle", type(PurchaseOracle).creationCode, abi.encode(addresses.productAdministratorRegistry)
+        );
+        binHash.purchaseOracle = currHash;
 
         // Deploy the facet factory
         if (_shouldDeploy(addresses.facetFactory)) {
@@ -126,6 +148,17 @@ contract Deploy is Script, DeterminedAddress {
             );
             addresses.facetFactory = address(facetFactory);
         }
+        currHash = _saveBin(
+            "InteractionFacetsFactory",
+            type(InteractionFacetsFactory).creationCode,
+            abi.encode(
+                addresses.referralRegistry,
+                addresses.productRegistry,
+                addresses.productAdministratorRegistry,
+                addresses.purchaseOracle
+            )
+        );
+        binHash.facetFactory = currHash;
 
         // Deploy the campaign factory
         if (_shouldDeploy(addresses.campaignFactory)) {
@@ -136,19 +169,32 @@ contract Deploy is Script, DeterminedAddress {
             );
             addresses.campaignFactory = address(campaignFactory);
         }
+        currHash = _saveBin(
+            "CampaignFactory",
+            type(CampaignFactory).creationCode,
+            abi.encode(addresses.referralRegistry, addresses.productAdministratorRegistry)
+        );
+        binHash.campaignFactory = currHash;
+
         if (_shouldDeploy(addresses.campaignBankFactory)) {
             console.log(" * Deploying CampaignBankFactory");
             CampaignBankFactory campaignBankFactory =
                 new CampaignBankFactory{salt: 0}(ProductAdministratorRegistry(addresses.productAdministratorRegistry));
             addresses.campaignBankFactory = address(campaignBankFactory);
         }
+        currHash = _saveBin(
+            "CampaignBankFactory",
+            type(CampaignBankFactory).creationCode,
+            abi.encode(addresses.productAdministratorRegistry)
+        );
+        binHash.campaignBankFactory = currHash;
 
         // Deploy the interaction manager if needed
         if (_shouldDeploy(addresses.productInteractionManager)) {
             console.log(" * Deploying ProductInteractionManager under erc1967 proxy");
             // Deploy implem
             address implem = address(
-                new ProductInteractionManager{salt: 0xae4e57b886541829ba70efc84340653c41e2908c01f8a8bf450799131401a2fd}(
+                new ProductInteractionManager{salt: 0xae4e57b886541829ba70efc84340653c41e2908cae5f126656e4d404cc7486f5}(
                     ProductRegistry(addresses.productRegistry),
                     ReferralRegistry(addresses.referralRegistry),
                     ProductAdministratorRegistry(addresses.productAdministratorRegistry)
@@ -167,6 +213,12 @@ contract Deploy is Script, DeterminedAddress {
             // Granr it the role to grant tree access on the referral registry
             ReferralRegistry(addresses.referralRegistry).grantRoles(proxy, REFERRAL_ALLOWANCE_MANAGER_ROLE);
         }
+        currHash = _saveBin(
+            "ProductInteractionManager",
+            type(ProductInteractionManager).creationCode,
+            abi.encode(addresses.productRegistry, addresses.referralRegistry, addresses.productAdministratorRegistry)
+        );
+        binHash.productInteractionManager = currHash;
 
         vm.stopBroadcast();
         return addresses;
@@ -188,7 +240,10 @@ contract Deploy is Script, DeterminedAddress {
     }
 
     /// @dev Deploy the kernel modules
-    function _deployKernelModules(Addresses memory addresses) internal returns (KernelAddresses memory) {
+    function _deployKernelModules(Addresses memory addresses, BinHashes memory binHash)
+        internal
+        returns (KernelAddresses memory)
+    {
         KernelAddresses memory kAddresses = _getKernelAddresses();
 
         vm.startBroadcast();
@@ -198,12 +253,18 @@ contract Deploy is Script, DeterminedAddress {
             P256VerifierWrapper p256verifierWrapper = new P256VerifierWrapper{salt: 0}();
             kAddresses.p256Wrapper = address(p256verifierWrapper);
         }
+        bytes32 currHash = _saveBin("P256VerifierWrapper", type(P256VerifierWrapper).creationCode);
+        binHash.p256Wrapper = currHash;
 
         if (_shouldDeploy(kAddresses.webAuthNValidator)) {
             console.log(" * Deploying MultiWebAuthNValidator");
             MultiWebAuthNValidatorV2 multiWebAuthNSigner = new MultiWebAuthNValidatorV2{salt: 0}(kAddresses.p256Wrapper);
             kAddresses.webAuthNValidator = address(multiWebAuthNSigner);
         }
+        currHash = _saveBin(
+            "MultiWebAuthNValidatorV2", type(MultiWebAuthNValidatorV2).creationCode, abi.encode(kAddresses.p256Wrapper)
+        );
+        binHash.webAuthNValidator = currHash;
 
         if (_shouldDeploy(kAddresses.webAuthNRecoveryAction)) {
             console.log(" * Deploying MultiWebAuthNRecoveryAction");
@@ -211,12 +272,20 @@ contract Deploy is Script, DeterminedAddress {
                 new MultiWebAuthNRecoveryAction{salt: 0}(kAddresses.webAuthNValidator);
             kAddresses.webAuthNRecoveryAction = address(multiWebAuthNRecovery);
         }
+        currHash = _saveBin(
+            "MultiWebAuthNRecoveryAction",
+            type(MultiWebAuthNRecoveryAction).creationCode,
+            abi.encode(kAddresses.webAuthNValidator)
+        );
+        binHash.webAuthNRecoveryAction = currHash;
 
         if (_shouldDeploy(kAddresses.interactionDelegator)) {
             console.log(" * Deploying InteractionDelegator");
             InteractionDelegator interactionDelegator = new InteractionDelegator{salt: 0}(msg.sender);
             kAddresses.interactionDelegator = address(interactionDelegator);
         }
+        currHash = _saveBin("InteractionDelegator", type(InteractionDelegator).creationCode, abi.encode(msg.sender));
+        binHash.interactionDelegator = currHash;
 
         if (_shouldDeploy(kAddresses.interactionDelegatorValidator)) {
             console.log(" * Deploying InteractionDelegatorValidator");
@@ -224,6 +293,12 @@ contract Deploy is Script, DeterminedAddress {
                 new InteractionDelegatorValidator{salt: 0}(kAddresses.interactionDelegator);
             kAddresses.interactionDelegatorValidator = address(interactionDelegatorValidator);
         }
+        currHash = _saveBin(
+            "InteractionDelegatorValidator",
+            type(InteractionDelegatorValidator).creationCode,
+            abi.encode(kAddresses.interactionDelegator)
+        );
+        binHash.interactionDelegatorValidator = currHash;
 
         if (_shouldDeploy(kAddresses.interactionDelegatorAction)) {
             console.log(" * Deploying InteractionDelegatorAction");
@@ -232,6 +307,12 @@ contract Deploy is Script, DeterminedAddress {
             }(ProductInteractionManager(addresses.productInteractionManager));
             kAddresses.interactionDelegatorAction = address(interactionDelegatorAction);
         }
+        currHash = _saveBin(
+            "InteractionDelegatorAction",
+            type(InteractionDelegatorAction).creationCode,
+            abi.encode(addresses.productInteractionManager)
+        );
+        binHash.interactionDelegatorAction = currHash;
 
         vm.stopBroadcast();
         return kAddresses;
