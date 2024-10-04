@@ -69,14 +69,8 @@ contract ReferralCampaign is InteractionCampaign {
     /// @dev The max exploration level of the referral tree
     uint256 private constant MAX_EXPLORATION_LEVEL = 5;
 
-    /// @dev The fixed frak fee rate
-    uint256 private constant FRAK_FEE = 2000; // 20%
-
     /// @dev The referral tree for the current product id
     bytes32 private immutable REFERRAL_TREE;
-
-    /// @dev The accounting wallet of frak that will receive the rewards
-    address private immutable FRAK_CAMPAIGN;
 
     /// @dev The referral registry
     ReferralRegistry private immutable REFERRAL_REGISTRY;
@@ -163,7 +157,6 @@ contract ReferralCampaign is InteractionCampaign {
         ReferralCampaignConfig memory _config,
         ReferralRegistry _referralRegistry,
         ProductAdministratorRegistry _productAdministratorRegistry,
-        address _frakCampaignWallet,
         ProductInteractionDiamond _interaction
     ) InteractionCampaign(_productAdministratorRegistry, _interaction, _config.name) {
         // Early exit if we got no triggers nor campaign bank
@@ -177,7 +170,6 @@ contract ReferralCampaign is InteractionCampaign {
         // Set every immutable arguments
         REFERRAL_REGISTRY = _referralRegistry;
         CAMPAIGN_BANK = _config.campaignBank;
-        FRAK_CAMPAIGN = _frakCampaignWallet;
 
         // Store the referral tree
         REFERRAL_TREE = _interaction.getReferralTree();
@@ -303,21 +295,13 @@ contract ReferralCampaign is InteractionCampaign {
 
         unchecked {
             // Build our reward array
-            Reward[] memory rewards = new Reward[](referrers.length + 2);
+            Reward[] memory rewards = new Reward[](referrers.length + 1);
             uint256 remainingAmount = _amount;
 
-            // First reward is the frak accounting one
-            {
-                uint256 frkAmount = (_amount * FRAK_FEE) / PERCENT_BASE;
-                rewards[0] = Reward(FRAK_CAMPAIGN, frkAmount);
-                // Decrease the amount
-                remainingAmount -= frkAmount;
-            }
-
-            // Second one is the user
+            // First one is the user
             {
                 uint256 userAmount = (remainingAmount * _userPercent) / PERCENT_BASE;
-                rewards[1] = Reward(_user, userAmount);
+                rewards[0] = Reward(_user, userAmount);
                 // Decrease the amount
                 remainingAmount -= userAmount;
             }
@@ -326,7 +310,7 @@ contract ReferralCampaign is InteractionCampaign {
             for (uint256 i = 0; i < referrers.length; i++) {
                 // Build the reward
                 uint256 reward = (remainingAmount * _deperditionLevel) / PERCENT_BASE;
-                rewards[i + 2] = Reward(referrers[i], reward);
+                rewards[i + 1] = Reward(referrers[i], reward);
                 // Decrease the reward by the amount distributed
                 remainingAmount -= reward;
             }

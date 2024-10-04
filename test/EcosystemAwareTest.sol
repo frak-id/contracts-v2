@@ -24,8 +24,6 @@ abstract contract EcosystemAwareTest is Test {
     address internal campaignManager = makeAddr("campaignManager");
     address internal purchaseOracleOperator = makeAddr("purchaseOracleOperator");
 
-    address internal frakCampaignWallet = makeAddr("frakCampaignWallet");
-
     /// @dev A mocked erc20 token
     MockErc20 internal token = new MockErc20();
 
@@ -40,7 +38,7 @@ abstract contract EcosystemAwareTest is Test {
     /// @dev The different factories
     InteractionFacetsFactory internal facetFactory =
         new InteractionFacetsFactory(referralRegistry, productRegistry, adminRegistry, purchaseOracle);
-    CampaignFactory internal campaignFactory = new CampaignFactory(referralRegistry, adminRegistry, frakCampaignWallet);
+    CampaignFactory internal campaignFactory = new CampaignFactory(referralRegistry, adminRegistry);
 
     /// @dev The product interaction manager
     ProductInteractionManager internal productInteractionManager;

@@ -87,7 +87,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, adminRegistry, frakCampaignWallet, productInteraction);
+        new ReferralCampaign(config, referralRegistry, adminRegistry, productInteraction);
     }
 
     function test_construct_InvalidConfig_noBank() public {
@@ -100,7 +100,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, adminRegistry, frakCampaignWallet, productInteraction);
+        new ReferralCampaign(config, referralRegistry, adminRegistry, productInteraction);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -410,7 +410,6 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         assertEq(campaignBank.getPendingAmount(bob), 0);
         assertEq(campaignBank.getPendingAmount(charlie), 0);
         assertEq(campaignBank.getPendingAmount(delta), 0);
-        assertEq(campaignBank.getPendingAmount(frakCampaignWallet), 0);
     }
 
     function assertRewardDistributed() private view {
@@ -418,7 +417,6 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         assertGt(campaignBank.getPendingAmount(bob), 0);
         assertGt(campaignBank.getPendingAmount(charlie), 0);
         assertGt(campaignBank.getPendingAmount(delta), 0);
-        assertGt(campaignBank.getPendingAmount(frakCampaignWallet), 0);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -497,8 +495,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
     function _campaignSetup(ReferralCampaignConfig memory _config) private {
         // Deploy the campaign
-        referralCampaign =
-            new ReferralCampaign(_config, referralRegistry, adminRegistry, frakCampaignWallet, productInteraction);
+        referralCampaign = new ReferralCampaign(_config, referralRegistry, adminRegistry, productInteraction);
 
         // Allow the campaign bank to distribute rewards
         vm.prank(campaignManager);

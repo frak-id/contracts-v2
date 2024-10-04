@@ -87,18 +87,23 @@ contract Deploy is Script, DeterminedAddress {
         // Deploy the registries
         if (_shouldDeploy(addresses.productRegistry)) {
             console.log(" * Deploying ProductRegistry");
-            ProductRegistry productRegistry = new ProductRegistry{salt: 0}(msg.sender);
+            ProductRegistry productRegistry = new ProductRegistry{
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908c59ed75dc94a425451637437d
+            }(msg.sender);
             addresses.productRegistry = address(productRegistry);
         }
         if (_shouldDeploy(addresses.referralRegistry)) {
             console.log(" * Deploying ReferralRegistry");
-            ReferralRegistry referralRegistry = new ReferralRegistry{salt: 0}(msg.sender);
+            ReferralRegistry referralRegistry = new ReferralRegistry{
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908c27ea1090cbdde3109a73c0ca
+            }(msg.sender);
             addresses.referralRegistry = address(referralRegistry);
         }
         if (_shouldDeploy(addresses.productAdministratorRegistry)) {
             console.log(" * Deploying ProductAdministratorRegistry");
-            ProductAdministratorRegistry adminRegistry =
-                new ProductAdministratorRegistry{salt: 0}(ProductRegistry(addresses.productRegistry));
+            ProductAdministratorRegistry adminRegistry = new ProductAdministratorRegistry{
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908c0fb70d6ed9a3af080e01c6da
+            }(ProductRegistry(addresses.productRegistry));
             addresses.productAdministratorRegistry = address(adminRegistry);
         }
 
@@ -127,8 +132,7 @@ contract Deploy is Script, DeterminedAddress {
             console.log(" * Deploying CampaignFactory");
             CampaignFactory campaignFactory = new CampaignFactory{salt: 0}(
                 ReferralRegistry(addresses.referralRegistry),
-                ProductAdministratorRegistry(addresses.productAdministratorRegistry),
-                airdropper
+                ProductAdministratorRegistry(addresses.productAdministratorRegistry)
             );
             addresses.campaignFactory = address(campaignFactory);
         }
@@ -144,14 +148,17 @@ contract Deploy is Script, DeterminedAddress {
             console.log(" * Deploying ProductInteractionManager under erc1967 proxy");
             // Deploy implem
             address implem = address(
-                new ProductInteractionManager{salt: 0}(
+                new ProductInteractionManager{salt: 0xae4e57b886541829ba70efc84340653c41e2908c01f8a8bf450799131401a2fd}(
                     ProductRegistry(addresses.productRegistry),
                     ReferralRegistry(addresses.referralRegistry),
                     ProductAdministratorRegistry(addresses.productAdministratorRegistry)
                 )
             );
+            console.log("  ** ProductInteractionManager implementation: %s", implem);
             // Deploy and register proxy
-            address proxy = LibClone.deployDeterministicERC1967(implem, 0);
+            address proxy = LibClone.deployDeterministicERC1967(
+                implem, 0xae4e57b886541829ba70efc84340653c41e2908c74c911196efa85290dc9cb2b
+            );
             ProductInteractionManager(proxy).init(
                 msg.sender, InteractionFacetsFactory(addresses.facetFactory), CampaignFactory(addresses.campaignFactory)
             );
