@@ -88,12 +88,13 @@ contract UpdateProductInteractions is Script, DeterminedAddress {
 
         // Update each products
         productRegistry.updateMetadata(
-            _getProductIds().pNewsPaper, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "A Positive World"
+            _getProductIds().pNewsPaper, PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "A Positive World", ""
         );
         productRegistry.updateMetadata(
             _getProductIds().pEthccDemo,
             PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL | PRODUCT_TYPE_DAPP,
-            "Frak - EthCC demo"
+            "Frak - EthCC demo",
+            ""
         );
 
         vm.stopBroadcast();

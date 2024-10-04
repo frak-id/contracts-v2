@@ -157,7 +157,7 @@ contract Deploy is Script, DeterminedAddress {
             console.log("  ** ProductInteractionManager implementation: %s", implem);
             // Deploy and register proxy
             address proxy = LibClone.deployDeterministicERC1967(
-                implem, 0xae4e57b886541829ba70efc84340653c41e2908c74c911196efa85290dc9cb2b
+                implem, 0xae4e57b886541829ba70efc84340653c41e2908c0c1f7c099b4b5247aa9a3ae6
             );
             ProductInteractionManager(proxy).init(
                 msg.sender, InteractionFacetsFactory(addresses.facetFactory), CampaignFactory(addresses.campaignFactory)
@@ -227,8 +227,9 @@ contract Deploy is Script, DeterminedAddress {
 
         if (_shouldDeploy(kAddresses.interactionDelegatorAction)) {
             console.log(" * Deploying InteractionDelegatorAction");
-            InteractionDelegatorAction interactionDelegatorAction =
-                new InteractionDelegatorAction{salt: 0}(ProductInteractionManager(addresses.productInteractionManager));
+            InteractionDelegatorAction interactionDelegatorAction = new InteractionDelegatorAction{
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908c4b9e01222a484937eece7913
+            }(ProductInteractionManager(addresses.productInteractionManager));
             kAddresses.interactionDelegatorAction = address(interactionDelegatorAction);
         }
 

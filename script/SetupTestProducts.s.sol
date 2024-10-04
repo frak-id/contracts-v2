@@ -67,7 +67,7 @@ contract SetupTestProducts is Script, DeterminedAddress {
     function _mintProduct(
         ProductRegistry _productRegistry,
         ProductTypes _productTypes,
-        string memory _name,
+        bytes32 _name,
         string memory _domain
     ) internal returns (uint256) {
         return _productRegistry.mint(_productTypes, _name, _domain, productOwner);

@@ -20,6 +20,9 @@ contract ProductRegistryTest is Test {
         productRegistry = new ProductRegistry(owner);
         vm.prank(owner);
         productRegistry.grantRoles(minter, MINTER_ROLE);
+
+        vm.prank(owner);
+        productRegistry.setMetadataUrl("https://backend.frak.id/metadata/");
     }
 
     /* -------------------------------------------------------------------------- */
@@ -28,14 +31,14 @@ contract ProductRegistryTest is Test {
 
     function test_productRegistry_description() public view {
         assertEq(productRegistry.name(), "ProductRegistry");
-        assertEq(productRegistry.symbol(), "CR");
+        assertEq(productRegistry.symbol(), "PR");
 
-        assertEq(productRegistry.tokenURI(0), "https://product.frak.id/metadata/0.json");
-        assertEq(productRegistry.tokenURI(13), "https://product.frak.id/metadata/13.json");
-        assertEq(productRegistry.tokenURI(420), "https://product.frak.id/metadata/420.json");
+        assertEq(productRegistry.tokenURI(0), "https://backend.frak.id/metadata/0.json");
+        assertEq(productRegistry.tokenURI(13), "https://backend.frak.id/metadata/13.json");
+        assertEq(productRegistry.tokenURI(420), "https://backend.frak.id/metadata/420.json");
         assertEq(
             productRegistry.tokenURI(type(uint256).max),
-            "https://product.frak.id/metadata/115792089237316195423570985008687907853269984665640564039457584007913129639935.json"
+            "https://backend.frak.id/metadata/115792089237316195423570985008687907853269984665640564039457584007913129639935.json"
         );
     }
 
@@ -88,7 +91,6 @@ contract ProductRegistryTest is Test {
         assertEq(mintedId, id);
         assertEq(productRegistry.ownerOf(mintedId), address(minter));
         assertEq(ProductTypes.unwrap(productRegistry.getProductTypes(id)), ProductTypes.unwrap(PRODUCT_TYPE_DAPP));
-        assertEq(productRegistry.isExistingProduct(id), true);
 
         Metadata memory metadata = productRegistry.getMetadata(id);
         assertEq(ProductTypes.unwrap(metadata.productTypes), ProductTypes.unwrap(PRODUCT_TYPE_DAPP));
@@ -106,19 +108,21 @@ contract ProductRegistryTest is Test {
         assertEq(metadata.domain, "domain");
 
         vm.prank(minter);
-        productRegistry.updateMetadata(id, ProductTypes.wrap(uint256(13)), "new-name");
+        productRegistry.updateMetadata(id, ProductTypes.wrap(uint256(13)), "new-name", "https://metadata-url.com/");
 
         metadata = productRegistry.getMetadata(id);
         assertEq(ProductTypes.unwrap(metadata.productTypes), uint256(13));
         assertEq(metadata.name, "new-name");
         assertEq(metadata.domain, "domain");
+        assertEq(metadata.customMetadataUrl, "https://metadata-url.com/");
+        assertEq(productRegistry.tokenURI(id), "https://metadata-url.com/");
 
         vm.expectRevert(ERC721.NotOwnerNorApproved.selector);
-        productRegistry.updateMetadata(id, PRODUCT_TYPE_DAPP, "new-name");
+        productRegistry.updateMetadata(id, PRODUCT_TYPE_DAPP, "new-name", "");
 
         vm.expectRevert(ProductRegistry.InvalidNameOrDomain.selector);
         vm.prank(minter);
-        productRegistry.updateMetadata(id, PRODUCT_TYPE_DAPP, "");
+        productRegistry.updateMetadata(id, PRODUCT_TYPE_DAPP, "", "");
     }
 
     function test_isAuthorized() public {
@@ -133,5 +137,15 @@ contract ProductRegistryTest is Test {
         productRegistry.setApprovalForAll(operator, true);
 
         assertNotEq(productRegistry.ownerOf(id), operator);
+    }
+
+    function test_setBaseMetadataUrl_isAuthorized() public {
+        vm.expectRevert(Ownable.Unauthorized.selector);
+        productRegistry.setMetadataUrl("https://metadata-url.com/");
+
+        vm.prank(owner);
+        productRegistry.setMetadataUrl("https://metadata-url.com/");
+
+        assertEq(productRegistry.tokenURI(0), "https://metadata-url.com/0.json");
     }
 }

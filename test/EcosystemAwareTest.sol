@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {MockErc20} from "./utils/MockErc20.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {LibString} from "solady/utils/LibString.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {ProductTypes} from "src/constants/ProductTypes.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
@@ -80,7 +81,7 @@ abstract contract EcosystemAwareTest is Test {
     /*                                Some helpers                                */
     /* -------------------------------------------------------------------------- */
 
-    function _mintProduct(ProductTypes _productTypes, string memory _name, string memory _domain)
+    function _mintProduct(ProductTypes _productTypes, bytes32 _name, string memory _domain)
         internal
         returns (uint256 productId)
     {
@@ -97,7 +98,7 @@ abstract contract EcosystemAwareTest is Test {
         vm.stopPrank();
     }
 
-    function _mintProductWithInteraction(ProductTypes _productTypes, string memory _name, string memory _domain)
+    function _mintProductWithInteraction(ProductTypes _productTypes, bytes32 _name, string memory _domain)
         internal
         returns (uint256 productId, ProductInteractionDiamond productInteraction)
     {
@@ -109,6 +110,6 @@ abstract contract EcosystemAwareTest is Test {
         productInteraction = productInteractionManager.deployInteractionContract(productId);
 
         // Label the interaction contract
-        vm.label(address(productInteraction), string.concat("InteractionDiamond-", _name));
+        vm.label(address(productInteraction), string.concat("InteractionDiamond-", LibString.toString(uint256(_name))));
     }
 }

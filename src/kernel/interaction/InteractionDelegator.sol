@@ -35,10 +35,8 @@ contract InteractionDelegator is OwnableRoles {
         // Execute the interactions
         for (uint256 i = 0; i < _delegatedInteractions.length; i++) {
             DelegatedInteraction calldata dInteraction = _delegatedInteractions[i];
-            // Map to smart wallet
-            InteractionDelegatorAction walletAction = InteractionDelegatorAction(dInteraction.wallet);
             // Execute the interaction (we don't handle error)
-            try walletAction.sendInteraction(dInteraction.interaction) {} catch {}
+            try InteractionDelegatorAction(dInteraction.wallet).sendInteraction(dInteraction.interaction) {} catch {}
         }
     }
 
@@ -60,10 +58,8 @@ contract InteractionDelegator is OwnableRoles {
         // Execute the interactions
         for (uint256 i = 0; i < _delegatedInteractions.length; i++) {
             DelegatedBatchedInteraction calldata dInteraction = _delegatedInteractions[i];
-            // Map to smart wallet
-            InteractionDelegatorAction walletAction = InteractionDelegatorAction(dInteraction.wallet);
             // Execute the interaction (we don't handle error)
-            try walletAction.sendInteractions(dInteraction.interactions) {} catch {}
+            try InteractionDelegatorAction(dInteraction.wallet).sendInteractions(dInteraction.interactions) {} catch {}
         }
     }
 
