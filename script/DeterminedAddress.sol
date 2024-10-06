@@ -54,11 +54,6 @@ struct BinHashes {
     bytes32 interactionDelegatorAction;
 }
 
-struct ProductIds {
-    uint256 pNewsPaper;
-    uint256 pEthccDemo;
-}
-
 struct DeploymentBlocks {
     uint256 arbSepolia;
 }
@@ -74,12 +69,6 @@ contract DeterminedAddress is Script {
     // Config
     address internal airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
     address internal productOwner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
-
-    // news paper product
-    uint256 internal pNewsPaper =
-        20_376_791_661_718_660_580_662_410_765_070_640_284_736_320_707_848_823_176_694_931_891_585_259_913_409;
-    uint256 internal pEthccWallet =
-        33_953_649_417_576_654_953_995_537_313_820_306_697_747_390_492_794_311_279_756_157_547_821_320_957_282;
 
     function _getAddresses() internal returns (Addresses memory) {
         string memory file = _nexusChainFile();
@@ -171,16 +160,6 @@ contract DeterminedAddress is Script {
         });
     }
 
-    function _getProductIds() internal view returns (ProductIds memory) {
-        return ProductIds({pNewsPaper: pNewsPaper, pEthccDemo: pEthccWallet});
-    }
-
-    function _getProductIdsArr() internal view returns (uint256[] memory arr) {
-        arr = new uint256[](2);
-        arr[0] = pNewsPaper;
-        arr[1] = pEthccWallet;
-    }
-
     function _getDeploymentBlocks() internal pure returns (DeploymentBlocks memory) {
         return DeploymentBlocks({arbSepolia: 66_229_858});
     }
@@ -221,7 +200,7 @@ contract DeterminedAddress is Script {
     }
 
     // Build an initial empty bin hash struct
-    function _emptyBinHash() internal returns (BinHashes memory _emptybinHashes) {
+    function _emptyBinHash() internal pure returns (BinHashes memory _emptybinHashes) {
         return BinHashes({
             productRegistry: bytes32(0),
             referralRegistry: bytes32(0),
