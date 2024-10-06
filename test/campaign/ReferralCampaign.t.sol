@@ -62,8 +62,8 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         campaignBank.updateDistributionState(true);
 
         // Grant the right roles to the product interaction manager
-        vm.prank(owner);
-        referralRegistry.grantAccessToTree(referralTree, owner);
+        vm.prank(contractOwner);
+        referralRegistry.grantAccessToTree(referralTree, contractOwner);
 
         // Fake the timestamp
         vm.warp(100);
@@ -503,7 +503,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
     }
 
     modifier withReferralChain() {
-        vm.startPrank(owner);
+        vm.startPrank(contractOwner);
         referralRegistry.saveReferrer(referralTree, alice, bob);
         referralRegistry.saveReferrer(referralTree, bob, charlie);
         referralRegistry.saveReferrer(referralTree, charlie, delta);

@@ -18,7 +18,7 @@ import {REFERRAL_ALLOWANCE_MANAGER_ROLE, ReferralRegistry} from "src/registry/Re
 /// @dev Test with all the frak ecosystem context
 abstract contract EcosystemAwareTest is Test {
     // Setup a few wallet that could be used almost everywhere
-    address internal owner = makeAddr("owner");
+    address internal contractOwner = makeAddr("contractOwner");
     address internal productOwner = makeAddr("productOwner");
     address internal productAdmin = makeAddr("productAdmin");
     address internal interactionManager = makeAddr("interactionManager");
@@ -29,8 +29,8 @@ abstract contract EcosystemAwareTest is Test {
     MockErc20 internal token = new MockErc20();
 
     /// @dev The different regitries
-    ProductRegistry internal productRegistry = new ProductRegistry(owner);
-    ReferralRegistry internal referralRegistry = new ReferralRegistry(owner);
+    ProductRegistry internal productRegistry = new ProductRegistry(contractOwner);
+    ReferralRegistry internal referralRegistry = new ReferralRegistry(contractOwner);
     ProductAdministratorRegistry internal adminRegistry = new ProductAdministratorRegistry(productRegistry);
 
     /// @dev The purchase oracle
@@ -49,14 +49,14 @@ abstract contract EcosystemAwareTest is Test {
         address implem = address(new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry));
         address proxy = LibClone.deployERC1967(implem);
         productInteractionManager = ProductInteractionManager(proxy);
-        productInteractionManager.init(owner, facetFactory, campaignFactory);
+        productInteractionManager.init(contractOwner, facetFactory, campaignFactory);
 
         // Label a few stuff
         vm.label(implem, "ProductInteractionManager-Implementation");
         vm.label(proxy, "ProductInteractionManager-Proxy");
 
         // Grant the right roles to the product interaction manager
-        vm.prank(owner);
+        vm.prank(contractOwner);
         referralRegistry.grantRoles(address(productInteractionManager), REFERRAL_ALLOWANCE_MANAGER_ROLE);
     }
 
@@ -86,7 +86,7 @@ abstract contract EcosystemAwareTest is Test {
         returns (uint256 productId)
     {
         // Mint the product
-        vm.prank(owner);
+        vm.prank(contractOwner);
         productId = productRegistry.mint(_productTypes, _name, _domain, productOwner);
 
         // Grant the right roles to the product interaction manager

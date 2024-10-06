@@ -235,7 +235,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
     }
 
     function test_updateFacetsFactory() public {
-        vm.prank(owner);
+        vm.prank(contractOwner);
         productInteractionManager.updateFacetsFactory(facetFactory);
     }
 
@@ -316,7 +316,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         ProductInteractionManager rawImplem =
             new ProductInteractionManager(productRegistry, referralRegistry, adminRegistry);
         vm.expectRevert();
-        rawImplem.init(owner, facetFactory, campaignFactory);
+        rawImplem.init(contractOwner, facetFactory, campaignFactory);
     }
 
     function test_upgrade() public {
@@ -325,7 +325,7 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         vm.expectRevert(Ownable.Unauthorized.selector);
         productInteractionManager.upgradeToAndCall(newImplem, "");
 
-        vm.prank(owner);
+        vm.prank(contractOwner);
         productInteractionManager.upgradeToAndCall(newImplem, "");
     }
 
