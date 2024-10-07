@@ -1,19 +1,25 @@
 {
-  "name": "@frak-id/poc-paywall",
+  "name": "@frak-id/contracts-v2",
   "version": "1.0.0",
-  "description": "All the smart contracts used for the paywall POC",
+  "description": "All the smart contracts used for Frak v2",
   "license": "GNU GPL 3.0",
   "private": true,
   "scripts": {
     "preinstall": "npx only-allow bun",
     "clean": "forge clean",
     "build": "forge build",
-    "generate": "wagmi generate"
+    "generate": "wagmi generate",
+    "lint": "solhint src/**/*.sol",
+    "lint:test": "solhint test/**/*.sol",
+    "lint:script": "solhint script/**/*.sol"
   },
   "devDependencies": {
     "@wagmi/cli": "2.1.10"
   },
   "engines": {
     "node": "^18.16.0"
+  },
+  "dependencies": {
+    "solhint": "^5.0.3"
   }
 }

@@ -2,15 +2,10 @@
 pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
-import {InteractionType, InteractionTypeLib} from "../constants/InteractionType.sol";
+import {InteractionTypeLib} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
-import {
-    CAMPAIGN_MANAGER_ROLE,
-    INTERCATION_VALIDATOR_ROLE,
-    PRODUCT_MANAGER_ROLE,
-    UPGRADE_ROLE
-} from "../constants/Roles.sol";
-import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
+import {INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {ProductAdministratorRegistry, ProductRoles} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {ProductInteractionStorageLib} from "./lib/ProductInteractionStorageLib.sol";
@@ -57,7 +52,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
 
     /// @dev EIP-712 typehash used to validate the given transaction
     bytes32 private constant VALIDATE_INTERACTION_TYPEHASH =
-        keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user,uint256 nonce)");
+        keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user)");
 
     /// @dev The base product referral tree: `keccak256("product-referral-tree")`
     bytes32 private constant BASE_PRODUCT_TREE = 0x256d49b597bf37ff9c8c4e75b5975d725441598c9cc7249f4726439b6b7971bb;
@@ -105,6 +100,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
             tree := keccak256(0, 0x40)
         }
         _productInteractionStorage().referralTree = tree;
+        _productInteractionStorage().productId = _productId;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -166,19 +162,18 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         // Unpack the interaction
         (uint8 _productTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
 
-        // Get the facet matching the product type
-        IInteractionFacet facet = _getFacetForDenominator(_productTypeDenominator);
-
         // Validate the interaction
-        _validateInteraction(keccak256(_facetData), msg.sender, _signature);
+        _validateSenderInteraction(keccak256(_facetData), _signature);
 
         // Transmit the interaction to the facet
-        (bool success, bytes memory outputData) = address(facet).delegatecall(_facetData);
+        (bool success, bytes memory outputData) =
+            address(_getFacetForDenominator(_productTypeDenominator)).delegatecall(_facetData);
         if (!success) {
             revert InteractionHandlingFailed();
         }
 
-        // Send the interaction to the campaigns if we got some (at least 24 bytes since it should contain the action + user with it)
+        // Send the interaction to the campaigns if we got some (at least 24 bytes since it should contain the action +
+        // user with it)
         if (outputData.length > 23) {
             _sendInteractionToCampaign(outputData);
         }
@@ -200,48 +195,16 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Check if the provided interaction is valid
-    function _validateInteraction(bytes32 _interactionData, address _user, bytes calldata _signature) internal {
-        // Get the key for our nonce
-        bytes32 nonceKey;
-        assembly {
-            mstore(0, _interactionData)
-            mstore(0x20, _user)
-            nonceKey := keccak256(0, 0x40)
-        }
-
+    function _validateSenderInteraction(bytes32 _interactionData, bytes calldata _signature) internal view {
         // Rebuild the full typehash
         bytes32 digest = _hashTypedData(
-            keccak256(
-                abi.encode(
-                    VALIDATE_INTERACTION_TYPEHASH,
-                    PRODUCT_ID,
-                    _interactionData,
-                    _user,
-                    _productInteractionStorage().nonces[nonceKey]++
-                )
-            )
+            keccak256(abi.encode(VALIDATE_INTERACTION_TYPEHASH, PRODUCT_ID, _interactionData, msg.sender))
         );
 
-        // Retreive the signer
-        address signer = ECDSA.tryRecoverCalldata(digest, _signature);
-
         // Check if the signer as the role to validate the interaction
-        bool isValidSigner = hasAllRoles(signer, INTERCATION_VALIDATOR_ROLE);
-        if (!isValidSigner) {
+        if (!hasAnyRole(ECDSA.tryRecoverCalldata(digest, _signature), INTERCATION_VALIDATOR_ROLE)) {
             revert WrongInteractionSigner();
         }
-    }
-
-    /// @dev Get the current user nonce for the given interaction
-    function getNonceForInteraction(bytes32 _interactionData, address _user) external view returns (uint256) {
-        bytes32 nonceKey;
-        assembly {
-            mstore(0, _interactionData)
-            mstore(0x20, _user)
-            nonceKey := keccak256(0, 0x40)
-        }
-
-        return _productInteractionStorage().nonces[nonceKey];
     }
 
     /* -------------------------------------------------------------------------- */
@@ -266,17 +229,53 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     function _sendInteractionToCampaign(bytes memory _data) internal {
         InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
         uint256 length = campaigns.length;
+        if (length == 0) {
+            return;
+        }
 
-        // Call the campaign using a try catch to avoid blocking the whole process if a campaign is locked
-        unchecked {
-            for (uint256 i = 0; i < length; i++) {
-                try campaigns[i].handleInteraction(_data) {} catch {}
+        // Treat it as mem safe assembly, even though it's not rly the case
+        //  since we are overwriting the two slots before the _data arr, but since that's the last function post execute
+        // we don't rly case
+        /// @solidity memory-safe-assembly
+        assembly {
+            // Store the handleInteraction selector + offset
+            mstore(sub(_data, 64), 0xc375ab13)
+            mstore(sub(_data, 32), 0x20)
+
+            // Build the calldata we will call the campaign with
+            let _dataLength := add(mload(_data), 0x60)
+            let _dataStart := sub(_data, 0x24)
+
+            // Build the iteration array
+            mstore(0, campaigns.slot)
+            let _currentOffset := keccak256(0, 0x20)
+            let _endOffset := add(_currentOffset, length)
+
+            // Iterate over each campaign and send the data to it
+            for {} 1 {} {
+                // Call the campaign
+                pop(
+                    call(
+                        gas(),
+                        // Campaign address
+                        sload(_currentOffset),
+                        0,
+                        _dataStart,
+                        _dataLength,
+                        0,
+                        0
+                    )
+                )
+                // Move to the next campaign
+                _currentOffset := add(_currentOffset, 1)
+                // If we reached the end, we exit
+                if iszero(lt(_currentOffset, _endOffset)) { break }
             }
         }
     }
 
     /// @dev Activate a new campaign
-    function attachCampaign(InteractionCampaign _campaign) external onlyAllowedCampaignManager {
+    function attachCampaign(InteractionCampaign _campaign) external onlyCampaignManager {
         InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
 
         // Ensure we don't already have this campaign attached
@@ -292,7 +291,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     }
 
     /// @dev Detach multiple campaigns
-    function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyAllowedCampaignManager {
+    function detachCampaigns(InteractionCampaign[] calldata _campaigns) external onlyCampaignManager {
         InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
 
         for (uint256 i = 0; i < _campaigns.length; i++) {
@@ -343,12 +342,12 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /* -------------------------------------------------------------------------- */
 
     /// @dev Grant roles to a user (only or product manager can do that)
-    function grantRoles(address user, uint256 roles) public payable override onlyProductManager {
+    function grantRoles(address user, uint256 roles) public payable override onlyInteractionManager {
         _grantRoles(user, roles);
     }
 
     /// @dev Revoke roles to a user (only or product manager can do that)
-    function revokeRoles(address user, uint256 roles) public payable override onlyProductManager {
+    function revokeRoles(address user, uint256 roles) public payable override onlyInteractionManager {
         _removeRoles(user, roles);
     }
 
@@ -357,19 +356,22 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /* -------------------------------------------------------------------------- */
 
     /// @dev Restrict the execution to the campaign manager or an approved manager
-    modifier onlyProductManager() {
-        bool isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, PRODUCT_MANAGER_ROLE);
-        if (!isAllowed) revert Unauthorized();
+    modifier onlyInteractionManager() {
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
+            PRODUCT_ID, msg.sender, ProductRoles.INTERACTION_OR_ADMINISTRATOR
+        );
         _;
     }
 
     /// @dev Restrict the execution to the campaign manager or an approved manager
-    modifier onlyAllowedCampaignManager() {
-        bool isAllowed = msg.sender == INTERACTION_MANAGER;
-        if (!isAllowed) {
-            isAllowed = PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
+    modifier onlyCampaignManager() {
+        // If the interaction manager is calling, we don't need to check the roles
+        if (msg.sender != INTERACTION_MANAGER) {
+            // Otherwise, we need to check the roles
+            PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
+                PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_OR_ADMINISTRATOR
+            );
         }
-        if (!isAllowed) revert Unauthorized();
         _;
     }
 }

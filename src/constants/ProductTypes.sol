@@ -27,8 +27,16 @@ library ProductTypesLib {
         return self.containType(PRODUCT_TYPE_PRESS);
     }
 
+    function isWebShopType(ProductTypes self) internal pure returns (bool isType) {
+        return self.containType(PRODUCT_TYPE_WEB_SHOP);
+    }
+
     function hasReferralFeature(ProductTypes self) internal pure returns (bool isType) {
         return self.containType(PRODUCT_TYPE_FEATURE_REFERRAL);
+    }
+
+    function hasPurchaseFeature(ProductTypes self) internal pure returns (bool isType) {
+        return self.containType(PRODUCT_TYPE_FEATURE_PURCHASE);
     }
 
     function containType(ProductTypes self, ProductTypes typeToCheck) internal pure returns (bool containsType) {
@@ -67,9 +75,11 @@ library ProductTypesLib {
 // Global product types
 uint8 constant DENOMINATOR_DAPP = 1;
 uint8 constant DENOMINATOR_PRESS = 2;
+uint8 constant DENOMINATOR_WEB_SHOP = 3;
 
 // Feature types denominators
 uint8 constant DENOMINATOR_FEATURE_REFERRAL = 30;
+uint8 constant DENOMINATOR_FEATURE_PURCHASE = 31;
 
 /* -------------------------------------------------------------------------- */
 /*                          All of our product types                          */
@@ -77,5 +87,7 @@ uint8 constant DENOMINATOR_FEATURE_REFERRAL = 30;
 
 ProductTypes constant PRODUCT_TYPE_DAPP = ProductTypes.wrap(uint256(1 << DENOMINATOR_DAPP));
 ProductTypes constant PRODUCT_TYPE_PRESS = ProductTypes.wrap(uint256(1 << DENOMINATOR_PRESS));
+ProductTypes constant PRODUCT_TYPE_WEB_SHOP = ProductTypes.wrap(uint256(1 << DENOMINATOR_WEB_SHOP));
 
 ProductTypes constant PRODUCT_TYPE_FEATURE_REFERRAL = ProductTypes.wrap(uint256(1 << DENOMINATOR_FEATURE_REFERRAL));
+ProductTypes constant PRODUCT_TYPE_FEATURE_PURCHASE = ProductTypes.wrap(uint256(1 << DENOMINATOR_FEATURE_PURCHASE));

@@ -3,11 +3,8 @@ pragma solidity ^0.8.0;
 
 import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
-import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_PRESS, ProductTypes} from "src/constants/ProductTypes.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {InteractionType, PressInteractions} from "src/constants/InteractionType.sol";
+import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {PressInteractionFacet} from "src/interaction/facets/PressInteractionFacet.sol";
 
@@ -19,14 +16,12 @@ contract PressInteractionTest is InteractionTest {
     PressInteractionFacet private rawFacet;
 
     function setUp() public {
-        // TODO: Setup with a more granular approach
-        vm.prank(owner);
-        productId = productRegistry.mint(PRODUCT_TYPE_PRESS, "name", "press-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
         // Deploy the press interaction contract
-        _initInteractionTest();
+        (uint256 _pid, ProductInteractionDiamond _productInteraction) =
+            _mintProductWithInteraction(PRODUCT_TYPE_PRESS, "name", "press-domain");
+        _initInteractionTest(_pid, _productInteraction);
 
         // Extract the press facet
         rawFacet = PressInteractionFacet(address(productInteraction.getFacet(DENOMINATOR_PRESS)));
@@ -91,19 +86,19 @@ contract PressInteractionTest is InteractionTest {
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(0), alice);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleRead(0, alice);
         // Call the open article method
         vm.prank(alice);
         productInteraction.handleInteraction(packedInteraction, signature);
     }
 
-    function test_articleRead(bytes32 _articleId, address _user) public {
+    function testFuzz_articleRead(bytes32 _articleId, address _user) public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.READ_ARTICLE, _readArticleData(_articleId), _user);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleRead(_articleId, _user);
         // Call the open article method
         vm.prank(_user);
@@ -134,24 +129,24 @@ contract PressInteractionTest is InteractionTest {
     /*                              Test open article                             */
     /* -------------------------------------------------------------------------- */
 
-    function w() public {
+    function test_articleOpened() public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(0), alice);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleOpened(0, alice);
         // Call the open article method
         vm.prank(alice);
         productInteraction.handleInteraction(packedInteraction, signature);
     }
 
-    function test_articleOpened_simple(bytes32 _articleId, address _user) public {
+    function testFuzz_articleOpened(bytes32 _articleId, address _user) public {
         (bytes memory packedInteraction, bytes memory signature) =
             _prepareInteraction(DENOMINATOR_PRESS, PressInteractions.OPEN_ARTICLE, _openArticleData(_articleId), _user);
 
         // Setup the event check
-        vm.expectEmit(true, false, false, true, address(productInteraction));
+        vm.expectEmit(true, true, true, true, address(productInteraction));
         emit PressInteractionFacet.ArticleOpened(_articleId, _user);
         // Call the open article method
         vm.prank(_user);

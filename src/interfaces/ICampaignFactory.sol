@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
-import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 
 /// @author @KONFeature
 /// @title ICampaignFactory

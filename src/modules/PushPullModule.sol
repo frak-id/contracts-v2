@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {InvalidConfig} from "../constants/Errors.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+
+/// @dev Reward struct to sent to a user
+struct Reward {
+    address user;
+    uint256 amount;
+}
 
 /// @author @KONFeature
 /// @title PushPullModule
@@ -17,7 +22,7 @@ abstract contract PushPullModule is ReentrancyGuard {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Emitted when a reward is added for a user
-    event RewardAdded(address indexed user, uint256 amount);
+    event RewardAdded(address indexed user, address emitter, uint256 amount);
 
     /// @dev Emitted when a reward is claimed by a user
     event RewardClaimed(address indexed user, uint256 amount);
@@ -80,16 +85,11 @@ abstract contract PushPullModule is ReentrancyGuard {
         tokenStorage.totalPending = newTotalPending;
 
         // Emit the event
-        emit RewardAdded(_user, _amount);
+        emit RewardAdded(_user, msg.sender, _amount);
     }
 
-    struct Reward {
-        address user;
-        uint256 amount;
-    }
-
-    /// @notice Add multiple rewards for the given `_user` with the given `_amount`
-    function _pushRewards(Reward[] memory _rewards) internal nonReentrant {
+    /// @notice Add multiple rewards for the given `_user` with the given `_amount` via calldata
+    function _pushRewards(Reward[] calldata _rewards) internal nonReentrant {
         // Get the given storage for the token
         PushPullModuleStorage storage tokenStorage = _pushPullStorage();
 
@@ -102,7 +102,7 @@ abstract contract PushPullModule is ReentrancyGuard {
             Reward memory reward = _rewards[i];
 
             // Compute the new pending total amount
-            newTotalPending += _rewards[i].amount;
+            newTotalPending += reward.amount;
             if (newTotalPending > currentBalance) {
                 revert NotEnoughToken();
             }
@@ -111,7 +111,7 @@ abstract contract PushPullModule is ReentrancyGuard {
             tokenStorage.pendingAmount[reward.user] += reward.amount;
 
             // Emit the event
-            emit RewardAdded(reward.user, reward.amount);
+            emit RewardAdded(reward.user, msg.sender, reward.amount);
         }
 
         // Update the total pending amount
@@ -153,8 +153,13 @@ abstract contract PushPullModule is ReentrancyGuard {
         return _pushPullStorage().pendingAmount[_user];
     }
 
-    /// @notice Get the pending amount for the given `_user`
-    function getTotalPending() external view returns (uint256) {
+    /// @notice Get the total pending amount
+    function getTotalPending() public view returns (uint256) {
         return _pushPullStorage().totalPending;
+    }
+
+    /// @notice Get the token linked to this push pull reward
+    function getToken() public view returns (address) {
+        return TOKEN;
     }
 }

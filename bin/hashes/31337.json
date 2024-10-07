@@ -1,0 +1,16 @@
+{
+  "campaignBankFactory": "0xf8b2aee6c15ef28981fff02086676021ede1eadf2ec9c4936b169deb565001d7",
+  "campaignFactory": "0xd11921e847a6c0ed2c7d06c16147236ec7d5fc38d699b1b643d52e5c9596aa1e",
+  "facetFactory": "0xca98d83bbc16a43e55e8327fa5b5e41e82ca947341103d8cce08cfb286360ccb",
+  "interactionDelegator": "0xb2c23eed3591e5fd9aafee258d01b8a152f727599aad6a16689a12bc9b687f52",
+  "interactionDelegatorAction": "0x072a7b435aeabf6235d34c8adb074608e34355c769f82b3b600460880f56a987",
+  "interactionDelegatorValidator": "0x5343d7c69994ccd66eb05a3163b9bc1a72ec3d5f160fc4f15af38d226ae32000",
+  "p256Wrapper": "0xca379e2dc78bb3bbbf27e1fe0a9680cc2a49479f7d347931fd8800f19f01fa20",
+  "productAdministratorRegistry": "0x0e825f8998623927abf7b0846dd52afd3177033e022b456c1e9e55687c11f2a7",
+  "productInteractionManager": "0xd309387ee3571c136bd5fd6a9926ed94d574e74d3dc49dfd352555eed5a84fc7",
+  "productRegistry": "0x72d933815005053a025dd04e274b07c13b670d22d358c3d90aaecaad6b404a27",
+  "purchaseOracle": "0xf73620236911d5724375205df6c47f59c34df85f9b57ae2a96f81fe9e140c046",
+  "referralRegistry": "0x51866bd41b21c2587e2d2f73eb86d7e82ae16f68b9aed882a02e1b59454062da",
+  "webAuthNRecoveryAction": "0x5ed706dcc84dad8639fb95fb8e261aaa839c0b4545a2f15b0f5f03e7abffb51f",
+  "webAuthNValidator": "0xe02d6211c83aa9307e52842be45c21a392e41dd5b27b1dee211802d803f1ed3e"
+}

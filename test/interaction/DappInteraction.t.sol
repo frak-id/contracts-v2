@@ -3,15 +3,10 @@ pragma solidity ^0.8.0;
 
 import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {LibZip} from "solady/utils/LibZip.sol";
-import {DappInteractions, InteractionType, InteractionTypeLib} from "src/constants/InteractionType.sol";
-import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_DAPP, ProductTypes} from "src/constants/ProductTypes.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {DappInteractions} from "src/constants/InteractionType.sol";
+import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_DAPP} from "src/constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {DappInteractionFacet} from "src/interaction/facets/DappInteractionFacet.sol";
-import {PressInteractionFacet} from "src/interaction/facets/PressInteractionFacet.sol";
 import {MPT} from "src/utils/MPT.sol";
 
 contract DappInteractionTest is InteractionTest {
@@ -34,14 +29,12 @@ contract DappInteractionTest is InteractionTest {
         bytes4(keccak256(abi.encodePacked(address(mockStorage), MockStorageContract.getMockedFailing.selector)));
 
     function setUp() public {
-        // TODO: Setup with a more granular approach
-        vm.prank(owner);
-        productId = productRegistry.mint(PRODUCT_TYPE_DAPP, "name", "dapp-storage-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
         // Deploy the press interaction contract
-        _initInteractionTest();
+        (uint256 _pid, ProductInteractionDiamond _productInteraction) =
+            _mintProductWithInteraction(PRODUCT_TYPE_DAPP, "name", "dapp-storage-domain");
+        _initInteractionTest(_pid, _productInteraction);
 
         // Extract the press facet
         rawFacet = DappInteractionFacet(address(productInteraction.getFacet(DENOMINATOR_DAPP)));

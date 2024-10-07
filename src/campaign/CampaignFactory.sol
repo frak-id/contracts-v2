@@ -2,11 +2,10 @@
 pragma solidity 0.8.23;
 
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
-import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {ReferralCampaign} from "./ReferralCampaign.sol";
+import {ReferralCampaign, ReferralCampaignConfig} from "./ReferralCampaign.sol";
 
 /// @author @KONFeature
 /// @title CampaignFactory
@@ -38,17 +37,9 @@ contract CampaignFactory is ICampaignFactory {
     /// @dev The referral registry
     ProductAdministratorRegistry private immutable PRODUCT_ADMINISTRATOR_REGISTRY;
 
-    /// @dev The frak campaign wallet
-    address private immutable FRAK_CAMPAIGN_WALLET;
-
-    constructor(
-        ReferralRegistry _referralRegistry,
-        ProductAdministratorRegistry _productAdministratorRegistry,
-        address _frakCampaignWallet
-    ) {
+    constructor(ReferralRegistry _referralRegistry, ProductAdministratorRegistry _productAdministratorRegistry) {
         REFERRAL_REGISTRY = _referralRegistry;
         PRODUCT_ADMINISTRATOR_REGISTRY = _productAdministratorRegistry;
-        FRAK_CAMPAIGN_WALLET = _frakCampaignWallet;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -82,14 +73,11 @@ contract CampaignFactory is ICampaignFactory {
         returns (address)
     {
         // Parse the input data
-        ReferralCampaign.CampaignConfig calldata config;
-        assembly {
-            config := _initData.offset
-        }
+        ReferralCampaignConfig memory config = abi.decode(_initData, (ReferralCampaignConfig));
+
         // Create the campaign
-        ReferralCampaign campaign = new ReferralCampaign(
-            config, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, FRAK_CAMPAIGN_WALLET, _interaction
-        );
+        ReferralCampaign campaign =
+            new ReferralCampaign(config, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, _interaction);
         return address(campaign);
     }
 }

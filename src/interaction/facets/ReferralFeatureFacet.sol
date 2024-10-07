@@ -14,15 +14,17 @@ import {IInteractionFacet} from "./IInteractionFacet.sol";
 contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet {
     using InteractionTypeLib for bytes;
 
+    error InvalidReferrer();
+
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Event emitted when a `user` created a referral link
-    event ReferralLinkCreation(address indexed user);
+    event ReferralLinkCreation(address user);
 
     /// @dev Event emitted when a `user` was referred by `referrer`
-    event UserReferred(address indexed user, address indexed referrer);
+    event UserReferred(address user, address referrer);
 
     /// @dev The referral registry
     ReferralRegistry internal immutable REFERRAL_REGISTRY;
@@ -82,21 +84,16 @@ contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
         // If we got no referrer, we can just stop here
         address referrer = data.referrer;
         if (referrer == address(0)) {
-            return "";
+            revert InvalidReferrer();
         }
 
         bytes32 tree = _referralTree();
-        address user = msg.sender;
-
-        // Check if the user can have a referrer on this platform
-        if (_isUserAlreadyReferred(tree, user)) {
-            return "";
-        }
 
         // Save the info inside the right referral tree
-        _saveReferrer(tree, user, referrer);
+        // It will handle failing stuff if the user already has a referrer
+        _saveReferrer(tree, msg.sender, referrer);
         // Emit the share link used event
-        emit UserReferred(user, referrer);
+        emit UserReferred(msg.sender, referrer);
         // Just resend the data
         return ReferralInteractions.REFERRED.packForCampaign(msg.sender, _data);
     }
@@ -108,10 +105,5 @@ contract ReferralFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
     /// @dev Save on the registry level that `_user` has been referred by `_referrer`
     function _saveReferrer(bytes32 tree, address _user, address _referrer) internal {
         REFERRAL_REGISTRY.saveReferrer(tree, _user, _referrer);
-    }
-
-    /// @dev Check on the registry if the `_user` has already a referrer
-    function _isUserAlreadyReferred(bytes32 tree, address _user) internal view returns (bool) {
-        return REFERRAL_REGISTRY.getReferrer(tree, _user) != address(0);
     }
 }

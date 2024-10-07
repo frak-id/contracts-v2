@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {ProductTypes} from "src/constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
-import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 
 contract MockCampaign is InteractionCampaign {

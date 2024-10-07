@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {InteractionType} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
-import {CAMPAIGN_MANAGER_ROLE} from "../constants/Roles.sol";
 import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamond.sol";
-import {ProductInteractionManager} from "../interaction/ProductInteractionManager.sol";
-import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
+import {ProductAdministratorRegistry, ProductRoles} from "../registry/ProductAdministratorRegistry.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 
 /// @author @KONFeature
@@ -109,7 +106,7 @@ abstract contract InteractionCampaign is ReentrancyGuard {
     }
 
     /// @dev Update the campaign running status
-    function setRunningStatus(bool _isRunning) external nonReentrant onlyAllowedManager {
+    function setRunningStatus(bool _isRunning) external onlyAllowedManager {
         _interactionCampaignStorage().isRunning = _isRunning;
     }
 
@@ -119,9 +116,9 @@ abstract contract InteractionCampaign is ReentrancyGuard {
 
     /// @dev Only allow the call for an authorised mananger
     modifier onlyAllowedManager() {
-        bool isAllowed =
-            PRODUCT_ADMINISTRATOR_REGISTRY.hasAllRolesOrAdmin(PRODUCT_ID, msg.sender, CAMPAIGN_MANAGER_ROLE);
-        if (!isAllowed) revert Unauthorized();
+        PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
+            PRODUCT_ID, msg.sender, ProductRoles.CAMPAIGN_OR_ADMINISTRATOR
+        );
         _;
     }
 

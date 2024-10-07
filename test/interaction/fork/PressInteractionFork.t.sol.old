@@ -4,23 +4,23 @@ pragma solidity 0.8.23;
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Addresses, DeterminedAddress} from "script/DeterminedAddress.sol";
-import {CONTENT_TYPE_PRESS, ContentTypes, DENOMINATOR_DAPP, DENOMINATOR_PRESS} from "src/constants/ContentTypes.sol";
-import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
-import {INTERCATION_VALIDATOR_ROLE, REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {ContentInteractionDiamond} from "src/interaction/ContentInteractionDiamond.sol";
-import {ContentInteractionManager} from "src/interaction/ContentInteractionManager.sol";
+import {PRODUCT_TYPE_PRESS, ProductTypes, DENOMINATOR_DAPP, DENOMINATOR_PRESS} from "src/constants/ProductTypes.sol";
+import {InteractionType, InteractionTypeLib, PressInteractions, ReferralInteractions} from "src/constants/InteractionType.sol";
+import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
+import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 
 contract PressInteractionForkTest is Test, DeterminedAddress {
     uint256 private arbSepoliaFork;
 
-    ContentInteractionManager internal contentInteractionManager;
-    ContentInteractionDiamond internal contentInteraction;
+    ProductInteractionManager internal productInteractionManager;
+    ProductInteractionDiamond internal productInteraction;
 
     address private owner = 0x7caF754C934710D7C73bc453654552BEcA38223F;
     uint256 internal validatorPrivKey;
     address internal validator;
 
-    uint256 private contentId = _getContentIds().cFrak;
+    uint256 private productId = 0x4b1115a4946079f8d83c63061f5c49c2f351a054d8dfb284b197f54dbfa8ed62;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -28,7 +28,7 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
 
     function setUp() public {
         // Create our forks
-        arbSepoliaFork = vm.createFork(vm.envString("ARBITRUM_SEPOLIA_RPC_URL"), _getDeploymentBlocks().arbSepolia);
+        arbSepoliaFork = vm.createFork(vm.envString("ARBITRUM_SEPOLIA_RPC_URL"), 84946095);
 
         // Create our validator ECDSA
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
@@ -40,7 +40,7 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
             _prepareInteraction(PressInteractions.READ_ARTICLE, abi.encode(bytes32(0)), alice);
         // Call the open article method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function test_openArticle() public arbSepoliaEnv {
@@ -49,22 +49,56 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
             _prepareInteraction(PressInteractions.OPEN_ARTICLE, abi.encode(bytes32(0)), alice);
         // Call the open article method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
-    function test_referred() public arbSepoliaEnv {
+    function test_manualSignature() public arbSepoliaEnv {
         // Prepare our tx
         (bytes memory packedInteraction, bytes memory signature) =
-            _prepareInteraction(PressInteractions.REFERRED, abi.encode(charlie), bob);
-        // Call the open article method
-        vm.prank(bob);
-        contentInteraction.handleInteraction(packedInteraction, signature);
-
-        // Prepare our tx
-        (packedInteraction, signature) = _prepareInteraction(PressInteractions.REFERRED, abi.encode(bob), alice);
+            _prepareInteraction(PressInteractions.OPEN_ARTICLE, abi.encode(bytes32(0)), alice);
         // Call the open article method
         vm.prank(alice);
-        contentInteraction.handleInteraction(packedInteraction, signature);
+        productInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    function test_homeMadeSignature() public arbSepoliaEnv {
+        uint256 pKey = 0x0414b17d27be1226e123fb1e8ff9890b2123b542684271acecc772e530b963ab;
+
+        uint256 pId = 0x4b1115a4946079f8d83c63061f5c49c2f351a054d8dfb284b197f54dbfa8ed62;
+        address user = 0xCf4990bBa0B9A56500501d0c6eF139B92a050352;
+        bytes memory interactionData = hex"c0a24ffbe9906f638cdccc38db75d86fded32eaaab46769c81f58d62609616276d7cfef1";
+
+        // Build the digest
+        bytes32 domainSeparator = productInteraction.getDomainSeparator();
+        bytes32 dataHash = keccak256(
+            abi.encode(
+                keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user)"),
+                productId,
+                keccak256(interactionData),
+                user
+            )
+        );
+        bytes32 fullHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, dataHash));
+
+        // Sign the full hash
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(pKey, fullHash);
+        if (v != 27) {
+            // then left-most bit of s has to be flipped to 1.
+            s = s | bytes32(uint256(1) << 255);
+        }
+
+        // Compact the signature into a single byte
+        bytes memory signature = abi.encodePacked(r, s);
+
+        // 0x4b54f8685e53b2fefdebe82195a8f84ac3367618895e9d3e3cce93b7248cba2d2be2074b85ba80053a1c0d089b9ac6f15d50c12518d2dac6c2c19f2cbf559625
+        // 0x4b54f8685e53b2fefdebe82195a8f84ac3367618895e9d3e3cce93b7248cba2d2be2074b85ba80053a1c0d089b9ac6f15d50c12518d2dac6c2c19f2cbf5596251b
+
+        // bytes32 domainSeparator = 0x289abd584e6541e95c206050b83222c5f67f80e2eab1a86642a894f5387fc253;
+        vm.prank(user);
+        productInteraction.handleInteraction(abi.encodePacked(DENOMINATOR_PRESS, interactionData), hex"4b54f8685e53b2fefdebe82195a8f84ac3367618895e9d3e3cce93b7248cba2d2be2074b85ba80053a1c0d089b9ac6f15d50c12518d2dac6c2c19f2cbf5596251b");
+
+        vm.prank(user);
+        address(productInteraction).call(hex"e987c53d000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002502c0a24ffbf0067366153df2ea32975977dc94a213ed20091f020a78745ea55a0c4c60053900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000410e8990c40cef41083d1aca9ad5b96ca5e825fe869e7092967eca5878fcd522da2d9590068de684c6d415ca7ff9b0245783d9fb119a5ce473bc0cbd74a3277c141c00000000000000000000000000000000000000000000000000000000000000");
     }
 
     /* -------------------------------------------------------------------------- */
@@ -77,17 +111,15 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
         view
         returns (bytes memory signature)
     {
-        uint256 nonce = contentInteraction.getNonceForInteraction(keccak256(_interactionData), _user);
-        bytes32 domainSeparator = contentInteraction.getDomainSeparator();
+        bytes32 domainSeparator = productInteraction.getDomainSeparator();
 
         // Build the digest
         bytes32 dataHash = keccak256(
             abi.encode(
-                keccak256("ValidateInteraction(uint256 contentId,bytes32 interactionData,address user,uint256 nonce)"),
-                contentId,
+                keccak256("ValidateInteraction(uint256 productId,bytes32 interactionData,address user)"),
+                productId,
                 keccak256(_interactionData),
-                _user,
-                nonce
+                _user
             )
         );
         bytes32 fullHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, dataHash));
@@ -122,12 +154,12 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
         vm.selectFork(arbSepoliaFork);
 
         Addresses memory addresses = _getAddresses();
-        contentInteractionManager = ContentInteractionManager(addresses.contentInteractionManager);
-        contentInteraction = contentInteractionManager.getInteractionContract(contentId);
+        productInteractionManager = ProductInteractionManager(addresses.productInteractionManager);
+        productInteraction = productInteractionManager.getInteractionContract(productId);
 
         // Grant the validator roles
         vm.prank(owner);
-        contentInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
+        productInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
 
         _;
     }

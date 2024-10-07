@@ -3,6 +3,36 @@ pragma solidity 0.8.23;
 
 import {ProductRegistry} from "./ProductRegistry.sol";
 
+/// @notice Roles used for the product registry
+///  - Product administrator:
+///     - Has all the right mentioned below
+///     - Can't do anything on the product registry (update product metadata's, transfer etc), only the owner can do
+/// that
+///     - Can update campaign bank state (distribution state + withdraw pending tokens)
+///  - Interaction Manger:
+///     - Can update the roles on the deployed interactions contracts (ex: add new validator or upgrader)
+///     - Can manage the interaction contracts from the InteractionManager (deploy it, update it, delete it)
+///  - Campaign Manager:
+///     - Can manage the campaigns (update running status + some config depending on the cammpaign implementation)
+///     - Can attach / detach campaigns to a interactions contracts (either via the Manager or directly on the
+/// interaction contract)
+///     - Can deploy campaign and directly attach them via the product manager
+///     - Can allow a campaign to distribute from a campaign treasury (campaign bank)
+///  - Purchase Oracle:
+///     - Can operate the purchase oracle (change the merkle root for the product id)
+library ProductRoles {
+    uint256 constant PRODUCT_ADMINISTRATOR = 1 << 0;
+    uint256 constant INTERACTION_MANAGER_ROLE = 1 << 1;
+    uint256 constant CAMPAIGN_MANAGER_ROLE = 1 << 2;
+
+    /// @dev The role that can operate the purchase oracle
+    uint256 constant PURCHASE_ORACLE_OPERATOR_ROLE = 1 << 3;
+
+    /// @dev Roles prebuilt
+    uint256 constant INTERACTION_OR_ADMINISTRATOR = INTERACTION_MANAGER_ROLE | PRODUCT_ADMINISTRATOR;
+    uint256 constant CAMPAIGN_OR_ADMINISTRATOR = CAMPAIGN_MANAGER_ROLE | PRODUCT_ADMINISTRATOR;
+}
+
 /// @author @KONFeature
 /// @title ProductAdministratorRegistry
 /// @notice Registery for the roles associated per users around a product
@@ -55,7 +85,7 @@ contract ProductAdministratorRegistry {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Overwrite the roles directly without authorization guard.
-    function _setRoles(uint256 productId, address user, uint256 roles) internal virtual {
+    function _setRoles(uint256 productId, address user, uint256 roles) internal {
         /// @solidity memory-safe-assembly
         assembly {
             mstore(0x0c, _ROLE_SLOT_SEED)
@@ -74,7 +104,7 @@ contract ProductAdministratorRegistry {
     /// @dev Updates the roles directly without authorization guard.
     /// If `on` is true, each set bit of `roles` will be turned on,
     /// otherwise, each set bit of `roles` will be turned off.
-    function _updateRoles(uint256 productId, address user, uint256 roles, bool on) internal virtual {
+    function _updateRoles(uint256 productId, address user, uint256 roles, bool on) internal {
         /// @solidity memory-safe-assembly
         assembly {
             mstore(0x0c, _ROLE_SLOT_SEED)
@@ -105,41 +135,31 @@ contract ProductAdministratorRegistry {
 
     /// @dev Allows the owner to grant `user` `roles`.
     /// If the `user` already has a role, then it will be an no-op for the role.
-    function grantRoles(uint256 productId, address user, uint256 roles)
-        public
-        payable
-        virtual
-        onlyProductAdmin(productId)
-    {
+    function grantRoles(uint256 productId, address user, uint256 roles) public payable onlyProductAdmin(productId) {
         _updateRoles(productId, user, roles, true);
     }
 
     /// @dev Allow the caller to remove their own roles.
     /// If the caller does not have a role, then it will be an no-op for the role.
-    function renounceRoles(uint256 productId, uint256 roles) public payable virtual {
+    function renounceRoles(uint256 productId, uint256 roles) public payable {
         _updateRoles(productId, msg.sender, roles, false);
     }
 
     /// @dev Allow the caller to remove their own roles.
     /// If the caller does not have a role, then it will be an no-op for the role.
-    function renounceAllRoles(uint256 productId) public payable virtual {
+    function renounceAllRoles(uint256 productId) public payable {
         _setRoles(productId, msg.sender, 0);
     }
 
     /// @dev Allows the owner to remove `user` `roles`.
     /// If the `user` does not have a role, then it will be an no-op for the role.
-    function revokeRoles(uint256 productId, address user, uint256 roles)
-        public
-        payable
-        virtual
-        onlyProductAdmin(productId)
-    {
+    function revokeRoles(uint256 productId, address user, uint256 roles) public payable onlyProductAdmin(productId) {
         _updateRoles(productId, user, roles, false);
     }
 
     /// @dev Allows the owner to remove all the `user` roles.
     /// If the `user` does not have a role, then it will be an no-op for the role.
-    function revokeAllRoles(uint256 productId, address user) public payable virtual onlyProductAdmin(productId) {
+    function revokeAllRoles(uint256 productId, address user) public payable onlyProductAdmin(productId) {
         _setRoles(productId, user, 0);
     }
 
@@ -147,13 +167,8 @@ contract ProductAdministratorRegistry {
     /*                             Public role checks                             */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Check if the `_caller` is authorized to manage the `_productId` (basically if he have the admin right on the product)
-    function isAuthorizedAdmin(uint256 _productId, address _caller) public view returns (bool) {
-        return PRODUCT_REGISTRY.isAuthorized(_productId, _caller);
-    }
-
     /// @dev Returns the roles of `user`.
-    function rolesOf(uint256 productId, address user) public view virtual returns (uint256 roles) {
+    function rolesOf(uint256 productId, address user) public view returns (uint256 roles) {
         /// @solidity memory-safe-assembly
         assembly {
             // Compute the role slot.
@@ -166,28 +181,62 @@ contract ProductAdministratorRegistry {
     }
 
     /// @dev Returns whether `user` has any of `roles`.
-    function hasAnyRole(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
+    function hasAnyRole(uint256 productId, address user, uint256 roles) public view returns (bool) {
         return rolesOf(productId, user) & roles != 0;
     }
 
     /// @dev Returns whether `user` has all of `roles`.
-    function hasAllRoles(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
+    function onlyAnyRolesOrOwner(uint256 _productId, address _user, uint256 _roles) public view {
+        // If he has all the roles, directly exit
+        if (rolesOf(_productId, _user) & _roles != 0) return;
+        // Otherwise, check if he is the owner
+        if (PRODUCT_REGISTRY.ownerOf(_productId) == _user) return;
+        // Otherwise, revert
+        revert Unauthorized();
+    }
+
+    /// @dev Returns whether `user` has all of `roles`.
+    function hasAllRoles(uint256 productId, address user, uint256 roles) public view returns (bool) {
         return rolesOf(productId, user) & roles == roles;
     }
 
     /// @dev Returns whether `user` has all of `roles`.
-    function hasAllRolesOrAdmin(uint256 productId, address user, uint256 roles) public view virtual returns (bool) {
-        bool hasRoles = rolesOf(productId, user) & roles == roles;
-        if (hasRoles) return true;
-        return isAuthorizedAdmin(productId, user);
+    function hasAllRolesOrOwner(uint256 _productId, address _user, uint256 _roles) public view returns (bool) {
+        // If he has all the roles, directly return true
+        if (rolesOf(_productId, _user) & _roles == _roles) return true;
+        // Otherwise, check if he is the owner
+        return PRODUCT_REGISTRY.ownerOf(_productId) == _user;
+    }
+
+    /// @dev Returns whether `user` has all of `roles`.
+    function onlyAllRolesOrOwner(uint256 _productId, address _user, uint256 _roles) public view {
+        // If he has all the roles, directly exit
+        if (rolesOf(_productId, _user) & _roles == _roles) return;
+        // Otherwise, check if he is the owner
+        if (PRODUCT_REGISTRY.ownerOf(_productId) == _user) return;
+        // Otherwise, revert
+        revert Unauthorized();
     }
 
     /* -------------------------------------------------------------------------- */
     /*                                  Modifiers                                 */
     /* -------------------------------------------------------------------------- */
 
-    modifier onlyProductAdmin(uint256 productId) {
-        if (!isAuthorizedAdmin(productId, msg.sender)) revert Unauthorized();
-        _;
+    modifier onlyProductAdmin(uint256 _productId) {
+        // Case of a product admin
+        if (rolesOf(_productId, msg.sender) & ProductRoles.PRODUCT_ADMINISTRATOR == ProductRoles.PRODUCT_ADMINISTRATOR)
+        {
+            _;
+            return;
+        }
+
+        // Case of a product owner
+        if (PRODUCT_REGISTRY.ownerOf(_productId) == msg.sender) {
+            _;
+            return;
+        }
+
+        // Otherwise, revert
+        revert Unauthorized();
     }
 }

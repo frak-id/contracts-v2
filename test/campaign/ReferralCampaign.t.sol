@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {InteractionTest} from "../interaction/InteractionTest.sol";
-import {MockErc20} from "../utils/MockErc20.sol";
+import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-import {Test} from "forge-std/Test.sol";
-import {Ownable} from "solady/auth/Ownable.sol";
-import {ReferralCampaign} from "src/campaign/ReferralCampaign.sol";
+import {CampaignBank} from "src/campaign/CampaignBank.sol";
+import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
+import {
+    ReferralCampaign, ReferralCampaignConfig, ReferralCampaignTriggerConfig
+} from "src/campaign/ReferralCampaign.sol";
 import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     PRODUCT_TYPE_DAPP,
@@ -14,125 +15,108 @@ import {
     PRODUCT_TYPE_PRESS,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {REFERRAL_ALLOWANCE_MANAGER_ROLE} from "src/constants/Roles.sol";
-import {Metadata, ProductRegistry} from "src/registry/ProductRegistry.sol";
-import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
+import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 
-contract ReferralCampaignTest is InteractionTest {
-    address private emitter;
-
+/// @dev Test contract our referral campaign
+contract ReferralCampaignTest is EcosystemAwareTest {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
     address private delta = makeAddr("delta");
 
-    /// @dev A mocked erc20 token
-    MockErc20 private token = new MockErc20();
+    address private interactionEmitter;
+
+    /// @dev The product interaction contract
+    ProductInteractionDiamond private productInteraction;
+
+    /// @dev The product id
+    uint256 private productId;
+    bytes32 private referralTree;
+
+    /// @dev The bank we will use
+    CampaignBank private campaignBank;
 
     /// @dev The campaign we will test
     ReferralCampaign private referralCampaign;
 
     function setUp() public {
-        vm.prank(owner);
-        productId =
-            productRegistry.mint(PRODUCT_TYPE_PRESS | PRODUCT_TYPE_FEATURE_REFERRAL, "name", "press-domain", owner);
-        vm.prank(owner);
-        productRegistry.setApprovalForAll(operator, true);
+        _initEcosystemAwareTest();
 
-        _initInteractionTest();
+        // Setup content with allowance for the operator
+        (productId, productInteraction) = _mintProductWithInteraction(PRODUCT_TYPE_PRESS, "name", "press-domain");
 
-        // Grant the right roles to the product interaction manager
-        vm.prank(owner);
-        referralRegistry.grantRoles(owner, REFERRAL_ALLOWANCE_MANAGER_ROLE);
-        vm.prank(owner);
-        referralRegistry.grantAccessToTree(referralTree, owner);
+        // Save the product interaction as the interaction emitter
+        interactionEmitter = address(productInteraction);
 
-        // Our campaign
-        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
-            token: address(token),
-            initialReward: 10 ether,
-            userRewardPercent: 5_000, // 50%
-            distributionCapPeriod: 1 days,
-            distributionCap: 100 ether,
-            startDate: uint48(0),
-            endDate: uint48(0),
-            name: "test"
-        });
-        referralCampaign = new ReferralCampaign(config, referralRegistry, adminRegistry, owner, productInteraction);
+        // Get the referral tree
+        referralTree = productInteraction.getReferralTree();
+
+        // Deploy the bank
+        campaignBank = new CampaignBank(adminRegistry, productId, address(token));
 
         // Mint a few test tokens to the campaign
-        token.mint(address(referralCampaign), 1_000 ether);
+        token.mint(address(campaignBank), 1000 ether);
 
-        emitter = address(productInteraction);
+        // Start our bank
+        vm.prank(productOwner);
+        campaignBank.updateDistributionState(true);
+
+        // Grant the right roles to the product interaction manager
+        vm.prank(contractOwner);
+        referralRegistry.grantAccessToTree(referralTree, contractOwner);
 
         // Fake the timestamp
         vm.warp(100);
     }
 
-    function performSingleInteraction() internal override {
-        vm.skip(true);
+    function test_init() public pure {
+        assertTrue(true);
     }
 
-    function getOutOfFacetScopeInteraction() internal override returns (bytes memory a, bytes memory b) {
-        vm.skip(true);
-        // just for linter stuff
-        a = abi.encodePacked("a");
-        b = abi.encodePacked("b");
-    }
+    /* -------------------------------------------------------------------------- */
+    /*                               Test construct                               */
+    /* -------------------------------------------------------------------------- */
 
-    function test_init() public {
-        ReferralCampaign.CampaignConfig memory config = ReferralCampaign.CampaignConfig({
-            token: address(0),
-            initialReward: 10 ether,
-            userRewardPercent: 5_000, // 50%
-            distributionCapPeriod: 1 days,
-            distributionCap: 100 ether,
-            startDate: uint48(0),
-            endDate: uint48(0),
-            name: "test"
+    function test_construct_InvalidConfig_emptyTrigger() public {
+        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+            name: "test",
+            triggers: new ReferralCampaignTriggerConfig[](0),
+            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
         });
 
         vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, adminRegistry, owner, productInteraction);
+        new ReferralCampaign(config, referralRegistry, adminRegistry, productInteraction);
     }
 
-    function test_metadata() public view {
-        (string memory name, string memory version,) = referralCampaign.getMetadata();
-        assertEq(name, "frak.campaign.referral");
+    function test_construct_InvalidConfig_noBank() public {
+        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+            name: "test",
+            triggers: _buildTriggers(),
+            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: CampaignBank(address(0))
+        });
+
+        vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
+        new ReferralCampaign(config, referralRegistry, adminRegistry, productInteraction);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Test metadata setup                            */
+    /* -------------------------------------------------------------------------- */
+
+    function test_metadata() public withSimpleConfig {
+        // Ensure the metadata is correct
+        (string memory campaignType, string memory version, bytes32 name) = referralCampaign.getMetadata();
+
+        assertEq(campaignType, "frak.campaign.referral");
         assertEq(version, "0.0.1");
+        assertEq(name, bytes32("test"));
     }
 
-    function test_isActive() public {
-        // Not enoguth token work
-        deal(address(token), address(referralCampaign), 1 ether);
-        assertEq(referralCampaign.isActive(), false);
-
-        // Enough token work
-        deal(address(token), address(referralCampaign), 101 ether);
-        assertEq(referralCampaign.isActive(), true);
-
-        // Not running work
-        vm.prank(owner);
-        referralCampaign.setRunningStatus(false);
-        assertEq(referralCampaign.isActive(), false);
-
-        // Running work
-        vm.prank(owner);
-        referralCampaign.setRunningStatus(true);
-        assertEq(referralCampaign.isActive(), true);
-
-        // Not started yet work
-        vm.prank(owner);
-        referralCampaign.setActivationDate(uint48(vm.getBlockTimestamp() + 1), 0);
-        assertEq(referralCampaign.isActive(), false);
-
-        // Ended work
-        vm.prank(owner);
-        referralCampaign.setActivationDate(0, uint48(vm.getBlockTimestamp() - 1));
-        assertEq(referralCampaign.isActive(), false);
-    }
-
-    function test_supportProductType() public view {
+    function test_supportProductType() public withSimpleConfig {
         assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_DAPP), false);
         assertEq(referralCampaign.supportProductType(ProductTypes.wrap(uint256(1 << 9))), false);
         assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_PRESS), false);
@@ -143,120 +127,383 @@ contract ReferralCampaignTest is InteractionTest {
         );
     }
 
-    function test_withdraw() public {
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        referralCampaign.withdraw();
+    /* -------------------------------------------------------------------------- */
+    /*                             Test running status                            */
+    /* -------------------------------------------------------------------------- */
 
-        vm.prank(owner);
-        referralCampaign.withdraw();
+    function test_setRunningStatus() public withSimpleConfig {
+        // Ensure the campaign is running
+        assertTrue(referralCampaign.isRunning());
 
-        assertEq(token.balanceOf(owner), 1_000 ether);
-        assertEq(token.balanceOf(address(referralCampaign)), 0);
+        vm.prank(campaignManager);
+        referralCampaign.setRunningStatus(false);
+
+        // Ensure the campaign is not running
+        assertFalse(referralCampaign.isRunning());
+
+        // Ensure the product owner can start the campaign
+        vm.prank(productOwner);
+        referralCampaign.setRunningStatus(true);
+
+        // Ensure the campaign is running
+        assertTrue(referralCampaign.isRunning());
     }
 
-    function test_distributeTokenToUserReferrers() public withReferralChain {
-        // Ensure we can't distribute if not allowed
-        vm.expectRevert(Ownable.Unauthorized.selector);
-        referralCampaign.distributeTokenToUserReferrers(alice, 10 ether);
+    function test_setRunningStatus_Unauthorized() public withSimpleConfig {
+        // Ensure the campaign is running
+        assertTrue(referralCampaign.isRunning());
 
-        // Distribute to alice
-        vm.prank(owner);
-        referralCampaign.distributeTokenToUserReferrers(alice, 10 ether);
+        // Try to stop the campaign, ensure failing if we don't have the right roles
+        vm.expectRevert(InteractionCampaign.Unauthorized.selector);
+        referralCampaign.setRunningStatus(false);
 
-        assertEq(referralCampaign.getPendingAmount(alice), 4 ether);
-        assertEq(referralCampaign.getPendingAmount(bob), 3.2 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie), 0.64 ether);
-        assertEq(referralCampaign.getPendingAmount(delta), 0.16 ether);
+        // Try to stop the campaign, ensure failing if we don't have the right roles
+        vm.prank(interactionManager);
+        vm.expectRevert(InteractionCampaign.Unauthorized.selector);
+        referralCampaign.setRunningStatus(false);
 
-        // Distribute to bob
-        vm.prank(owner);
-        referralCampaign.distributeTokenToUserReferrers(bob, 10 ether);
-
-        assertEq(referralCampaign.getPendingAmount(bob), 7.2 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie), 3.84 ether);
-        assertEq(referralCampaign.getPendingAmount(delta), 0.96 ether);
+        // Ensure the campaign is not running
+        assertTrue(referralCampaign.isRunning());
     }
 
-    function test_tokenDistribution_DailyDistributionCapReached() public withReferralChain {
-        // Distribute to alice 90 ether
-        vm.prank(owner);
-        referralCampaign.distributeTokenToUserReferrers(alice, 99.99 ether);
-        assertEq(referralCampaign.getPendingAmount(alice), 39.996 ether);
+    /* -------------------------------------------------------------------------- */
+    /*                          Test campaign activation                          */
+    /* -------------------------------------------------------------------------- */
 
-        // Case were we reach the end of the cap
-        vm.expectRevert(ReferralCampaign.DistributionCapReached.selector);
-        vm.prank(owner);
-        referralCampaign.distributeTokenToUserReferrers(alice, 0.1 ether);
-
-        // Assert that the cap is restored the day after
-        uint256 currentTimestamp = block.timestamp;
-        vm.warp(currentTimestamp + 1 days);
-        vm.prank(owner);
-        referralCampaign.distributeTokenToUserReferrers(alice, 99.99 ether);
-        assertEq(referralCampaign.getPendingAmount(alice), 79.992 ether);
+    function test_setup_isActive() public withSimpleConfig {
+        // Ensure the campaign is running
+        assertTrue(referralCampaign.isActive());
     }
 
-    function test_handleInteraction_doNothing() public withReferralChain {
+    function test_isActive_interactionCampaignInactive() public withSimpleConfig {
+        vm.prank(productOwner);
+        referralCampaign.setRunningStatus(false);
+
+        // Ensure the campaign is running
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_isActive_withActivationPeriod() public withActivationConfig(80, 120) {
+        assertTrue(referralCampaign.isActive());
+    }
+
+    function test_isActive_withActivationStartNotPassed() public withActivationConfig(80, 120) {
+        vm.warp(75);
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_isActive_withActivationEndPassed() public withActivationConfig(80, 120) {
+        vm.warp(125);
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_isActive_withBankDisabled() public withSimpleConfig {
+        vm.prank(campaignManager);
+        campaignBank.updateCampaignAuthorisation(address(referralCampaign), false);
+
+        assertFalse(referralCampaign.isActive());
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Test config update                             */
+    /* -------------------------------------------------------------------------- */
+
+    function test_updateActivationPeriod_Unauthorized() public withSimpleConfig {
+        vm.expectRevert(InteractionCampaign.Unauthorized.selector);
+        referralCampaign.updateActivationPeriod(ReferralCampaign.ActivationPeriod(uint48(0), uint48(0)));
+    }
+
+    function test_updateCapConfig_Unauthorized() public withSimpleConfig {
+        vm.expectRevert(InteractionCampaign.Unauthorized.selector);
+        referralCampaign.updateCapConfig(ReferralCampaign.CapConfig(uint48(0), uint208(0)));
+    }
+
+    function test_updateActivationPeriod() public withSimpleConfig {
+        assertTrue(referralCampaign.isActive());
+
+        uint48 time = uint48(block.timestamp);
+
+        vm.prank(campaignManager);
+        referralCampaign.updateActivationPeriod(ReferralCampaign.ActivationPeriod(time - 1, time + 1));
+        assertTrue(referralCampaign.isActive());
+
+        // Get config
+        (, ReferralCampaign.ActivationPeriod memory config,) = referralCampaign.getConfig();
+        assertEq(config.start, time - 1);
+        assertEq(config.end, time + 1);
+
+        vm.warp(time + 2);
+        assertFalse(referralCampaign.isActive());
+    }
+
+    function test_updateCapConfig() public withSimpleConfig {
+        vm.prank(campaignManager);
+        referralCampaign.updateCapConfig(ReferralCampaign.CapConfig(uint48(1312), uint208(10 ether)));
+
+        // Get config
+        (ReferralCampaign.CapConfig memory config,,) = referralCampaign.getConfig();
+        assertEq(config.period, uint48(1312));
+        assertEq(config.amount, uint208(10 ether));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                          Test interaction handling                         */
+    /* -------------------------------------------------------------------------- */
+
+    function test_handleInteraction_Unauthorized() public withSimpleConfig {
         bytes memory fckedUpData = hex"13";
 
-        // Ensure we can't distribute if not allowed
-        vm.expectRevert(Ownable.Unauthorized.selector);
+        // Ensure only the emitter can push interactions
+        vm.expectRevert(InteractionCampaign.Unauthorized.selector);
         referralCampaign.handleInteraction(fckedUpData);
-
-        // Ensure call won't fail with fcked up data
-        vm.prank(emitter);
-        referralCampaign.handleInteraction(fckedUpData);
-
-        // Ensure no reward was added
-        assertEq(referralCampaign.getPendingAmount(alice), 0);
-        assertEq(referralCampaign.getPendingAmount(bob), 0);
-        assertEq(referralCampaign.getPendingAmount(charlie), 0);
-        assertEq(referralCampaign.getPendingAmount(delta), 0);
-
-        // Ensure it won't do anything if campaign stopped
-        vm.prank(owner);
-        referralCampaign.withdraw();
-        vm.prank(emitter);
-        referralCampaign.handleInteraction(fckedUpData);
-
-        // Ensure no reward was added
-        assertEq(referralCampaign.getPendingAmount(alice), 0);
-        assertEq(referralCampaign.getPendingAmount(bob), 0);
-        assertEq(referralCampaign.getPendingAmount(charlie), 0);
-        assertEq(referralCampaign.getPendingAmount(delta), 0);
     }
 
-    function test_handleInteraction_sharedArticleUsed() public withReferralChain {
+    function test_handleInteraction_InactiveCampaign() public withSimpleConfig {
+        bytes memory fckedUpData = hex"13";
+
+        vm.prank(campaignManager);
+        referralCampaign.setRunningStatus(false);
+
+        // Ensure only the emitter can push interactions
+        vm.prank(interactionEmitter);
+        vm.expectRevert(InteractionCampaign.InactiveCampaign.selector);
+        referralCampaign.handleInteraction(fckedUpData);
+    }
+
+    function test_handleInteraction_doNothingForUnknownInteraction() public withSimpleConfig {
+        bytes memory fckedUpData = hex"13";
+
+        vm.prank(interactionEmitter);
+        referralCampaign.handleInteraction(fckedUpData);
+
+        // Ensure no reward was added
+        assertNoRewardDistributed();
+    }
+
+    function test_handleInteraction_doNothingIfNoReferrer() public withSimpleConfig {
         bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
 
-        // Ensure call won't fail with fcked up data
-        vm.prank(emitter);
+        vm.prank(interactionEmitter);
         referralCampaign.handleInteraction(interactionData);
 
-        assertEq(referralCampaign.getPendingAmount(alice), 4 ether);
-        assertEq(referralCampaign.getPendingAmount(bob), 3.2 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie), 0.64 ether);
-        assertEq(referralCampaign.getPendingAmount(delta), 0.16 ether);
+        // Ensure no reward was added
+        assertNoRewardDistributed();
+    }
 
-        // Ensure it won't do anything if campaign stopped
-        vm.prank(owner);
-        referralCampaign.withdraw();
-        vm.prank(emitter);
-        vm.expectRevert();
+    function test_handleInteraction() public withSimpleConfig withReferralChain {
+        bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
+
+        vm.prank(interactionEmitter);
         referralCampaign.handleInteraction(interactionData);
 
-        assertEq(referralCampaign.getPendingAmount(alice), 4 ether);
-        assertEq(referralCampaign.getPendingAmount(bob), 3.2 ether);
-        assertEq(referralCampaign.getPendingAmount(charlie), 0.64 ether);
-        assertEq(referralCampaign.getPendingAmount(delta), 0.16 ether);
+        // Ensure the reward was added
+        assertRewardDistributed();
+    }
+
+    /// @dev Test that the maxCount per user is effictive and taken in account
+    /// @dev The simple config is set to have a maxCountPerUser of 1
+    function test_handleInteraction_DontResitributeIfSpecified() public withSimpleConfig withReferralChain {
+        bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
+
+        vm.prank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+
+        assertRewardDistributed();
+        uint256 prevAliceBalance = campaignBank.getPendingAmount(alice);
+
+        // Try to push the same interaction again
+        vm.prank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+
+        // Ensure the reward was not added
+        assertEq(campaignBank.getPendingAmount(alice), prevAliceBalance);
+    }
+
+    /// @dev Test that the maxCount per user is effictive and taken in account
+    /// @dev The simple config is set to have a maxCountPerUser of 1
+    function test_handleInteraction_InfiniteResitributeIfSpecified() public withSimpleConfig withReferralChain {
+        bytes memory interactionData =
+            InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRAL_LINK_CREATION, alice);
+
+        vm.prank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+
+        assertRewardDistributed();
+        uint256 prevAliceBalance = campaignBank.getPendingAmount(alice);
+
+        // Try to push the same interaction again
+        vm.prank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+
+        // Ensure the reward was not added
+        assertGt(campaignBank.getPendingAmount(alice), prevAliceBalance);
+        prevAliceBalance = campaignBank.getPendingAmount(alice);
+
+        // Try to push the same interaction again
+        vm.prank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+        assertGt(campaignBank.getPendingAmount(alice), prevAliceBalance);
+    }
+
+    /// @dev Test that the maxCount per user is effictive and taken in account
+    /// @dev The simple config is set to have a maxCountPerUser of 1
+    function test_handleInteraction_DistributionCapHit() public withCappedConfig(20 ether, 10) withReferralChain {
+        bytes memory interactionData =
+            InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRAL_LINK_CREATION, alice);
+
+        // Distrubte two rewards (should hit the cap since simple config have reward of 10eth)
+        vm.startPrank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+        referralCampaign.handleInteraction(interactionData);
+        vm.stopPrank();
+
+        // Ensure the reward was added
+        assertRewardDistributed();
+
+        // Ensure next reward trigger the cap hit
+        vm.prank(interactionEmitter);
+        vm.expectRevert(ReferralCampaign.DistributionCapReached.selector);
+        referralCampaign.handleInteraction(interactionData);
+    }
+
+    /// @dev Test that the maxCount per user is effictive and taken in account
+    /// @dev The simple config is set to have a maxCountPerUser of 1
+    function test_handleInteraction_DistributionCapReset() public withCappedConfig(20 ether, 10) withReferralChain {
+        bytes memory interactionData =
+            InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRAL_LINK_CREATION, alice);
+
+        // Distrubte two rewards (should hit the cap since simple config have reward of 10eth)
+        vm.startPrank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+        referralCampaign.handleInteraction(interactionData);
+        vm.stopPrank();
+
+        // Ensure the reward was added
+        assertRewardDistributed();
+
+        // Ensure next reward trigger the cap hit
+        vm.prank(interactionEmitter);
+        vm.expectRevert(ReferralCampaign.DistributionCapReached.selector);
+        referralCampaign.handleInteraction(interactionData);
+
+        uint256 prevAliceBalance = campaignBank.getPendingAmount(alice);
+
+        // Ensure that if we move 11seconds seconds forward, the cap is reset
+        uint48 prevTimestamp = uint48(block.timestamp);
+        vm.warp(block.timestamp + 11);
+
+        vm.expectEmit(true, true, true, true);
+        emit ReferralCampaign.DistributionCapReset(uint48(prevTimestamp), 20 ether);
+        vm.prank(interactionEmitter);
+        referralCampaign.handleInteraction(interactionData);
+
+        // Ensure the reward was added
+        assertGt(campaignBank.getPendingAmount(alice), prevAliceBalance);
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                                    Utils                                   */
+    /*                              Assertion helpers                             */
     /* -------------------------------------------------------------------------- */
 
+    function assertNoRewardDistributed() private view {
+        assertEq(campaignBank.getPendingAmount(alice), 0);
+        assertEq(campaignBank.getPendingAmount(bob), 0);
+        assertEq(campaignBank.getPendingAmount(charlie), 0);
+        assertEq(campaignBank.getPendingAmount(delta), 0);
+    }
+
+    function assertRewardDistributed() private view {
+        assertGt(campaignBank.getPendingAmount(alice), 0);
+        assertGt(campaignBank.getPendingAmount(bob), 0);
+        assertGt(campaignBank.getPendingAmount(charlie), 0);
+        assertGt(campaignBank.getPendingAmount(delta), 0);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                State helpers                               */
+    /* -------------------------------------------------------------------------- */
+
+    modifier withSimpleConfig() {
+        vm.pauseGasMetering();
+        // Build a config
+        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+            name: "test",
+            triggers: _buildTriggers(),
+            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
+        });
+
+        // Continue the execution
+        _campaignSetup(config);
+        vm.resumeGasMetering();
+        _;
+    }
+
+    modifier withCappedConfig(uint256 capAmount, uint256 capPeriod) {
+        vm.pauseGasMetering();
+        // Build a config
+        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+            name: "test",
+            triggers: _buildTriggers(),
+            capConfig: ReferralCampaign.CapConfig({period: uint48(capPeriod), amount: uint208(capAmount)}),
+            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank
+        });
+
+        // Continue the execution
+        _campaignSetup(config);
+        vm.resumeGasMetering();
+        _;
+    }
+
+    modifier withActivationConfig(uint256 start, uint256 end) {
+        vm.pauseGasMetering();
+        // Build a config
+        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+            name: "test",
+            triggers: _buildTriggers(),
+            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(start), end: uint48(end)}),
+            campaignBank: campaignBank
+        });
+
+        // Continue the execution
+        _campaignSetup(config);
+        vm.resumeGasMetering();
+        _;
+    }
+
+    function _buildTriggers() private pure returns (ReferralCampaignTriggerConfig[] memory triggers) {
+        triggers = new ReferralCampaignTriggerConfig[](2);
+
+        triggers[0] = ReferralCampaignTriggerConfig({
+            interactionType: ReferralInteractions.REFERRED,
+            baseReward: 10 ether,
+            userPercent: 5000, // 50%
+            deperditionPerLevel: 8000, // 80%
+            maxCountPerUser: 1
+        });
+        triggers[1] = ReferralCampaignTriggerConfig({
+            interactionType: ReferralInteractions.REFERRAL_LINK_CREATION,
+            baseReward: 10 ether,
+            userPercent: 5000, // 50%
+            deperditionPerLevel: 8000, // 80%
+            maxCountPerUser: 0
+        });
+    }
+
+    function _campaignSetup(ReferralCampaignConfig memory _config) private {
+        // Deploy the campaign
+        referralCampaign = new ReferralCampaign(_config, referralRegistry, adminRegistry, productInteraction);
+
+        // Allow the campaign bank to distribute rewards
+        vm.prank(campaignManager);
+        campaignBank.updateCampaignAuthorisation(address(referralCampaign), true);
+    }
+
     modifier withReferralChain() {
-        vm.startPrank(owner);
+        vm.startPrank(contractOwner);
         referralRegistry.saveReferrer(referralTree, alice, bob);
         referralRegistry.saveReferrer(referralTree, bob, charlie);
         referralRegistry.saveReferrer(referralTree, charlie, delta);

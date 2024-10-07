@@ -19,10 +19,10 @@ abstract contract ProductInteractionStorageLib {
 
     /// @custom:storage-location erc7201:frak.product.interaction
     struct ProductInteractionStorage {
+        /// @dev The product id (in storage to be accessible for facets)
+        uint256 productId;
         /// @dev The referral tree for this product
         bytes32 referralTree;
-        /// @dev Nonce for the validation of the interaction
-        mapping(bytes32 nonceKey => uint256 nonce) nonces;
         /// @dev Array of all the current active campaigns
         InteractionCampaign[] campaigns;
         /// @dev Array of our logic "facets"
@@ -38,5 +38,10 @@ abstract contract ProductInteractionStorageLib {
     /// @dev Get the referral tree
     function _referralTree() internal view returns (bytes32) {
         return _productInteractionStorage().referralTree;
+    }
+
+    /// @dev Get the product id
+    function _productId() internal view returns (uint256) {
+        return _productInteractionStorage().productId;
     }
 }
