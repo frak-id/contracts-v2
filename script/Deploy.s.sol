@@ -200,7 +200,7 @@ contract Deploy is Script, DeterminedAddress {
             console.log(" * Deploying ProductInteractionManager under erc1967 proxy");
             // Deploy implem
             address implem = address(
-                new ProductInteractionManager{salt: 0xae4e57b886541829ba70efc84340653c41e2908ca5831f4a1ccff8037c827ce0}(
+                new ProductInteractionManager{salt: 0x00000000000000000000000000000000000000009574a3ca53239268c072a019}(
                     ProductRegistry(addresses.productRegistry),
                     ReferralRegistry(addresses.referralRegistry),
                     ProductAdministratorRegistry(addresses.productAdministratorRegistry)
@@ -209,7 +209,7 @@ contract Deploy is Script, DeterminedAddress {
             console.log("  ** ProductInteractionManager implementation: %s", implem);
             // Deploy and register proxy
             address proxy = LibClone.deployDeterministicERC1967(
-                implem, 0xae4e57b886541829ba70efc84340653c41e2908c8e4f97e007ccfe032be883cd
+                implem, 0x000000000000000000000000000000000000000066ca83fe94b5b293e05ebc8a
             );
             ProductInteractionManager(proxy).init(
                 msg.sender, InteractionFacetsFactory(addresses.facetFactory), CampaignFactory(addresses.campaignFactory)
@@ -257,7 +257,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(kAddresses.p256Wrapper)) {
             console.log(" * Deploying p256 wrapper");
             P256VerifierWrapper p256verifierWrapper =
-                new P256VerifierWrapper{salt: 0xae4e57b886541829ba70efc84340653c41e2908c61d639808efae801a4b609f2}();
+                new P256VerifierWrapper{salt: 0x0000000000000000000000000000000000000000ca906bf5e0928035f7b75ffa}();
             kAddresses.p256Wrapper = address(p256verifierWrapper);
         }
         bytes32 currHash = _saveBin("P256VerifierWrapper", type(P256VerifierWrapper).creationCode);
@@ -266,7 +266,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(kAddresses.webAuthNValidator)) {
             console.log(" * Deploying MultiWebAuthNValidator");
             MultiWebAuthNValidatorV2 multiWebAuthNSigner = new MultiWebAuthNValidatorV2{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c5deb7428cff9a7014ed38121
+                salt: 0x0000000000000000000000000000000000000000442dd0f774d53742ba542281
             }(kAddresses.p256Wrapper);
             kAddresses.webAuthNValidator = address(multiWebAuthNSigner);
         }
@@ -278,7 +278,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(kAddresses.webAuthNRecoveryAction)) {
             console.log(" * Deploying MultiWebAuthNRecoveryAction");
             MultiWebAuthNRecoveryAction multiWebAuthNRecovery = new MultiWebAuthNRecoveryAction{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c3440f78eb5272a038c9de14b
+                salt: 0x0000000000000000000000000000000000000000c66200b9a9a8bbcfff2a3d87
             }(kAddresses.webAuthNValidator);
             kAddresses.webAuthNRecoveryAction = address(multiWebAuthNRecovery);
         }
@@ -292,7 +292,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(kAddresses.interactionDelegator)) {
             console.log(" * Deploying InteractionDelegator");
             InteractionDelegator interactionDelegator = new InteractionDelegator{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c225b5c1aad6caa027349ddd6
+                salt: 0x000000000000000000000000000000000000000069f0b5289bd1a427f5ed9370
             }(msg.sender);
             kAddresses.interactionDelegator = address(interactionDelegator);
         }
@@ -302,7 +302,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(kAddresses.interactionDelegatorValidator)) {
             console.log(" * Deploying InteractionDelegatorValidator");
             InteractionDelegatorValidator interactionDelegatorValidator = new InteractionDelegatorValidator{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908cb9169d64a6798e012da68cc2
+                salt: 0x0000000000000000000000000000000000000000aa2d3979892b207848398d35
             }(kAddresses.interactionDelegator);
             kAddresses.interactionDelegatorValidator = address(interactionDelegatorValidator);
         }
@@ -316,7 +316,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(kAddresses.interactionDelegatorAction)) {
             console.log(" * Deploying InteractionDelegatorAction");
             InteractionDelegatorAction interactionDelegatorAction = new InteractionDelegatorAction{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c48abe9d7a8eb5500982c3ef2
+                salt: 0x0000000000000000000000000000000000000000f48837f67bb931ec65596e0b
             }(ProductInteractionManager(addresses.productInteractionManager));
             kAddresses.interactionDelegatorAction = address(interactionDelegatorAction);
         }

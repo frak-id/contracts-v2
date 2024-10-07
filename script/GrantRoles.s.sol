@@ -17,13 +17,14 @@ contract GrantRoles is Script, DeterminedAddress {
         KernelAddresses memory kAddresses = _getKernelAddresses();
 
         // All the address that will be allowed to mint products
-        address[] memory productMinters = new address[](1);
-        productMinters[0] = 0x6A9553387Da23cbfFBdf58eC949c01580448F490; // local
-        productMinters[1] = 0xee310229c31e000292d14Add9d4c317095808661; // dev
+        address[] memory productMinters = new address[](3);
+        productMinters[0] = 0x6A9553387Da23cbfFBdf58eC949c01580448F490; // local - quentin
+        productMinters[1] = 0x861FA3E4e1801343cd619e3d691E64EF91515c48; // local - rodolphe
+        productMinters[2] = 0xee310229c31e000292d14Add9d4c317095808661; // dev
 
         // All the address that will be allowed to delegate interactions
         address[] memory interactionDelegators = new address[](2);
-        interactionDelegators[0] = 0x0612994c389F253f22AF91B63DD622049b7D42C5; // local
+        interactionDelegators[0] = 0x0612994c389F253f22AF91B63DD622049b7D42C5; // local - quentin
         interactionDelegators[1] = 0xef33C59086808F63733C3b92d273930772466b08; // dev
 
         // Grant every roles

@@ -15,6 +15,8 @@ import {ERC4337Utils} from "kernel-v2/utils/ERC4337Utils.sol";
 import {KernelTestBase} from "kernel-v2/utils/KernelTestBase.sol";
 import {ECDSAValidator} from "kernel-v2/validator/ECDSAValidator.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
+
+import {LibZip} from "solady/utils/LibZip.sol";
 import {InteractionType, PressInteractions} from "src/constants/InteractionType.sol";
 import {DENOMINATOR_PRESS, PRODUCT_TYPE_PRESS} from "src/constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
@@ -25,7 +27,6 @@ import {InteractionDelegatorValidator} from "src/kernel/interaction/InteractionD
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 import {WebAuthnVerifier} from "src/kernel/utils/WebAuthnVerifier.sol";
 import {MultiWebAuthNValidatorV2, WebAuthNPubKey} from "src/kernel/webauthn/MultiWebAuthNValidator.sol";
-import {LibZip} from "solady/utils/LibZip.sol";
 
 using ERC4337Utils for IEntryPoint;
 
@@ -147,8 +148,7 @@ contract InteractionDelegatorTest is KernelTestBase, InteractionTest {
         // Wrap that in the right form
         InteractionDelegator.DelegatedBatchedInteraction[] memory delegatedInteraction =
             new InteractionDelegator.DelegatedBatchedInteraction[](1);
-        delegatedInteraction[0] =
-            InteractionDelegator.DelegatedBatchedInteraction(address(kernel), interactions);
+        delegatedInteraction[0] = InteractionDelegator.DelegatedBatchedInteraction(address(kernel), interactions);
 
         // Send it
         vm.expectRevert(Ownable.Unauthorized.selector);
@@ -180,8 +180,7 @@ contract InteractionDelegatorTest is KernelTestBase, InteractionTest {
         // Wrap that in the right form
         InteractionDelegator.DelegatedBatchedInteraction[] memory delegatedInteraction =
             new InteractionDelegator.DelegatedBatchedInteraction[](1);
-        delegatedInteraction[0] =
-            InteractionDelegator.DelegatedBatchedInteraction(address(kernel), interactions);
+        delegatedInteraction[0] = InteractionDelegator.DelegatedBatchedInteraction(address(kernel), interactions);
 
         // Send it
         vm.expectEmit(true, true, true, true, address(productInteraction));
@@ -200,11 +199,11 @@ contract InteractionDelegatorTest is KernelTestBase, InteractionTest {
         // Wrap that in the right form
         InteractionDelegator.DelegatedBatchedInteraction[] memory delegatedInteraction =
             new InteractionDelegator.DelegatedBatchedInteraction[](1);
-        delegatedInteraction[0] =
-            InteractionDelegator.DelegatedBatchedInteraction(address(kernel), interactions);
+        delegatedInteraction[0] = InteractionDelegator.DelegatedBatchedInteraction(address(kernel), interactions);
 
         // Build the raw data to be sent
-        bytes memory rawCalldata = abi.encodeWithSelector(InteractionDelegator.executeBatched.selector, delegatedInteraction);
+        bytes memory rawCalldata =
+            abi.encodeWithSelector(InteractionDelegator.executeBatched.selector, delegatedInteraction);
         bytes memory compressedData = LibZip.cdCompress(rawCalldata);
 
         // Send it

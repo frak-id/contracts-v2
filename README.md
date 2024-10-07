@@ -12,13 +12,14 @@ Addresses of the Frak contracts, deployed on Arbitrum and Arbitrum Sepolia.
 
 | Name                           | Address                                       |
 |--------------------------------|-----------------------------------------------|
-| Product Registry               | `0xdA7fBD02eb048bDf6f1607122eEe071e44f0b9F2`  |
-| Referral Registry              | `0xcf5855d9825578199969919F1696b80388111403`  |
-| Product Administrator Registry | `0x62254d732C078BF0484EA7dBd61f7F620184F95e`  |
-| Product Interaction Manager    | `0xC9d1BAB1B9A07c11AB0C264B13AFfD500DD4c2ee`  |
-| Facet Factory                  | `0xAC09E547d3f21F1E0aCbe76dde44BB1BcFFb9D7D`  |
-| Campaign Factory               | `0xB375B53C13eE2664DD9bD16f5624fE5097870543`  |
-| mUSD Token                     | `0x56039fa1a804F614eBD714139F29a3ff4DB57ad6`  |
+| Product Registry               | `0x9100000000290000D9a49572110030ba00E0F40b`  |
+| Referral Registry              | `0x5439e7b27500f7000A6DCD00006D000082510000`  |
+| Product Administrator Registry | `0x0000000000000823EaD12075a50A2a6520966e5c`  |
+| Purchase Oracle                | `0x0000EC17000000e783CA00Ee06890000114C100d`  |
+| Product Interaction Manager    | `0x0000000000009720dc2B0D893f7Ec2a878d21AeC`  |
+| Facet Factory                  | `0x000000000068C43436b8970Ee8791718f50b9643`  |
+| Campaign Factory               | `0x0000000000278e0EFbC5968020A798AaB1571E5c`  |
+| Campaign Bank Factory          | `0x00000000003604CF2d09f4Aa3B878843A765015d`  |
 
 ### Kernel plugins
 
@@ -27,12 +28,12 @@ Plugins for the Kernel smart accounts.
 | Name                                  | Address                                       |
 |---------------------------------------|-----------------------------------------------|
 | Generic                                                                               |
-| P256 Signature checker Wrapper        | `0x97A24c95E317c44c0694200dd0415dD6F556663D`  |
-| MultiWebAuthN - Kernel v2             | `0xF05f18D9312f10d1d417c45040B8497899f66A5E`  |
-| MultiWebAuthN Recovery - Kernel v2    | `0x8b29229515D3e5b829D59617A791b5B3a2c32ff1`  |
-| Interaction delegator                 | `0x4b8350E6291063bF14ca1E4379147a3bd23714CB`  |
-| Interaction delegator validator       | `0xb33cc9Aea3f6e1125179Ec0A1D9783eD3717d04C`  |
-| Interaction delegator action          | `0xaAF9c01fe6193d6226003B233A68f6EDD807bAb0`  |
+| P256 Signature checker Wrapper        | `0x00e4005A00007384000000B0a8A0F300DD9fCAFA`  |
+| MultiWebAuthN - Kernel v2             | `0x0000000000Fb9604350a25E826B050D859FE7b77`  |
+| MultiWebAuthN Recovery - Kernel v2    | `0x000000000093c960bC9F9Dc93509E394a96c7FD9`  |
+| Interaction delegator                 | `0x0000000000915Bae6248227914666Afd11Ad706e`  |
+| Interaction delegator validator       | `0x00000000002f84e026BbA7983F3c189D0C6dc8Fa`  |
+| Interaction delegator action          | `0x00000000001BF7FE0EEBf7c66E1e624D52a12FAD`  |
 
 
 ## Folder Structure
@@ -40,9 +41,11 @@ Plugins for the Kernel smart accounts.
 ```
 src
 ├── campaign
-│   ├── CampaignFactory.sol
+│   ├── CampaignBank.sol
+│   ├── CampaignBankFactory.sol
 │   ├── InteractionCampaign.sol
 │   └── ReferralCampaign.sol
+│   ├── CampaignFactory.sol
 ├── constants
 ├── interaction
 │   ├── InteractionFacetsFactory.sol
@@ -52,6 +55,8 @@ src
 │   │   ├── DappInteractionFacet.sol
 │   │   ├── IInteractionFacet.sol
 │   │   ├── PressInteractionFacet.sol
+│   │   ├── PurchaseInteractionFacet.sol
+│   │   ├── WebShopInteractionFacet.sol
 │   │   └── ReferralFeatureFacet.sol
 │   └── lib
 ├── interfaces
@@ -61,11 +66,12 @@ src
 │   ├── utils
 │   └── webauthn
 ├── modules
+├── oracle
+│   └── PurchaseOracle.sol
 ├── registry
 │   ├── ProductAdministratorRegistry.sol
 │   ├── ProductRegistry.sol
 │   └── ReferralRegistry.sol
-├── stylus
 └── tokens
 ```
 ## Registries
