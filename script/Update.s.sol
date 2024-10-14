@@ -20,9 +20,9 @@ import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 /// @dev update our smart contracts
 contract Update is Script, DeterminedAddress {
     function run() public {
-        _updateProductInteractionManager();
+        // _updateProductInteractionManager();
         _updateFacetFactory();
-        _updateCampaignsFactory();
+        // _updateCampaignsFactory();
     }
 
     function _updateProductInteractionManager() internal {

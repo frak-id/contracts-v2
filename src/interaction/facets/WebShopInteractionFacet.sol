@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {InteractionType, InteractionTypeLib} from "../../constants/InteractionType.sol";
+import {InteractionType, InteractionTypeLib, WebShopInteractions} from "../../constants/InteractionType.sol";
 import {DENOMINATOR_WEB_SHOP} from "../../constants/ProductTypes.sol";
 import {ProductInteractionStorageLib} from "../lib/ProductInteractionStorageLib.sol";
 import {IInteractionFacet} from "./IInteractionFacet.sol";
@@ -17,8 +17,20 @@ contract WebShopInteractionFacet is ProductInteractionStorageLib, IInteractionFa
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
+    /// @dev Event when a webshop is openned by the given `user`
+    event WebShopOpenned(address user);
+
     /// @dev High level interaction router
-    fallback(bytes calldata) external returns (bytes memory) {
+    fallback(bytes calldata _data) external returns (bytes memory) {
+        // Parse the interaction
+        (InteractionType _action,) = _data.unpackForFacet();
+
+        if (_action == WebShopInteractions.OPEN) {
+            emit WebShopOpenned(msg.sender);
+            // Just resend the data for campaign managment
+            return WebShopInteractions.OPEN.packForCampaign(msg.sender);
+        }
+
         revert UnknownInteraction();
     }
 

@@ -5,7 +5,12 @@ import {InteractionTest} from "./InteractionTest.sol";
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
-import {InteractionType, InteractionTypeLib, PressInteractions} from "src/constants/InteractionType.sol";
+import {
+    InteractionType,
+    InteractionTypeLib,
+    PressInteractions,
+    WebShopInteractions
+} from "src/constants/InteractionType.sol";
 import {
     DENOMINATOR_DAPP, DENOMINATOR_WEB_SHOP, PRODUCT_TYPE_WEB_SHOP, ProductTypes
 } from "src/constants/ProductTypes.sol";
@@ -14,6 +19,7 @@ import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamo
 import {WebShopInteractionFacet} from "src/interaction/facets/WebShopInteractionFacet.sol";
 
 contract WebShopInteractionTest is InteractionTest {
+    address private alice = makeAddr("alice");
     WebShopInteractionFacet private rawFacet;
 
     function setUp() public {
@@ -32,14 +38,15 @@ contract WebShopInteractionTest is InteractionTest {
     /* -------------------------------------------------------------------------- */
 
     function performSingleInteraction() internal override {
-        vm.skip(true);
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_WEB_SHOP, WebShopInteractions.OPEN, "", alice);
+        // Call the open article method
+        vm.prank(alice);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 
     function getOutOfFacetScopeInteraction() internal override returns (bytes memory a, bytes memory b) {
-        vm.skip(true);
-        // just for linter stuff
-        a = abi.encodePacked("a");
-        b = abi.encodePacked("b");
+        return _prepareInteraction(DENOMINATOR_DAPP, WebShopInteractions.OPEN, "", alice);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -50,5 +57,33 @@ contract WebShopInteractionTest is InteractionTest {
         // Can be built
         WebShopInteractionFacet tFacet = new WebShopInteractionFacet();
         assertEq(tFacet.productTypeDenominator(), DENOMINATOR_WEB_SHOP);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                              Test webshop open                             */
+    /* -------------------------------------------------------------------------- */
+
+    function test_webshopOpen() public {
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_WEB_SHOP, WebShopInteractions.OPEN, "", alice);
+
+        // Setup the event check
+        vm.expectEmit(true, true, true, true, address(productInteraction));
+        emit WebShopInteractionFacet.WebShopOpenned(alice);
+        // Call the open article method
+        vm.prank(alice);
+        productInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    function testFuzz_webshopOpen(address _user) public {
+        (bytes memory packedInteraction, bytes memory signature) =
+            _prepareInteraction(DENOMINATOR_WEB_SHOP, WebShopInteractions.OPEN, "", _user);
+
+        // Setup the event check
+        vm.expectEmit(true, true, true, true, address(productInteraction));
+        emit WebShopInteractionFacet.WebShopOpenned(_user);
+        // Call the open article method
+        vm.prank(_user);
+        productInteraction.handleInteraction(packedInteraction, signature);
     }
 }

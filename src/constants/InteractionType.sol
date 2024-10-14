@@ -135,7 +135,10 @@ library PressInteractions {
     InteractionType constant READ_ARTICLE = InteractionType.wrap(0xd5bd0fbe);
 }
 
-library WebShopInteractions {}
+library WebShopInteractions {
+    /// @dev `bytes4(keccak256("frak.webshop.interaction.open"))`
+    InteractionType constant OPEN = InteractionType.wrap(0xb311798f);
+}
 
 library ReferralInteractions {
     /// @dev `bytes4(keccak256("frak.referral.interaction.referred"))`
