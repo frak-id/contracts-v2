@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
-import {MINTER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {IFacetsFactory} from "../interfaces/IFacetsFactory.sol";
 import {ProductAdministratorRegistry, ProductRoles} from "../registry/ProductAdministratorRegistry.sol";
@@ -128,14 +128,18 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     /* -------------------------------------------------------------------------- */
 
     /// @dev Deploy a new interaction contract for the given `_productId`
-    function deployInteractionContract(uint256 _productId) public returns (ProductInteractionDiamond diamond) {
+    function deployInteractionContract(uint256 _productId)
+        public
+        onlyInteractionManager(_productId)
+        returns (ProductInteractionDiamond diamond)
+    {
         return deployInteractionContract(_productId, bytes32(0));
     }
 
     /// @dev Deploy a new interaction contract for the given `_productId`
     function deployInteractionContract(uint256 _productId, bytes32 _salt)
         public
-        onlyInteractionManagerOrMinter(_productId)
+        onlyInteractionManager(_productId)
         returns (ProductInteractionDiamond diamond)
     {
         // Check if we already have an interaction contract for this product
@@ -267,16 +271,6 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
             _productId, msg.sender, ProductRoles.INTERACTION_OR_ADMINISTRATOR
         );
-        _;
-    }
-    /// @dev Modifier to only allow call from an allowed product manager
-
-    modifier onlyInteractionManagerOrMinter(uint256 _productId) {
-        if (!hasAnyRole(msg.sender, MINTER_ROLE)) {
-            PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(
-                _productId, msg.sender, ProductRoles.INTERACTION_OR_ADMINISTRATOR
-            );
-        }
         _;
     }
 

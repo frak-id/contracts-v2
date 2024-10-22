@@ -20,8 +20,8 @@ import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
 /// @dev update our smart contracts
 contract Update is Script, DeterminedAddress {
     function run() public {
-        // _updateProductInteractionManager();
-        _updateFacetFactory();
+        _updateProductInteractionManager();
+        // _updateFacetFactory();
         // _updateCampaignsFactory();
     }
 
@@ -33,12 +33,13 @@ contract Update is Script, DeterminedAddress {
         vm.startBroadcast();
 
         address newImplem = address(
-            new ProductInteractionManager{salt: 0}(
+            new ProductInteractionManager{salt: 0xae4e57b886541829ba70efc84340653c41e2908c0582699da637ed026f26caaa}(
                 ProductRegistry(addresses.productRegistry),
                 ReferralRegistry(addresses.referralRegistry),
                 ProductAdministratorRegistry(addresses.productAdministratorRegistry)
             )
         );
+        console.log("New implementation address: ", newImplem);
         currentManager.upgradeToAndCall(newImplem, "");
 
         vm.stopBroadcast();

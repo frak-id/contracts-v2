@@ -174,6 +174,25 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
         assertNotEq(address(interaction.getFacet(DENOMINATOR_PRESS)), address(0));
     }
 
+    function test_deployInteractionContract_fromMinter() public {
+        // Deploy the interaction contract
+        vm.prank(minter);
+        productInteractionManager.deployInteractionContract(productIdPress);
+
+        // Assert it's deployed
+        assertNotEq(address(productInteractionManager.getInteractionContract(productIdPress)), address(0));
+
+        // Deploy the interaction contract for a product with multiple types
+        vm.prank(minter);
+        productInteractionManager.deployInteractionContract(productIdMulti);
+        ProductInteractionDiamond interaction = productInteractionManager.getInteractionContract(productIdMulti);
+        assertNotEq(address(interaction), address(0));
+
+        // Get the facet, and ensure it's not 0 for each product denomination
+        assertNotEq(address(interaction.getFacet(DENOMINATOR_DAPP)), address(0));
+        assertNotEq(address(interaction.getFacet(DENOMINATOR_PRESS)), address(0));
+    }
+
     function test_getInteractionContract() public {
         vm.expectRevert(ProductInteractionManager.NoInteractionContractFound.selector);
         productInteractionManager.getInteractionContract(productIdPress);

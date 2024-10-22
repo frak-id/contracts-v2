@@ -2,11 +2,13 @@
 pragma solidity ^0.8.0;
 
 import {MockErc20} from "./utils/MockErc20.sol";
+
 import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {ProductTypes} from "src/constants/ProductTypes.sol";
+import {MINTER_ROLE} from "src/constants/Roles.sol";
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
@@ -24,6 +26,7 @@ abstract contract EcosystemAwareTest is Test {
     address internal interactionManager = makeAddr("interactionManager");
     address internal campaignManager = makeAddr("campaignManager");
     address internal purchaseOracleOperator = makeAddr("purchaseOracleOperator");
+    address internal minter = makeAddr("minter");
 
     /// @dev A mocked erc20 token
     MockErc20 internal token = new MockErc20();
@@ -50,6 +53,9 @@ abstract contract EcosystemAwareTest is Test {
         address proxy = LibClone.deployERC1967(implem);
         productInteractionManager = ProductInteractionManager(proxy);
         productInteractionManager.init(contractOwner, facetFactory, campaignFactory);
+
+        vm.prank(contractOwner);
+        productInteractionManager.grantRoles(minter, MINTER_ROLE);
 
         // Label a few stuff
         vm.label(implem, "ProductInteractionManager-Implementation");
