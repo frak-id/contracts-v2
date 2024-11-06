@@ -169,7 +169,7 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
     }
 
     /// @dev Deploy a new interaction contract for the given `_productId`
-    function updateInteractionContract(uint256 _productId) external onlyInteractionManager(_productId) {
+    function updateInteractionContract(uint256 _productId) external onlyInteractionManagerOrMinter(_productId) {
         // Fetch the current interaction contract
         ProductInteractionDiamond interactionContract = getInteractionContract(_productId);
 

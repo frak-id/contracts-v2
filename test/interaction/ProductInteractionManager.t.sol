@@ -262,6 +262,34 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
     /*                          Campaign management test                          */
     /* -------------------------------------------------------------------------- */
 
+    function test_detachCampaigns_single() public {
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
+        bytes memory initData = _getReferralCampaignConfigInitData();
+
+        // Deploy interaction and add campaign
+        vm.startPrank(productOwner);
+        productInteractionManager.deployInteractionContract(productIdPress);
+        ProductInteractionDiamond interactionContract =
+            ProductInteractionDiamond(productInteractionManager.getInteractionContract(productIdPress));
+
+        address campaign1 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
+        address campaign2 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
+        address campaign3 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
+        address campaign4 = productInteractionManager.deployCampaign(productIdPress, campaignId, initData);
+        vm.stopPrank();
+
+        InteractionCampaign[] memory toRemove = new InteractionCampaign[](1);
+        toRemove[0] = InteractionCampaign(campaign2);
+
+        // Test ok with reordering
+        vm.prank(productOwner);
+        productInteractionManager.detachCampaigns(productIdPress, toRemove);
+        assertEq(interactionContract.getCampaigns().length, 3);
+        assertEq(address(interactionContract.getCampaigns()[0]), campaign1);
+        assertEq(address(interactionContract.getCampaigns()[1]), campaign4);
+        assertEq(address(interactionContract.getCampaigns()[2]), campaign3);
+    }
+
     function test_detachCampaigns_multi() public {
         bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
         bytes memory initData = _getReferralCampaignConfigInitData();

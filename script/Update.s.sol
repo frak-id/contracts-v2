@@ -16,12 +16,13 @@ import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
+import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 
 /// @dev update our smart contracts
 contract Update is Script, DeterminedAddress {
     function run() public {
         _updateProductInteractionManager();
-        // _updateFacetFactory();
+        _updateFacetFactory();
         // _updateCampaignsFactory();
     }
 
@@ -33,7 +34,7 @@ contract Update is Script, DeterminedAddress {
         vm.startBroadcast();
 
         address newImplem = address(
-            new ProductInteractionManager{salt: 0xae4e57b886541829ba70efc84340653c41e2908c0582699da637ed026f26caaa}(
+            new ProductInteractionManager{salt: 0xae4e57b886541829ba70efc84340653c41e2908c37ddbb1a8cdb7800db7afab8}(
                 ProductRegistry(addresses.productRegistry),
                 ReferralRegistry(addresses.referralRegistry),
                 ProductAdministratorRegistry(addresses.productAdministratorRegistry)
@@ -53,8 +54,19 @@ contract Update is Script, DeterminedAddress {
 
         vm.startBroadcast();
 
+        // Deploy the facet factory
+        InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{
+            salt: 0xae4e57b886541829ba70efc84340653c41e2908c4b2e2db998fc48004e5ce2af
+        }(
+            ReferralRegistry(addresses.referralRegistry),
+            ProductRegistry(addresses.productRegistry),
+            ProductAdministratorRegistry(addresses.productAdministratorRegistry),
+            PurchaseOracle(addresses.purchaseOracle)
+        );
+        console.log("New facet factory: ", address(facetFactory));
+
         // update the facet factory
-        productInteractionManager.updateFacetsFactory(InteractionFacetsFactory(addresses.facetFactory));
+        productInteractionManager.updateFacetsFactory(facetFactory);
 
         vm.stopBroadcast();
     }

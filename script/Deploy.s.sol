@@ -142,7 +142,7 @@ contract Deploy is Script, DeterminedAddress {
         if (_shouldDeploy(addresses.facetFactory)) {
             console.log(" * Deploying InteractionFacetsFactory");
             InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{
-                salt: 0xae4e57b886541829ba70efc84340653c41e2908c97d6d760375d2b003e54c9e6
+                salt: 0xae4e57b886541829ba70efc84340653c41e2908c4b2e2db998fc48004e5ce2af
             }(
                 ReferralRegistry(addresses.referralRegistry),
                 ProductRegistry(addresses.productRegistry),

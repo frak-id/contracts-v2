@@ -113,7 +113,7 @@ contract PurchaseFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
         // Emit the purchase start event
         emit PurchaseCompleted(data.purchaseId, msg.sender);
         // Just resend the data, in a lightweight variant, triming proof etc to lighten the flow
-        return PurchaseInteractions.PURCHASE_STARTED.packForCampaign(msg.sender);
+        return PurchaseInteractions.PURCHASE_COMPLETED.packForCampaign(msg.sender);
     }
 
     /// @dev Ensure the purchase is not already processed for a given user
