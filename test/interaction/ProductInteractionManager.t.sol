@@ -382,9 +382,16 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
 
     function _getReferralCampaignConfigInitData() internal returns (bytes memory initData) {
         vm.pauseGasMetering();
-        ReferralCampaignTriggerConfig[] memory triggers = new ReferralCampaignTriggerConfig[](1);
+        ReferralCampaignTriggerConfig[] memory triggers = new ReferralCampaignTriggerConfig[](2);
         triggers[0] = ReferralCampaignTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
+            baseReward: 10 ether,
+            userPercent: 5000, // 50%
+            deperditionPerLevel: 8000, // 80%
+            maxCountPerUser: 1
+        });
+        triggers[1] = ReferralCampaignTriggerConfig({
+            interactionType: ReferralInteractions.REFERRAL_LINK_CREATION,
             baseReward: 10 ether,
             userPercent: 5000, // 50%
             deperditionPerLevel: 8000, // 80%

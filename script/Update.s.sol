@@ -13,22 +13,26 @@ import {
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
+
+import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
 import {ReferralRegistry} from "src/registry/ReferralRegistry.sol";
-import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 
 /// @dev update our smart contracts
 contract Update is Script, DeterminedAddress {
     function run() public {
-        _updateProductInteractionManager();
-        _updateFacetFactory();
-        // _updateCampaignsFactory();
-    }
-
-    function _updateProductInteractionManager() internal {
         Addresses memory addresses = _getAddresses();
 
+        // _updateProductInteractionManager(addresses);
+        _updateFacetFactory(addresses);
+        // _updateCampaignsFactory(addresses);
+
+        // Save the addresses in a json file
+        _saveAddresses(addresses);
+    }
+
+    function _updateProductInteractionManager(Addresses memory addresses) internal {
         ProductInteractionManager currentManager = ProductInteractionManager(addresses.productInteractionManager);
 
         vm.startBroadcast();
@@ -46,9 +50,7 @@ contract Update is Script, DeterminedAddress {
         vm.stopBroadcast();
     }
 
-    function _updateFacetFactory() internal {
-        Addresses memory addresses = _getAddresses();
-
+    function _updateFacetFactory(Addresses memory addresses) internal {
         ProductInteractionManager productInteractionManager =
             ProductInteractionManager(addresses.productInteractionManager);
 
@@ -69,9 +71,12 @@ contract Update is Script, DeterminedAddress {
         productInteractionManager.updateFacetsFactory(facetFactory);
 
         vm.stopBroadcast();
+
+        // Update the addresses
+        addresses.facetFactory = address(facetFactory);
     }
 
-    function _updateCampaignsFactory() internal {
+    function _updateCampaignsFactory(Addresses memory addresses) internal {
         Addresses memory addresses = _getAddresses();
 
         ProductInteractionManager productInteractionManager =

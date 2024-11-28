@@ -37,10 +37,8 @@ contract GrantRoles is Script, DeterminedAddress {
             minters[0] = 0x3586ef9c352B07DEAb79E52ad70b96DB6264F913; // prod
         } else {
             // dev
-            minters = new address[](3);
-            minters[0] = 0x6A9553387Da23cbfFBdf58eC949c01580448F490; // local - quentin
-            minters[1] = 0x861FA3E4e1801343cd619e3d691E64EF91515c48; // local - rodolphe
-            minters[2] = 0xee310229c31e000292d14Add9d4c317095808661; // dev
+            minters = new address[](1);
+            minters[0] = 0x7b18c41665A4Eff371DdE0db605764D3B01b73f9; // dev
         }
     }
 
@@ -53,9 +51,8 @@ contract GrantRoles is Script, DeterminedAddress {
             interactionDelegators[0] = 0xc9a29de8a25333aaB013F1eF8b595eb79aE74C3C; // prod
         } else {
             // dev
-            interactionDelegators = new address[](2);
-            interactionDelegators[0] = 0x0612994c389F253f22AF91B63DD622049b7D42C5; // local - quentin
-            interactionDelegators[1] = 0xef33C59086808F63733C3b92d273930772466b08; // dev
+            interactionDelegators = new address[](1);
+            interactionDelegators[0] = 0x486b3b8E942CDa32287C1C1Ed3597d630271DbCb; // dev
         }
     }
 

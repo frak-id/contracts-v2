@@ -203,6 +203,66 @@ contract PurchaseFeatureInteractionTest is InteractionTest {
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                       Test unsafe purchase completed                       */
+    /* -------------------------------------------------------------------------- */
+
+    function test_unsafePurchaseCompleted() public {
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_FEATURE_PURCHASE,
+            PurchaseInteractions.UNSAFE_PURCHASE_COMPLETED,
+            _unsafePurchaseCompletedData(0),
+            alice
+        );
+
+        // Setup the event check
+        vm.expectEmit(true, true, true, true, address(productInteraction));
+        emit PurchaseFeatureFacet.PurchaseCompleted(0, alice);
+        vm.prank(alice);
+        productInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    function testFuzz_unsafePurchaseCompleted(uint256 _purchaseId) public {
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_FEATURE_PURCHASE,
+            PurchaseInteractions.UNSAFE_PURCHASE_COMPLETED,
+            _unsafePurchaseCompletedData(_purchaseId),
+            alice
+        );
+
+        // Setup the event check
+        vm.expectEmit(true, true, true, true, address(productInteraction));
+        emit PurchaseFeatureFacet.PurchaseCompleted(_purchaseId, alice);
+        vm.prank(alice);
+        productInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    function test_unsafePurchaseCompleted_DontHandleTwice() public {
+        (bytes memory packedInteraction, bytes memory signature) = _prepareInteraction(
+            DENOMINATOR_FEATURE_PURCHASE,
+            PurchaseInteractions.UNSAFE_PURCHASE_COMPLETED,
+            _unsafePurchaseCompletedData(0),
+            alice
+        );
+
+        // Setup the event check
+        vm.expectEmit(true, true, true, true, address(productInteraction));
+        emit PurchaseFeatureFacet.PurchaseCompleted(0, alice);
+        vm.prank(alice);
+        productInteraction.handleInteraction(packedInteraction, signature);
+
+        // Resend an interaction about the same purchase
+        (packedInteraction, signature) = _prepareInteraction(
+            DENOMINATOR_FEATURE_PURCHASE,
+            PurchaseInteractions.UNSAFE_PURCHASE_COMPLETED,
+            _unsafePurchaseCompletedData(0),
+            alice
+        );
+        vm.expectRevert(ProductInteractionDiamond.InteractionHandlingFailed.selector);
+        vm.prank(alice);
+        productInteraction.handleInteraction(packedInteraction, signature);
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                                   Helpers                                  */
     /* -------------------------------------------------------------------------- */
 
@@ -212,6 +272,10 @@ contract PurchaseFeatureInteractionTest is InteractionTest {
 
     function _purchaseCompletedData(uint256 _purchaseId, bytes32[] memory _proof) private pure returns (bytes memory) {
         return abi.encode(_purchaseId, _proof);
+    }
+
+    function _unsafePurchaseCompletedData(uint256 _purchaseId) private pure returns (bytes memory) {
+        return abi.encode(_purchaseId);
     }
 
     function _setOracleAndGetProof(uint256 _purchaseId, PurchaseStatus _status)

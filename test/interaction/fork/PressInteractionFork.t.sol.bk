@@ -4,14 +4,21 @@ pragma solidity 0.8.23;
 import "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
 import {Addresses, DeterminedAddress} from "script/DeterminedAddress.sol";
-import {PRODUCT_TYPE_PRESS, ProductTypes, DENOMINATOR_DAPP, DENOMINATOR_PRESS} from "src/constants/ProductTypes.sol";
-import {InteractionType, InteractionTypeLib, PressInteractions, ReferralInteractions} from "src/constants/InteractionType.sol";
+
+import {
+    InteractionType,
+    InteractionTypeLib,
+    PressInteractions,
+    ReferralInteractions
+} from "src/constants/InteractionType.sol";
+import {DENOMINATOR_DAPP, DENOMINATOR_PRESS, PRODUCT_TYPE_PRESS, ProductTypes} from "src/constants/ProductTypes.sol";
 import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 
 contract PressInteractionForkTest is Test, DeterminedAddress {
     uint256 private arbSepoliaFork;
+    uint256 private arbFork;
 
     ProductInteractionManager internal productInteractionManager;
     ProductInteractionDiamond internal productInteraction;
@@ -28,10 +35,21 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
 
     function setUp() public {
         // Create our forks
-        arbSepoliaFork = vm.createFork(vm.envString("ARBITRUM_SEPOLIA_RPC_URL"), 84946095);
+        arbSepoliaFork = vm.createFork(vm.envString("ARBITRUM_SEPOLIA_RPC_URL"), 84_946_095);
+        arbFork = vm.createFork(vm.envString("ARBITRUM_RPC_URL"), 271_977_079);
 
         // Create our validator ECDSA
         (validator, validatorPrivKey) = makeAddrAndKey("validator");
+    }
+
+    function test_interaction() public arbEnv {
+        vm.prank(0xC3433B729B571CDf500CD1BF7283E6b9DD26F295);
+        ProductInteractionDiamond diamond = productInteractionManager.getInteractionContract(
+            86_388_279_323_843_187_643_839_554_312_112_738_418_911_644_633_834_579_627_778_609_485_676_384_951_507
+        );
+        bytes memory data =
+            hex"e987c53d000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002502c0a24ffb01011ac196c4b8020c87c5904460bd4e952c4dedc8fea7a19afcf96cc908b422000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004186b778e09717c2d38f0f83d22810d734732afe1ab95c938d596bf77239eec8054e3692e98f81494c59ed14aac9ef304769b8cfb82f74ec4615800bc8ff4dd6041c00000000000000000000000000000000000000000000000000000000000000";
+        address(diamond).call(data);
     }
 
     function test_readArticle() public arbSepoliaEnv {
@@ -90,15 +108,16 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
         // Compact the signature into a single byte
         bytes memory signature = abi.encodePacked(r, s);
 
-        // 0x4b54f8685e53b2fefdebe82195a8f84ac3367618895e9d3e3cce93b7248cba2d2be2074b85ba80053a1c0d089b9ac6f15d50c12518d2dac6c2c19f2cbf559625
-        // 0x4b54f8685e53b2fefdebe82195a8f84ac3367618895e9d3e3cce93b7248cba2d2be2074b85ba80053a1c0d089b9ac6f15d50c12518d2dac6c2c19f2cbf5596251b
-
-        // bytes32 domainSeparator = 0x289abd584e6541e95c206050b83222c5f67f80e2eab1a86642a894f5387fc253;
         vm.prank(user);
-        productInteraction.handleInteraction(abi.encodePacked(DENOMINATOR_PRESS, interactionData), hex"4b54f8685e53b2fefdebe82195a8f84ac3367618895e9d3e3cce93b7248cba2d2be2074b85ba80053a1c0d089b9ac6f15d50c12518d2dac6c2c19f2cbf5596251b");
+        productInteraction.handleInteraction(
+            abi.encodePacked(DENOMINATOR_PRESS, interactionData),
+            hex"4b54f8685e53b2fefdebe82195a8f84ac3367618895e9d3e3cce93b7248cba2d2be2074b85ba80053a1c0d089b9ac6f15d50c12518d2dac6c2c19f2cbf5596251b"
+        );
 
         vm.prank(user);
-        address(productInteraction).call(hex"e987c53d000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002502c0a24ffbf0067366153df2ea32975977dc94a213ed20091f020a78745ea55a0c4c60053900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000410e8990c40cef41083d1aca9ad5b96ca5e825fe869e7092967eca5878fcd522da2d9590068de684c6d415ca7ff9b0245783d9fb119a5ce473bc0cbd74a3277c141c00000000000000000000000000000000000000000000000000000000000000");
+        address(productInteraction).call(
+            hex"e987c53d000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002502c0a24ffbf0067366153df2ea32975977dc94a213ed20091f020a78745ea55a0c4c60053900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000410e8990c40cef41083d1aca9ad5b96ca5e825fe869e7092967eca5878fcd522da2d9590068de684c6d415ca7ff9b0245783d9fb119a5ce473bc0cbd74a3277c141c00000000000000000000000000000000000000000000000000000000000000"
+        );
     }
 
     /* -------------------------------------------------------------------------- */
@@ -160,6 +179,20 @@ contract PressInteractionForkTest is Test, DeterminedAddress {
         // Grant the validator roles
         vm.prank(owner);
         productInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
+
+        _;
+    }
+
+    modifier arbEnv() {
+        vm.selectFork(arbFork);
+
+        Addresses memory addresses = _getAddresses();
+        productInteractionManager = ProductInteractionManager(addresses.productInteractionManager);
+        productInteraction = productInteractionManager.getInteractionContract(productId);
+
+        // Grant the validator roles
+        // vm.prank(owner);
+        // productInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
 
         _;
     }

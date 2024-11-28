@@ -50,6 +50,8 @@ contract PurchaseFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
             return _handlePurchaseStarted(_interactionData);
         } else if (_action == PurchaseInteractions.PURCHASE_COMPLETED) {
             return _handlePurchaseCompleted(_interactionData);
+        } else if (_action == PurchaseInteractions.UNSAFE_PURCHASE_COMPLETED) {
+            return _handlePurchaseCompletedNoProof(_interactionData);
         }
 
         revert UnknownInteraction();
@@ -114,6 +116,34 @@ contract PurchaseFeatureFacet is ProductInteractionStorageLib, IInteractionFacet
         emit PurchaseCompleted(data.purchaseId, msg.sender);
         // Just resend the data, in a lightweight variant, triming proof etc to lighten the flow
         return PurchaseInteractions.PURCHASE_COMPLETED.packForCampaign(msg.sender);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                Unsafe purchase completion (no oracle check)                */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev The data used for a purchase start process
+    /// @dev Not rly sensitive data, just the purchase ID
+    struct UnsafePurchseCompletedData {
+        uint256 purchaseId;
+    }
+
+    /// @dev Function for when a purchase is completed
+    function _handlePurchaseCompletedNoProof(bytes calldata _data) internal returns (bytes memory) {
+        // Parse the input data
+        UnsafePurchseCompletedData calldata data;
+        assembly {
+            data := _data.offset
+        }
+
+        // Ensure the purchase is not already processed
+        _ensureNotAlreadyPurchased(data.purchaseId);
+
+        // Emit the purchase start event
+        emit PurchaseCompleted(data.purchaseId, msg.sender);
+
+        // Just resend the data, in a lightweight variant, triming proof etc to lighten the flow
+        return PurchaseInteractions.UNSAFE_PURCHASE_COMPLETED.packForCampaign(msg.sender);
     }
 
     /// @dev Ensure the purchase is not already processed for a given user
