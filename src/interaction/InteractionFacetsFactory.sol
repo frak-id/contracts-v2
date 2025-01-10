@@ -13,6 +13,7 @@ import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
 import {PressInteractionFacet} from "./facets/PressInteractionFacet.sol";
 import {PurchaseFeatureFacet} from "./facets/PurchaseFeatureFacet.sol";
 import {ReferralFeatureFacet} from "./facets/ReferralFeatureFacet.sol";
+import {RetailInteractionFacet} from "./facets/RetailInteractionFacet.sol";
 import {WebShopInteractionFacet} from "./facets/WebShopInteractionFacet.sol";
 
 /// @title InteractionFacetsFactory
@@ -34,6 +35,7 @@ contract InteractionFacetsFactory is IFacetsFactory {
     IInteractionFacet private immutable PRESS_FACET;
     IInteractionFacet private immutable DAPP_FACET;
     IInteractionFacet private immutable WEB_SHOP_FACET;
+    IInteractionFacet private immutable RETAIL_FACET;
 
     /// @dev The feature facets addresses
     IInteractionFacet private immutable REFERRAL_FEATURE_FACET;
@@ -55,6 +57,7 @@ contract InteractionFacetsFactory is IFacetsFactory {
         PRESS_FACET = new PressInteractionFacet();
         DAPP_FACET = new DappInteractionFacet();
         WEB_SHOP_FACET = new WebShopInteractionFacet();
+        RETAIL_FACET = new RetailInteractionFacet();
 
         REFERRAL_FEATURE_FACET = new ReferralFeatureFacet(_referralRegistry);
         PURCHASE_FEATURE_FACET = new PurchaseFeatureFacet(_purchaseOracle);
@@ -111,6 +114,10 @@ contract InteractionFacetsFactory is IFacetsFactory {
         }
         if (productTypes.isWebShopType()) {
             facets[index] = WEB_SHOP_FACET;
+            index++;
+        }
+        if (productTypes.isRetailType()) {
+            facets[index] = RETAIL_FACET;
             index++;
         }
 
