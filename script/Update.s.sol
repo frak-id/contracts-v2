@@ -57,9 +57,7 @@ contract Update is Script, DeterminedAddress {
         vm.startBroadcast();
 
         // Deploy the facet factory
-        InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{
-            salt: 0xae4e57b886541829ba70efc84340653c41e2908c4b2e2db998fc48004e5ce2af
-        }(
+        InteractionFacetsFactory facetFactory = new InteractionFacetsFactory{salt: bytes32(uint256(1312))}(
             ReferralRegistry(addresses.referralRegistry),
             ProductRegistry(addresses.productRegistry),
             ProductAdministratorRegistry(addresses.productAdministratorRegistry),
@@ -77,8 +75,6 @@ contract Update is Script, DeterminedAddress {
     }
 
     function _updateCampaignsFactory(Addresses memory addresses) internal {
-        Addresses memory addresses = _getAddresses();
-
         ProductInteractionManager productInteractionManager =
             ProductInteractionManager(addresses.productInteractionManager);
 
