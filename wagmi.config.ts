@@ -33,6 +33,7 @@ export default defineConfig(
                 'PressInteractionFacet.json',
                 'DappInteractionFacet.json',
                 'ReferralFeatureFacet.json',
+                'RetailFeatureFacet.json',
                 'PurchaseFeatureFacet.json',
             ]),
         },
