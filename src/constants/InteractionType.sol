@@ -140,6 +140,11 @@ library WebShopInteractions {
     InteractionType constant OPEN = InteractionType.wrap(0xb311798f);
 }
 
+library RetailInteractions {
+    /// @dev `bytes4(keccak256("frak.retail.interaction.customer_meeting"))`
+    InteractionType constant CUSTOMER_MEETING = InteractionType.wrap(0x74489004);
+}
+
 library ReferralInteractions {
     /// @dev `bytes4(keccak256("frak.referral.interaction.referred"))`
     InteractionType constant REFERRED = InteractionType.wrap(0x010cc3b9);
