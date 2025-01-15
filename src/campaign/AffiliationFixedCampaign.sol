@@ -9,11 +9,13 @@ import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegi
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {CampaignBank} from "./CampaignBank.sol";
 import {InteractionCampaign} from "./InteractionCampaign.sol";
+import {CapConfig, CapState, CappedCampaign} from "./libs/CappedCampaign.sol";
+import {ActivationPeriod, TimeLockedCampaign} from "./libs/TimeLockedCampaign.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /// @dev Representing the config for a reward trigger of the campaign
-struct ReferralCampaignTriggerConfig {
+struct FixedAffiliationTriggerConfig {
     InteractionType interactionType;
     uint256 baseReward;
     uint256 userPercent;
@@ -22,42 +24,34 @@ struct ReferralCampaignTriggerConfig {
 }
 
 /// @dev Representing the config for the referral campaign
-struct ReferralCampaignConfig {
+struct AffiliationFixedCampaignConfig {
     // Optional name for the campaign (as bytes32)
     bytes32 name;
     // The associated campaign bank
     CampaignBank campaignBank;
     // Set of triggers for the campaign
-    ReferralCampaignTriggerConfig[] triggers;
+    FixedAffiliationTriggerConfig[] triggers;
     // Optional distribution cap config
-    ReferralCampaign.CapConfig capConfig;
+    CapConfig capConfig;
     // Optional activation period for the campaign
-    ReferralCampaign.ActivationPeriod activationPeriod;
+    ActivationPeriod activationPeriod;
 }
 
 /// @author @KONFeature
-/// @title ReferralCampaign
-/// @notice Smart contract for a referral based compagn
+/// @title AffiliationFixedCampaign
+/// @notice Represent an affiliation campaign with fixed rewards
 /// @custom:security-contact contact@frak.id
-contract ReferralCampaign is InteractionCampaign {
+contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLockedCampaign {
     using SafeTransferLib for address;
     using SafeCastLib for uint256;
     using InteractionTypeLib for bytes;
     using ReferralInteractions for bytes;
 
     /* -------------------------------------------------------------------------- */
-    /*                                   Events                                   */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev Event when the daily distribution cap is reset
-    event DistributionCapReset(uint48 previousTimestamp, uint256 distributedAmount);
-
-    /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
 
     error InvalidConfig();
-    error DistributionCapReached();
 
     /* -------------------------------------------------------------------------- */
     /*                              Immutable config                              */
@@ -92,60 +86,25 @@ contract ReferralCampaign is InteractionCampaign {
 
     /// @dev Representing the reward trigger storage, storage location is at:
     ///     (
-    ///         bytes32(uint256(keccak256('frak.campaign.referral.trigger')) - 1) &
+    ///         bytes32(uint256(keccak256('frak.campaign.affiliation-fixed.trigger')) - 1) &
     ///         0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ///     ) | _interactionType
     function _trigger(InteractionType _interactionType) private pure returns (RewardTrigger storage storagePtr) {
         assembly {
-            storagePtr.slot := or(0x2b590e368f6e51c03042de6eb3d37f464929de3b3f869c37f1eb01ab, _interactionType)
+            storagePtr.slot := or(0x000000009a66eab1dc06cf965a5dd434da376bfb8a26e5a07827dbae9f11e304, _interactionType)
         }
     }
 
-    /// @dev Representing the current cap state
-    /// @custom:storage-location erc7201:frak.campaign.capState
-    struct CapState {
-        uint48 startTimestamp;
-        uint208 distributedAmount;
-    }
-
-    /// @dev bytes32(uint256(keccak256('frak.campaign.referral.capState')) - 1)
-    function _capState() private pure returns (CapState storage storagePtr) {
-        assembly {
-            storagePtr.slot := 0x881caacfc312bc308261b04ba99d456fed46f678c5e99a1782daaeb374ee5ecc
-        }
-    }
-
-    /// @dev Representing the activation period
-    struct ActivationPeriod {
-        uint48 start;
-        uint48 end;
-    }
-
-    /// @dev Representing the cap config
-    struct CapConfig {
-        // Distribution cap period, in seconds
-        uint48 period;
-        // Distribution cap amount
-        uint208 amount;
-    }
-
-    bytes32 private constant _REFERRAL_CAMPAIGN_STORAGE_SLOT =
-        0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f;
-
-    /// @custom:storage-location erc7201:frak.campaign.referral
-    struct ReferralCampaignStorage {
+    /// @custom:storage-location erc7201:frak.campaign.affiliation-fixed
+    struct AffiliationFixedCampaignStorage {
         // Mapping of user + interaction type to triggered count
         mapping(uint256 userAndInteractionType => uint16 triggeredCount) userTriggeredCount;
-        /// @dev The distribution cap config
-        CapConfig capConfig;
-        /// @dev The start date of the campaign
-        ActivationPeriod activationPeriod;
     }
 
-    /// @dev bytes32(uint256(keccak256('frak.campaign.referral')) - 1)
-    function _referralCampaignStorage() private pure returns (ReferralCampaignStorage storage storagePtr) {
+    /// @dev bytes32(uint256(keccak256('frak.campaign.affiliation-fixed')) - 1)
+    function _storage() private pure returns (AffiliationFixedCampaignStorage storage storagePtr) {
         assembly {
-            storagePtr.slot := 0x1a8750ce484d3e646837fde7cca6507f02ff36bcb584c0638e67d94a44dffb1f
+            storagePtr.slot := 0x26def63c545368f8e4b3c82ea9bee91018c15d011c56c2ece861910b7ee72c62
         }
     }
 
@@ -154,7 +113,7 @@ contract ReferralCampaign is InteractionCampaign {
     /* -------------------------------------------------------------------------- */
 
     constructor(
-        ReferralCampaignConfig memory _config,
+        AffiliationFixedCampaignConfig memory _config,
         ReferralRegistry _referralRegistry,
         ProductAdministratorRegistry _productAdministratorRegistry,
         ProductInteractionDiamond _interaction
@@ -175,14 +134,13 @@ contract ReferralCampaign is InteractionCampaign {
         REFERRAL_TREE = _interaction.getReferralTree();
 
         // Set our config for the distribution cap and period
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-        campaignStorage.activationPeriod = _config.activationPeriod;
-        campaignStorage.capConfig = _config.capConfig;
+        _setActivationPeriod(_config.activationPeriod);
+        _setCapConfig(_config.capConfig);
 
         // Iterate over each triggers and set them
         uint256 triggerLength = _config.triggers.length;
         for (uint256 i = 0; i < triggerLength; i++) {
-            ReferralCampaignTriggerConfig memory triggerConfig = _config.triggers[i];
+            FixedAffiliationTriggerConfig memory triggerConfig = _config.triggers[i];
 
             RewardTrigger storage trigger = _trigger(triggerConfig.interactionType);
             trigger.baseReward = triggerConfig.baseReward.toUint192();
@@ -198,7 +156,7 @@ contract ReferralCampaign is InteractionCampaign {
 
     /// @dev Get the campaign metadata
     function getMetadata() public view override returns (string memory _type, string memory version, bytes32 name) {
-        _type = "frak.campaign.referral";
+        _type = "frak.campaign.affiliation-fixed";
         version = "0.0.1";
         name = _interactionCampaignStorage().name;
     }
@@ -209,30 +167,27 @@ contract ReferralCampaign is InteractionCampaign {
         view
         returns (CapConfig memory capConfig, ActivationPeriod memory activationPeriod, CampaignBank bank)
     {
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-
-        capConfig = campaignStorage.capConfig;
-        activationPeriod = campaignStorage.activationPeriod;
+        capConfig = _capConfig();
+        activationPeriod = _activationPeriod();
         bank = CAMPAIGN_BANK;
     }
 
     /// @dev Check if the campaign is active or not
     function isActive() public view override returns (bool) {
-        // Check if with start and end date
-        ReferralCampaignStorage storage campaignStorage = _referralCampaignStorage();
-
         // If it's not running, directly exit
         if (!_interactionCampaignStorage().isRunning) {
             return false;
         }
 
         // Check the activation period
-        ActivationPeriod storage activationPeriod = campaignStorage.activationPeriod;
-        if (activationPeriod.start != 0 && block.timestamp < activationPeriod.start) {
-            return false;
-        }
-        if (activationPeriod.end != 0 && block.timestamp > activationPeriod.end) {
-            return false;
+        {
+            ActivationPeriod storage activationPeriod = _activationPeriod();
+            if (
+                (activationPeriod.start != 0 && block.timestamp < activationPeriod.start)
+                    || (activationPeriod.end != 0 && block.timestamp > activationPeriod.end)
+            ) {
+                return false;
+            }
         }
 
         // Check if the campaign bank is able to distribute tokens
@@ -267,7 +222,7 @@ contract ReferralCampaign is InteractionCampaign {
             assembly {
                 countKey := or(user, interactionType)
             }
-            if (_referralCampaignStorage().userTriggeredCount[countKey] >= trigger.maxCountPerUser) {
+            if (_storage().userTriggeredCount[countKey] >= trigger.maxCountPerUser) {
                 return;
             }
         }
@@ -277,7 +232,7 @@ contract ReferralCampaign is InteractionCampaign {
 
         // Update the count if we got a computed key (otherwise, we don't care)
         if (countKey != 0) {
-            _referralCampaignStorage().userTriggeredCount[countKey]++;
+            _storage().userTriggeredCount[countKey]++;
         }
     }
 
@@ -325,36 +280,13 @@ contract ReferralCampaign is InteractionCampaign {
             CAMPAIGN_BANK.pushRewards(rewards);
 
             // If we have no cap, exit
-            CapConfig storage capConfig = _referralCampaignStorage().capConfig;
+            CapConfig storage capConfig = _capConfig();
             if (capConfig.amount == 0) {
                 return;
             }
 
             // Update the cap
-            _updateDistributionCap(capConfig, _amount);
-        }
-    }
-
-    /// @dev Update the distribution cap
-    /// @dev  And reset it if needed
-    function _updateDistributionCap(CapConfig storage _capConfig, uint256 _distributedAmount) private {
-        CapState memory capReadOnly = _capState();
-
-        unchecked {
-            // Cap reset case
-            if (block.timestamp > capReadOnly.startTimestamp + _capConfig.period) {
-                emit DistributionCapReset(capReadOnly.startTimestamp, capReadOnly.distributedAmount);
-
-                _capState().startTimestamp = uint48(block.timestamp);
-                _capState().distributedAmount = uint208(_distributedAmount);
-
-                return;
-            }
-            // Check if we can distribute the reward
-            if (capReadOnly.distributedAmount + _distributedAmount > _capConfig.amount) {
-                revert DistributionCapReached();
-            }
-            _capState().distributedAmount += uint208(_distributedAmount);
+            _updateDistributionCap(_amount);
         }
     }
 
@@ -363,12 +295,12 @@ contract ReferralCampaign is InteractionCampaign {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Update the campaign activation period
-    function updateActivationPeriod(ActivationPeriod calldata _activationPeriod) external onlyAllowedManager {
-        _referralCampaignStorage().activationPeriod = _activationPeriod;
+    function updateActivationPeriod(ActivationPeriod memory _newPeriod) external onlyAllowedManager {
+        _setActivationPeriod(_newPeriod);
     }
 
     /// @dev Update the campaign activation period
-    function updateCapConfig(CapConfig calldata _capConfig) external onlyAllowedManager {
-        _referralCampaignStorage().capConfig = _capConfig;
+    function updateCapConfig(CapConfig memory _config) external onlyAllowedManager {
+        _setCapConfig(_config);
     }
 }

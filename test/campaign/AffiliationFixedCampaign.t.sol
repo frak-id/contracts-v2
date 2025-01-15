@@ -3,11 +3,16 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
+
+import {
+    AffiliationFixedCampaign,
+    AffiliationFixedCampaignConfig,
+    FixedAffiliationTriggerConfig
+} from "src/campaign/AffiliationFixedCampaign.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
-import {
-    ReferralCampaign, ReferralCampaignConfig, ReferralCampaignTriggerConfig
-} from "src/campaign/ReferralCampaign.sol";
+import {CapConfig, CappedCampaign} from "src/campaign/libs/CappedCampaign.sol";
+import {ActivationPeriod} from "src/campaign/libs/TimeLockedCampaign.sol";
 import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     PRODUCT_TYPE_DAPP,
@@ -17,8 +22,8 @@ import {
 } from "src/constants/ProductTypes.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 
-/// @dev Test contract our referral campaign
-contract ReferralCampaignTest is EcosystemAwareTest {
+/// @dev Test contract our fixed affiliation campaign
+contract AffiliationFixedCampaignTest is EcosystemAwareTest {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
@@ -37,7 +42,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
     CampaignBank private campaignBank;
 
     /// @dev The campaign we will test
-    ReferralCampaign private referralCampaign;
+    AffiliationFixedCampaign private campaign;
 
     function setUp() public {
         _initEcosystemAwareTest();
@@ -78,29 +83,29 @@ contract ReferralCampaignTest is EcosystemAwareTest {
     /* -------------------------------------------------------------------------- */
 
     function test_construct_InvalidConfig_emptyTrigger() public {
-        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
-            triggers: new ReferralCampaignTriggerConfig[](0),
-            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            triggers: new FixedAffiliationTriggerConfig[](0),
+            capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
             campaignBank: campaignBank
         });
 
-        vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, adminRegistry, productInteraction);
+        vm.expectRevert(AffiliationFixedCampaign.InvalidConfig.selector);
+        new AffiliationFixedCampaign(config, referralRegistry, adminRegistry, productInteraction);
     }
 
     function test_construct_InvalidConfig_noBank() public {
-        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
             triggers: _buildTriggers(),
-            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
             campaignBank: CampaignBank(address(0))
         });
 
-        vm.expectRevert(ReferralCampaign.InvalidConfig.selector);
-        new ReferralCampaign(config, referralRegistry, adminRegistry, productInteraction);
+        vm.expectRevert(AffiliationFixedCampaign.InvalidConfig.selector);
+        new AffiliationFixedCampaign(config, referralRegistry, adminRegistry, productInteraction);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -109,21 +114,20 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
     function test_metadata() public withSimpleConfig {
         // Ensure the metadata is correct
-        (string memory campaignType, string memory version, bytes32 name) = referralCampaign.getMetadata();
+        (string memory campaignType, string memory version, bytes32 name) = campaign.getMetadata();
 
-        assertEq(campaignType, "frak.campaign.referral");
+        assertEq(campaignType, "frak.campaign.affiliation-fixed");
         assertEq(version, "0.0.1");
         assertEq(name, bytes32("test"));
     }
 
     function test_supportProductType() public withSimpleConfig {
-        assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_DAPP), false);
-        assertEq(referralCampaign.supportProductType(ProductTypes.wrap(uint256(1 << 9))), false);
-        assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_PRESS), false);
-        assertEq(referralCampaign.supportProductType(PRODUCT_TYPE_FEATURE_REFERRAL), true);
+        assertEq(campaign.supportProductType(PRODUCT_TYPE_DAPP), false);
+        assertEq(campaign.supportProductType(ProductTypes.wrap(uint256(1 << 9))), false);
+        assertEq(campaign.supportProductType(PRODUCT_TYPE_PRESS), false);
+        assertEq(campaign.supportProductType(PRODUCT_TYPE_FEATURE_REFERRAL), true);
         assertEq(
-            referralCampaign.supportProductType(PRODUCT_TYPE_FEATURE_REFERRAL | PRODUCT_TYPE_DAPP | PRODUCT_TYPE_PRESS),
-            true
+            campaign.supportProductType(PRODUCT_TYPE_FEATURE_REFERRAL | PRODUCT_TYPE_DAPP | PRODUCT_TYPE_PRESS), true
         );
     }
 
@@ -133,37 +137,37 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
     function test_setRunningStatus() public withSimpleConfig {
         // Ensure the campaign is running
-        assertTrue(referralCampaign.isRunning());
+        assertTrue(campaign.isRunning());
 
         vm.prank(campaignManager);
-        referralCampaign.setRunningStatus(false);
+        campaign.setRunningStatus(false);
 
         // Ensure the campaign is not running
-        assertFalse(referralCampaign.isRunning());
+        assertFalse(campaign.isRunning());
 
         // Ensure the product owner can start the campaign
         vm.prank(productOwner);
-        referralCampaign.setRunningStatus(true);
+        campaign.setRunningStatus(true);
 
         // Ensure the campaign is running
-        assertTrue(referralCampaign.isRunning());
+        assertTrue(campaign.isRunning());
     }
 
     function test_setRunningStatus_Unauthorized() public withSimpleConfig {
         // Ensure the campaign is running
-        assertTrue(referralCampaign.isRunning());
+        assertTrue(campaign.isRunning());
 
         // Try to stop the campaign, ensure failing if we don't have the right roles
         vm.expectRevert(InteractionCampaign.Unauthorized.selector);
-        referralCampaign.setRunningStatus(false);
+        campaign.setRunningStatus(false);
 
         // Try to stop the campaign, ensure failing if we don't have the right roles
         vm.prank(interactionManager);
         vm.expectRevert(InteractionCampaign.Unauthorized.selector);
-        referralCampaign.setRunningStatus(false);
+        campaign.setRunningStatus(false);
 
         // Ensure the campaign is not running
-        assertTrue(referralCampaign.isRunning());
+        assertTrue(campaign.isRunning());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -172,36 +176,36 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
     function test_setup_isActive() public withSimpleConfig {
         // Ensure the campaign is running
-        assertTrue(referralCampaign.isActive());
+        assertTrue(campaign.isActive());
     }
 
     function test_isActive_interactionCampaignInactive() public withSimpleConfig {
         vm.prank(productOwner);
-        referralCampaign.setRunningStatus(false);
+        campaign.setRunningStatus(false);
 
         // Ensure the campaign is running
-        assertFalse(referralCampaign.isActive());
+        assertFalse(campaign.isActive());
     }
 
     function test_isActive_withActivationPeriod() public withActivationConfig(80, 120) {
-        assertTrue(referralCampaign.isActive());
+        assertTrue(campaign.isActive());
     }
 
     function test_isActive_withActivationStartNotPassed() public withActivationConfig(80, 120) {
         vm.warp(75);
-        assertFalse(referralCampaign.isActive());
+        assertFalse(campaign.isActive());
     }
 
     function test_isActive_withActivationEndPassed() public withActivationConfig(80, 120) {
         vm.warp(125);
-        assertFalse(referralCampaign.isActive());
+        assertFalse(campaign.isActive());
     }
 
     function test_isActive_withBankDisabled() public withSimpleConfig {
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAuthorisation(address(referralCampaign), false);
+        campaignBank.updateCampaignAuthorisation(address(campaign), false);
 
-        assertFalse(referralCampaign.isActive());
+        assertFalse(campaign.isActive());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -210,38 +214,38 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
     function test_updateActivationPeriod_Unauthorized() public withSimpleConfig {
         vm.expectRevert(InteractionCampaign.Unauthorized.selector);
-        referralCampaign.updateActivationPeriod(ReferralCampaign.ActivationPeriod(uint48(0), uint48(0)));
+        campaign.updateActivationPeriod(ActivationPeriod(uint48(0), uint48(0)));
     }
 
     function test_updateCapConfig_Unauthorized() public withSimpleConfig {
         vm.expectRevert(InteractionCampaign.Unauthorized.selector);
-        referralCampaign.updateCapConfig(ReferralCampaign.CapConfig(uint48(0), uint208(0)));
+        campaign.updateCapConfig(CapConfig(uint48(0), uint208(0)));
     }
 
     function test_updateActivationPeriod() public withSimpleConfig {
-        assertTrue(referralCampaign.isActive());
+        assertTrue(campaign.isActive());
 
         uint48 time = uint48(block.timestamp);
 
         vm.prank(campaignManager);
-        referralCampaign.updateActivationPeriod(ReferralCampaign.ActivationPeriod(time - 1, time + 1));
-        assertTrue(referralCampaign.isActive());
+        campaign.updateActivationPeriod(ActivationPeriod(time - 1, time + 1));
+        assertTrue(campaign.isActive());
 
         // Get config
-        (, ReferralCampaign.ActivationPeriod memory config,) = referralCampaign.getConfig();
+        (, ActivationPeriod memory config,) = campaign.getConfig();
         assertEq(config.start, time - 1);
         assertEq(config.end, time + 1);
 
         vm.warp(time + 2);
-        assertFalse(referralCampaign.isActive());
+        assertFalse(campaign.isActive());
     }
 
     function test_updateCapConfig() public withSimpleConfig {
         vm.prank(campaignManager);
-        referralCampaign.updateCapConfig(ReferralCampaign.CapConfig(uint48(1312), uint208(10 ether)));
+        campaign.updateCapConfig(CapConfig(uint48(1312), uint208(10 ether)));
 
         // Get config
-        (ReferralCampaign.CapConfig memory config,,) = referralCampaign.getConfig();
+        (CapConfig memory config,,) = campaign.getConfig();
         assertEq(config.period, uint48(1312));
         assertEq(config.amount, uint208(10 ether));
     }
@@ -255,26 +259,26 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
         // Ensure only the emitter can push interactions
         vm.expectRevert(InteractionCampaign.Unauthorized.selector);
-        referralCampaign.handleInteraction(fckedUpData);
+        campaign.handleInteraction(fckedUpData);
     }
 
     function test_handleInteraction_InactiveCampaign() public withSimpleConfig {
         bytes memory fckedUpData = hex"13";
 
         vm.prank(campaignManager);
-        referralCampaign.setRunningStatus(false);
+        campaign.setRunningStatus(false);
 
         // Ensure only the emitter can push interactions
         vm.prank(interactionEmitter);
         vm.expectRevert(InteractionCampaign.InactiveCampaign.selector);
-        referralCampaign.handleInteraction(fckedUpData);
+        campaign.handleInteraction(fckedUpData);
     }
 
     function test_handleInteraction_doNothingForUnknownInteraction() public withSimpleConfig {
         bytes memory fckedUpData = hex"13";
 
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(fckedUpData);
+        campaign.handleInteraction(fckedUpData);
 
         // Ensure no reward was added
         assertNoRewardDistributed();
@@ -284,7 +288,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
 
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
 
         // Ensure no reward was added
         assertNoRewardDistributed();
@@ -294,7 +298,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
 
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
 
         // Ensure the reward was added
         assertRewardDistributed();
@@ -306,14 +310,14 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         bytes memory interactionData = InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRED, alice);
 
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
 
         assertRewardDistributed();
         uint256 prevAliceBalance = campaignBank.getPendingAmount(alice);
 
         // Try to push the same interaction again
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
 
         // Ensure the reward was not added
         assertEq(campaignBank.getPendingAmount(alice), prevAliceBalance);
@@ -326,14 +330,14 @@ contract ReferralCampaignTest is EcosystemAwareTest {
             InteractionTypeLib.packForCampaign(ReferralInteractions.REFERRAL_LINK_CREATION, alice);
 
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
 
         assertRewardDistributed();
         uint256 prevAliceBalance = campaignBank.getPendingAmount(alice);
 
         // Try to push the same interaction again
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
 
         // Ensure the reward was not added
         assertGt(campaignBank.getPendingAmount(alice), prevAliceBalance);
@@ -341,7 +345,7 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
         // Try to push the same interaction again
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
         assertGt(campaignBank.getPendingAmount(alice), prevAliceBalance);
     }
 
@@ -353,8 +357,8 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
         // Distrubte two rewards (should hit the cap since simple config have reward of 10eth)
         vm.startPrank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
         vm.stopPrank();
 
         // Ensure the reward was added
@@ -362,8 +366,8 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
         // Ensure next reward trigger the cap hit
         vm.prank(interactionEmitter);
-        vm.expectRevert(ReferralCampaign.DistributionCapReached.selector);
-        referralCampaign.handleInteraction(interactionData);
+        vm.expectRevert(CappedCampaign.DistributionCapReached.selector);
+        campaign.handleInteraction(interactionData);
     }
 
     /// @dev Test that the maxCount per user is effictive and taken in account
@@ -374,8 +378,8 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
         // Distrubte two rewards (should hit the cap since simple config have reward of 10eth)
         vm.startPrank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
         vm.stopPrank();
 
         // Ensure the reward was added
@@ -383,8 +387,8 @@ contract ReferralCampaignTest is EcosystemAwareTest {
 
         // Ensure next reward trigger the cap hit
         vm.prank(interactionEmitter);
-        vm.expectRevert(ReferralCampaign.DistributionCapReached.selector);
-        referralCampaign.handleInteraction(interactionData);
+        vm.expectRevert(CappedCampaign.DistributionCapReached.selector);
+        campaign.handleInteraction(interactionData);
 
         uint256 prevAliceBalance = campaignBank.getPendingAmount(alice);
 
@@ -393,9 +397,9 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         vm.warp(block.timestamp + 11);
 
         vm.expectEmit(true, true, true, true);
-        emit ReferralCampaign.DistributionCapReset(uint48(prevTimestamp), 20 ether);
+        emit CappedCampaign.DistributionCapReset(uint48(prevTimestamp), 20 ether);
         vm.prank(interactionEmitter);
-        referralCampaign.handleInteraction(interactionData);
+        campaign.handleInteraction(interactionData);
 
         // Ensure the reward was added
         assertGt(campaignBank.getPendingAmount(alice), prevAliceBalance);
@@ -426,11 +430,11 @@ contract ReferralCampaignTest is EcosystemAwareTest {
     modifier withSimpleConfig() {
         vm.pauseGasMetering();
         // Build a config
-        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
             triggers: _buildTriggers(),
-            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
             campaignBank: campaignBank
         });
 
@@ -443,11 +447,11 @@ contract ReferralCampaignTest is EcosystemAwareTest {
     modifier withCappedConfig(uint256 capAmount, uint256 capPeriod) {
         vm.pauseGasMetering();
         // Build a config
-        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
             triggers: _buildTriggers(),
-            capConfig: ReferralCampaign.CapConfig({period: uint48(capPeriod), amount: uint208(capAmount)}),
-            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            capConfig: CapConfig({period: uint48(capPeriod), amount: uint208(capAmount)}),
+            activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
             campaignBank: campaignBank
         });
 
@@ -460,11 +464,11 @@ contract ReferralCampaignTest is EcosystemAwareTest {
     modifier withActivationConfig(uint256 start, uint256 end) {
         vm.pauseGasMetering();
         // Build a config
-        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
             triggers: _buildTriggers(),
-            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(start), end: uint48(end)}),
+            capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ActivationPeriod({start: uint48(start), end: uint48(end)}),
             campaignBank: campaignBank
         });
 
@@ -474,17 +478,17 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         _;
     }
 
-    function _buildTriggers() private pure returns (ReferralCampaignTriggerConfig[] memory triggers) {
-        triggers = new ReferralCampaignTriggerConfig[](2);
+    function _buildTriggers() private pure returns (FixedAffiliationTriggerConfig[] memory triggers) {
+        triggers = new FixedAffiliationTriggerConfig[](2);
 
-        triggers[0] = ReferralCampaignTriggerConfig({
+        triggers[0] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
             userPercent: 5000, // 50%
             deperditionPerLevel: 8000, // 80%
             maxCountPerUser: 1
         });
-        triggers[1] = ReferralCampaignTriggerConfig({
+        triggers[1] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRAL_LINK_CREATION,
             baseReward: 10 ether,
             userPercent: 5000, // 50%
@@ -493,13 +497,13 @@ contract ReferralCampaignTest is EcosystemAwareTest {
         });
     }
 
-    function _campaignSetup(ReferralCampaignConfig memory _config) private {
+    function _campaignSetup(AffiliationFixedCampaignConfig memory _config) private {
         // Deploy the campaign
-        referralCampaign = new ReferralCampaign(_config, referralRegistry, adminRegistry, productInteraction);
+        campaign = new AffiliationFixedCampaign(_config, referralRegistry, adminRegistry, productInteraction);
 
         // Allow the campaign bank to distribute rewards
         vm.prank(campaignManager);
-        campaignBank.updateCampaignAuthorisation(address(referralCampaign), true);
+        campaignBank.updateCampaignAuthorisation(address(campaign), true);
     }
 
     modifier withReferralChain() {

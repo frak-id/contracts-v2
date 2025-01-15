@@ -4,11 +4,16 @@ pragma solidity ^0.8.0;
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
 import {Ownable} from "solady/auth/Ownable.sol";
+
+import {
+    AffiliationFixedCampaign,
+    AffiliationFixedCampaignConfig,
+    FixedAffiliationTriggerConfig
+} from "src/campaign/AffiliationFixedCampaign.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
-import {
-    ReferralCampaign, ReferralCampaignConfig, ReferralCampaignTriggerConfig
-} from "src/campaign/ReferralCampaign.sol";
+import {CapConfig} from "src/campaign/libs/CappedCampaign.sol";
+import {ActivationPeriod} from "src/campaign/libs/TimeLockedCampaign.sol";
 import {ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
     DENOMINATOR_DAPP,
@@ -263,8 +268,8 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
     /* -------------------------------------------------------------------------- */
 
     function test_detachCampaigns_single() public {
-        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
-        bytes memory initData = _getReferralCampaignConfigInitData();
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.affiliation-fixed"));
+        bytes memory initData = _getAffiliationFixedCampaignConfigInitData();
 
         // Deploy interaction and add campaign
         vm.startPrank(productOwner);
@@ -291,8 +296,8 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
     }
 
     function test_detachCampaigns_multi() public {
-        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
-        bytes memory initData = _getReferralCampaignConfigInitData();
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.affiliation-fixed"));
+        bytes memory initData = _getAffiliationFixedCampaignConfigInitData();
 
         // Deploy interaction and add campaign
         vm.startPrank(productOwner);
@@ -331,8 +336,8 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
     }
 
     function test_deployCampaign() public {
-        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
-        bytes memory initData = _getReferralCampaignConfigInitData();
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.affiliation-fixed"));
+        bytes memory initData = _getAffiliationFixedCampaignConfigInitData();
 
         // Deploy interaction
         vm.prank(productOwner);
@@ -380,17 +385,17 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
     /*                                   Helpers                                  */
     /* -------------------------------------------------------------------------- */
 
-    function _getReferralCampaignConfigInitData() internal returns (bytes memory initData) {
+    function _getAffiliationFixedCampaignConfigInitData() internal returns (bytes memory initData) {
         vm.pauseGasMetering();
-        ReferralCampaignTriggerConfig[] memory triggers = new ReferralCampaignTriggerConfig[](2);
-        triggers[0] = ReferralCampaignTriggerConfig({
+        FixedAffiliationTriggerConfig[] memory triggers = new FixedAffiliationTriggerConfig[](2);
+        triggers[0] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
             userPercent: 5000, // 50%
             deperditionPerLevel: 8000, // 80%
             maxCountPerUser: 1
         });
-        triggers[1] = ReferralCampaignTriggerConfig({
+        triggers[1] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRAL_LINK_CREATION,
             baseReward: 10 ether,
             userPercent: 5000, // 50%
@@ -398,11 +403,11 @@ contract ProductInteractionManagerTest is EcosystemAwareTest {
             maxCountPerUser: 1
         });
 
-        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
             triggers: triggers,
-            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
             campaignBank: campaignBank
         });
         initData = abi.encode(config);
