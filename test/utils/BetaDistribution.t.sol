@@ -46,6 +46,38 @@ contract BetaDistributionTest is Test {
         assertNotEq(p2, p3);
     }
 
+    // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=10
+    function test_integerBetaPoint_average_beta10() public {
+        uint256 beta = 10;
+        uint256 runs = 10_000;
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < runs; i++) {
+            total += BetaDistribution.getBetaIntegerPoint(beta);
+        }
+
+        uint256 average = total / runs;
+
+        assertGt(average, 0.16e18, "Average should be greater than 0.16");
+        assertLt(average, 0.18e18, "Average should be lower than 0.18");
+    }
+
+    // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=2
+    function test_integerBetaPoint_average_beta2() public {
+        uint256 beta = 2;
+        uint256 runs = 10_000;
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < runs; i++) {
+            total += BetaDistribution.getBetaIntegerPoint(beta);
+        }
+
+        uint256 average = total / runs;
+
+        assertGt(average, 0.49e18, "Average should be greater than 0.49");
+        assertLt(average, 0.51e18, "Average should be lower than 0.51");
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                Wad beta test                               */
     /* -------------------------------------------------------------------------- */
@@ -99,5 +131,37 @@ contract BetaDistributionTest is Test {
         for (uint256 i = 0; i < runs; i++) {
             console.log(points[i]);
         }
+    }
+
+    // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=13.12
+    function test_wadBetaPoint_average_beta13() public {
+        uint256 betaWad = 13.12e18;
+        uint256 runs = 10_000;
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < runs; i++) {
+            total += BetaDistribution.getBetaWadPoint(betaWad);
+        }
+
+        uint256 average = total / runs;
+
+        assertGt(average, 0.12e18, "Average should be greater than 0.12");
+        assertLt(average, 0.14e18, "Average should be lower than 0.14");
+    }
+
+    // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=2.1
+    function test_wadBetaPoint_average_beta2() public {
+        uint256 betaWad = 2.1e18;
+        uint256 runs = 10_000;
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < runs; i++) {
+            total += BetaDistribution.getBetaWadPoint(betaWad);
+        }
+
+        uint256 average = total / runs;
+
+        assertGt(average, 0.49e18, "Average should be greater than 0.49");
+        assertLt(average, 0.51e18, "Average should be lower than 0.51");
     }
 }

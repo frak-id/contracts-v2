@@ -88,14 +88,19 @@ library BetaDistribution {
         // Initialize PRNG
         LibPRNG.PRNG memory prng = _initPrngSeed();
 
+        // Calculate fractional part in WAD
+        uint256 fraction = wadBeta % WAD;
+        uint256 betaFloor = wadBeta / WAD; // floor(β)
+
+        // If we got no fractional part, we can just return as an integer point
+        if (fraction == 0) {
+            return getBetaIntegerPoint(betaFloor);
+        }
+
         // We can "safely" use an unchecked block here since `_getPoint` return safe values and  `divWad` do a check
         unchecked {
             // Get integer bounds of beta
-            uint256 betaFloor = wadBeta / WAD; // floor(β)
             uint256 betaCeil = betaFloor + 1; // ceil(β)
-
-            // Calculate fractional part in WAD
-            uint256 fraction = wadBeta % WAD;
 
             // Generate first sample with floor(β)
             uint256 point1 = _getPoint(prng, betaFloor);

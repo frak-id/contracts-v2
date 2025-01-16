@@ -69,6 +69,9 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
     /// @dev Pourcentage base
     uint256 private constant PERCENT_BASE = 10_000;
 
+    /// @dev Multiplier to map a percent to a WAD point decimals (1e18 / 1e4)
+    uint256 private constant PERCENT_TO_WAD = 1e14;
+
     /// @dev The max exploration level of the referral tree
     uint256 private constant MAX_EXPLORATION_LEVEL = 5;
 
@@ -166,7 +169,7 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
 
             RewardTrigger storage trigger = _trigger(triggerConfig.interactionType);
             trigger.startReward = triggerConfig.startReward.toUint96();
-            trigger.endReward = triggerConfig.endReward.toUint16();
+            trigger.endReward = triggerConfig.endReward.toUint96();
             trigger.percentBeta = triggerConfig.percentBeta.toUint48();
             trigger.maxCountPerUser = triggerConfig.maxCountPerUser.toUint16();
         }
@@ -250,7 +253,7 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
         }
 
         // Get a point on the beta curve following alpha = 2 and beta = trigger.percentBeta
-        uint256 wadPoint = BetaDistribution.getBetaWadPoint(trigger.percentBeta * 1e14);
+        uint256 wadPoint = BetaDistribution.getBetaWadPoint(uint256(trigger.percentBeta) * PERCENT_TO_WAD);
 
         // Move this point accross the rward range (0 = start, 1 = end)
         uint256 reward = trigger.startReward + (uint256(trigger.endReward - trigger.startReward)).mulWad(wadPoint);
