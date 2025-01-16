@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-
 import {
     AffiliationFixedCampaign,
     AffiliationFixedCampaignConfig,
@@ -12,6 +11,7 @@ import {
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {InteractionCampaign} from "src/campaign/InteractionCampaign.sol";
 import {CapConfig, CappedCampaign} from "src/campaign/libs/CappedCampaign.sol";
+import {RewardChainingConfig} from "src/campaign/libs/RewardChainingCampaign.sol";
 import {ActivationPeriod} from "src/campaign/libs/TimeLockedCampaign.sol";
 import {InteractionTypeLib, ReferralInteractions} from "src/constants/InteractionType.sol";
 import {
@@ -88,7 +88,11 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
             triggers: new FixedAffiliationTriggerConfig[](0),
             capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
             activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
-            campaignBank: campaignBank
+            campaignBank: campaignBank,
+            chainingConfig: RewardChainingConfig({
+                userPercent: 5000, // 50%
+                deperditionPerLevel: 8000 // 80%
+            })
         });
 
         vm.expectRevert(AffiliationFixedCampaign.InvalidConfig.selector);
@@ -101,7 +105,11 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
             triggers: _buildTriggers(),
             capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
             activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
-            campaignBank: CampaignBank(address(0))
+            campaignBank: CampaignBank(address(0)),
+            chainingConfig: RewardChainingConfig({
+                userPercent: 5000, // 50%
+                deperditionPerLevel: 8000 // 80%
+            })
         });
 
         vm.expectRevert(AffiliationFixedCampaign.InvalidConfig.selector);
@@ -432,10 +440,14 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
         // Build a config
         AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
-            triggers: _buildTriggers(),
             capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
             activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
-            campaignBank: campaignBank
+            campaignBank: campaignBank,
+            chainingConfig: RewardChainingConfig({
+                userPercent: 5000, // 50%
+                deperditionPerLevel: 8000 // 80%
+            }),
+            triggers: _buildTriggers()
         });
 
         // Continue the execution
@@ -452,7 +464,11 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
             triggers: _buildTriggers(),
             capConfig: CapConfig({period: uint48(capPeriod), amount: uint208(capAmount)}),
             activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
-            campaignBank: campaignBank
+            campaignBank: campaignBank,
+            chainingConfig: RewardChainingConfig({
+                userPercent: 5000, // 50%
+                deperditionPerLevel: 8000 // 80%
+            })
         });
 
         // Continue the execution
@@ -469,7 +485,11 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
             triggers: _buildTriggers(),
             capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
             activationPeriod: ActivationPeriod({start: uint48(start), end: uint48(end)}),
-            campaignBank: campaignBank
+            campaignBank: campaignBank,
+            chainingConfig: RewardChainingConfig({
+                userPercent: 5000, // 50%
+                deperditionPerLevel: 8000 // 80%
+            })
         });
 
         // Continue the execution
@@ -484,15 +504,11 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
         triggers[0] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
-            userPercent: 5000, // 50%
-            deperditionPerLevel: 8000, // 80%
             maxCountPerUser: 1
         });
         triggers[1] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRAL_LINK_CREATION,
             baseReward: 10 ether,
-            userPercent: 5000, // 50%
-            deperditionPerLevel: 8000, // 80%
             maxCountPerUser: 0
         });
     }

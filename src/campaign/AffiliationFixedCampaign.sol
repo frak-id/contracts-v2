@@ -10,6 +10,7 @@ import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {CampaignBank} from "./CampaignBank.sol";
 import {InteractionCampaign} from "./InteractionCampaign.sol";
 import {CapConfig, CapState, CappedCampaign} from "./libs/CappedCampaign.sol";
+import {RewardChainingConfig} from "./libs/RewardChainingCampaign.sol";
 import {ActivationPeriod, TimeLockedCampaign} from "./libs/TimeLockedCampaign.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
@@ -18,8 +19,6 @@ import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 struct FixedAffiliationTriggerConfig {
     InteractionType interactionType;
     uint256 baseReward;
-    uint256 userPercent;
-    uint256 deperditionPerLevel;
     uint256 maxCountPerUser;
 }
 
@@ -29,12 +28,14 @@ struct AffiliationFixedCampaignConfig {
     bytes32 name;
     // The associated campaign bank
     CampaignBank campaignBank;
-    // Set of triggers for the campaign
-    FixedAffiliationTriggerConfig[] triggers;
     // Optional distribution cap config
     CapConfig capConfig;
     // Optional activation period for the campaign
     ActivationPeriod activationPeriod;
+    // The chaining config;
+    RewardChainingConfig chainingConfig;
+    // Set of triggers for the campaign
+    FixedAffiliationTriggerConfig[] triggers;
 }
 
 /// @author @KONFeature
@@ -72,16 +73,20 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
     /// @dev The associated bank campaign
     CampaignBank private immutable CAMPAIGN_BANK;
 
+    /// @dev The deperdition of reward per referral level
+    uint256 private immutable DEPERDITION_PER_LEVEL;
+
+    /// @dev The user percent of the reward (the rest is distributed accross the referral chain)
+    uint256 private immutable USER_PERCENT;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
     /// @dev Representing a reward trigger
     struct RewardTrigger {
-        uint192 baseReward;
-        uint16 userPercent;
-        uint16 deperditionPerLevel;
         uint16 maxCountPerUser;
+        uint240 baseReward;
     }
 
     /// @dev Representing the reward trigger storage, storage location is at:
@@ -133,6 +138,10 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
         // Store the referral tree
         REFERRAL_TREE = _interaction.getReferralTree();
 
+        // Store chaining config
+        USER_PERCENT = _config.chainingConfig.userPercent;
+        DEPERDITION_PER_LEVEL = _config.chainingConfig.deperditionPerLevel;
+
         // Set our config for the distribution cap and period
         _setActivationPeriod(_config.activationPeriod);
         _setCapConfig(_config.capConfig);
@@ -143,9 +152,7 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
             FixedAffiliationTriggerConfig memory triggerConfig = _config.triggers[i];
 
             RewardTrigger storage trigger = _trigger(triggerConfig.interactionType);
-            trigger.baseReward = triggerConfig.baseReward.toUint192();
-            trigger.userPercent = triggerConfig.userPercent.toUint16();
-            trigger.deperditionPerLevel = triggerConfig.deperditionPerLevel.toUint16();
+            trigger.baseReward = triggerConfig.baseReward.toUint240();
             trigger.maxCountPerUser = triggerConfig.maxCountPerUser.toUint16();
         }
     }
@@ -228,7 +235,7 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
         }
 
         // Perform the token distribution
-        _performTokenDistribution(user, trigger.baseReward, trigger.userPercent, trigger.deperditionPerLevel);
+        _performTokenDistribution(user, trigger.baseReward);
 
         // Update the count if we got a computed key (otherwise, we don't care)
         if (countKey != 0) {
@@ -237,9 +244,7 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
     }
 
     /// @dev Perform a token distrubtion for all the referrers of `_user`, with the initial amount to `_amount`
-    function _performTokenDistribution(address _user, uint256 _amount, uint256 _userPercent, uint256 _deperditionLevel)
-        internal
-    {
+    function _performTokenDistribution(address _user, uint256 _amount) internal {
         // Get all the referrers
         address[] memory referrers = REFERRAL_REGISTRY.getCappedReferrers(REFERRAL_TREE, _user, MAX_EXPLORATION_LEVEL);
 
@@ -255,7 +260,7 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
 
             // First one is the user
             {
-                uint256 userAmount = (remainingAmount * _userPercent) / PERCENT_BASE;
+                uint256 userAmount = (remainingAmount * USER_PERCENT) / PERCENT_BASE;
                 rewards[0] = Reward(_user, userAmount);
                 // Decrease the amount
                 remainingAmount -= userAmount;
@@ -264,7 +269,7 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
             // Iterate over each referrers
             for (uint256 i = 0; i < referrers.length; i++) {
                 // Build the reward
-                uint256 reward = (remainingAmount * _deperditionLevel) / PERCENT_BASE;
+                uint256 reward = (remainingAmount * DEPERDITION_PER_LEVEL) / PERCENT_BASE;
                 rewards[i + 1] = Reward(referrers[i], reward);
                 // Decrease the reward by the amount distributed
                 remainingAmount -= reward;

@@ -11,16 +11,11 @@ import {BetaDistribution} from "../utils/BetaDistribution.sol";
 import {CampaignBank} from "./CampaignBank.sol";
 import {InteractionCampaign} from "./InteractionCampaign.sol";
 import {CapConfig, CapState, CappedCampaign} from "./libs/CappedCampaign.sol";
+import {RewardChainingConfig} from "./libs/RewardChainingCampaign.sol";
 import {ActivationPeriod, TimeLockedCampaign} from "./libs/TimeLockedCampaign.sol";
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
-
-/// @dev Represent the chaining config (how do we distribute the reward accross the referral chain)
-struct AffiliationChainingConfig {
-    uint256 userPercent;
-    uint256 deperditionPerLevel;
-}
 
 /// @dev Representing the config for a reward trigger of the campaign
 struct RangeAffiliationTriggerConfig {
@@ -42,10 +37,10 @@ struct AffiliationRangeCampaignConfig {
     CampaignBank campaignBank;
     // Optional distribution cap config
     CapConfig capConfig;
-    // The chaining config;
-    AffiliationChainingConfig chainingConfig;
     // Optional activation period for the campaign
     ActivationPeriod activationPeriod;
+    // The chaining config;
+    RewardChainingConfig chainingConfig;
     // Set of triggers for the campaign
     RangeAffiliationTriggerConfig[] triggers;
 }
@@ -86,6 +81,12 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
     /// @dev The associated bank campaign
     CampaignBank private immutable CAMPAIGN_BANK;
 
+    /// @dev The deperdition of reward per referral level
+    uint256 private immutable DEPERDITION_PER_LEVEL;
+
+    /// @dev The user percent of the reward (the rest is distributed accross the referral chain)
+    uint256 private immutable USER_PERCENT;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -112,18 +113,10 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
         }
     }
 
-    /// @dev Representing the reward chaining
-    struct RewardChaining {
-        uint16 userPercent;
-        uint16 deperditionPerLevel;
-    }
-
     /// @custom:storage-location erc7201:frak.campaign.affiliation-range
     struct ReferralCampaignStorage {
         // Mapping of user + interaction type to triggered count
         mapping(uint256 userAndInteractionType => uint16 triggeredCount) userTriggeredCount;
-        /// @dev The reward chaining
-        RewardChaining rewardChaining;
     }
 
     /// @dev bytes32(uint256(keccak256('frak.campaign.affiliation-range')) - 1)
@@ -158,15 +151,13 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
         // Store the referral tree
         REFERRAL_TREE = _interaction.getReferralTree();
 
+        // Store chaining config
+        USER_PERCENT = _config.chainingConfig.userPercent;
+        DEPERDITION_PER_LEVEL = _config.chainingConfig.deperditionPerLevel;
+
         // Set our config for the distribution cap and period
         _setActivationPeriod(_config.activationPeriod);
         _setCapConfig(_config.capConfig);
-
-        // Set the reward chaining
-        _storage().rewardChaining = RewardChaining({
-            userPercent: _config.chainingConfig.userPercent.toUint16(),
-            deperditionPerLevel: _config.chainingConfig.deperditionPerLevel.toUint16()
-        });
 
         // Iterate over each triggers and set them
         uint256 triggerLength = _config.triggers.length;
@@ -264,11 +255,8 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
         // Move this point accross the rward range (0 = start, 1 = end)
         uint256 reward = trigger.startReward + (uint256(trigger.endReward - trigger.startReward)).mulWad(wadPoint);
 
-        // Get the reward chaining
-        RewardChaining storage rewardChaining = _storage().rewardChaining;
-
         // Perform the token distribution (user, reward, userPercent, deperditionPerLevel)
-        _performTokenDistribution(user, reward, rewardChaining.userPercent, rewardChaining.deperditionPerLevel);
+        _performTokenDistribution(user, reward);
 
         // Update the count if we got a computed key (otherwise, we don't care)
         if (countKey != 0) {
@@ -277,9 +265,7 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
     }
 
     /// @dev Perform a token distrubtion for all the referrers of `_user`, with the initial amount to `_amount`
-    function _performTokenDistribution(address _user, uint256 _amount, uint256 _userPercent, uint256 _deperditionLevel)
-        internal
-    {
+    function _performTokenDistribution(address _user, uint256 _amount) internal {
         // Get all the referrers
         address[] memory referrers = REFERRAL_REGISTRY.getCappedReferrers(REFERRAL_TREE, _user, MAX_EXPLORATION_LEVEL);
 
@@ -295,7 +281,7 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
 
             // First one is the user
             {
-                uint256 userAmount = (remainingAmount * _userPercent) / PERCENT_BASE;
+                uint256 userAmount = (remainingAmount * USER_PERCENT) / PERCENT_BASE;
                 rewards[0] = Reward(_user, userAmount);
                 // Decrease the amount
                 remainingAmount -= userAmount;
@@ -304,7 +290,7 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
             // Iterate over each referrers
             for (uint256 i = 0; i < referrers.length; i++) {
                 // Build the reward
-                uint256 reward = (remainingAmount * _deperditionLevel) / PERCENT_BASE;
+                uint256 reward = (remainingAmount * DEPERDITION_PER_LEVEL) / PERCENT_BASE;
                 rewards[i + 1] = Reward(referrers[i], reward);
                 // Decrease the reward by the amount distributed
                 remainingAmount -= reward;

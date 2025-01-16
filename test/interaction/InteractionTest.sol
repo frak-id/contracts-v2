@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-
 import {
     AffiliationFixedCampaign,
     AffiliationFixedCampaignConfig,
@@ -11,6 +10,7 @@ import {
 } from "src/campaign/AffiliationFixedCampaign.sol";
 import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {CapConfig} from "src/campaign/libs/CappedCampaign.sol";
+import {RewardChainingConfig} from "src/campaign/libs/RewardChainingCampaign.sol";
 import {ActivationPeriod} from "src/campaign/libs/TimeLockedCampaign.sol";
 import {
     InteractionType,
@@ -171,8 +171,6 @@ abstract contract InteractionTest is EcosystemAwareTest {
         triggers[0] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
-            userPercent: 5000, // 50%
-            deperditionPerLevel: 8000, // 80%
             maxCountPerUser: 1
         });
 
@@ -181,7 +179,8 @@ abstract contract InteractionTest is EcosystemAwareTest {
             triggers: triggers,
             capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
             activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
-            campaignBank: campaignBank
+            campaignBank: campaignBank,
+            chainingConfig: RewardChainingConfig({userPercent: 5000, deperditionPerLevel: 8000})
         });
         initData = abi.encode(config);
         vm.resumeGasMetering();
