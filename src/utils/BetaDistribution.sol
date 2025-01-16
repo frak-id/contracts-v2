@@ -119,8 +119,17 @@ library BetaDistribution {
     /* -------------------------------------------------------------------------- */
 
     function _initPrngSeed() internal view returns (LibPRNG.PRNG memory) {
+        uint256 seed;
+        assembly {
+            let freeMemPtr := mload(0x40)
+            mstore(0, gas())
+            mstore(0x20, prevrandao())
+            mstore(0x40, caller())
+            seed := keccak256(0, 0x60)
+            mstore(0x40, freeMemPtr)
+        }
         // Initialize our PRNG with a random seed based on various chain parameters
-        return LibPRNG.PRNG({state: uint256(keccak256(abi.encodePacked(block.prevrandao, gasleft(), msg.sender)))});
+        return LibPRNG.PRNG({state: seed});
     }
 
     /// @dev Helper function to get a beta-distributed point for integer beta values
