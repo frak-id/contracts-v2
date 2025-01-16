@@ -31,6 +31,7 @@ library BetaDistribution {
     using LibPRNG for LibPRNG.PRNG;
 
     error InvalidBetaValue();
+    error PointCalculationFailed();
 
     /// The fixed alpha parameter of the beta distribution
     uint256 internal constant WAD = 1e18;
@@ -118,7 +119,7 @@ library BetaDistribution {
     }
 
     /// @dev Helper function to get a beta-distributed point for integer beta values
-    function _getPoint(LibPRNG.PRNG memory prng, uint256 beta) internal pure returns (uint256) {
+    function _getPoint(LibPRNG.PRNG memory prng, uint256 beta) internal pure returns (uint256 point) {
         // We can "safely" use an unchecked block here since `exponentialWad` return safe values and  `divWad` do a
         // check
         unchecked {
@@ -134,7 +135,11 @@ library BetaDistribution {
             }
 
             // Return X = gammaAlpha / (gammaAlpha + gammaBeta)
-            return gammaAlpha.divWad(gammaAlpha + gammaBeta);
+            point = gammaAlpha.divWad(gammaAlpha + gammaBeta);
+            // Failsafe check
+            if (point > WAD) {
+                revert PointCalculationFailed();
+            }
         }
     }
 }
