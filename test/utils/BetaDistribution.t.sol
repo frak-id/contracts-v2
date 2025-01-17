@@ -151,7 +151,7 @@ contract BetaDistributionTest is Test {
 
     // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=2.1
     function test_wadBetaPoint_average_beta2() public view {
-        uint256 betaWad = 13.27841e18;
+        uint256 betaWad = 2.1e18;
         uint256 runs = 10_000;
         uint256 total = 0;
 

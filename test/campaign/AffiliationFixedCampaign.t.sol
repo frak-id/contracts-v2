@@ -117,6 +117,18 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                                Test factory                                */
+    /* -------------------------------------------------------------------------- */
+
+    function test_factory() public {
+        bytes4 identifier = bytes4(keccak256("frak.campaign.affiliation-fixed"));
+        address deployed = campaignFactory.createCampaign(productInteraction, identifier, abi.encode(_simpleConfig()));
+
+        (string memory campaignType,,) = AffiliationFixedCampaign(deployed).getMetadata();
+        assertEq(campaignType, "frak.campaign.affiliation-fixed");
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                             Test metadata setup                            */
     /* -------------------------------------------------------------------------- */
 
@@ -435,20 +447,24 @@ contract AffiliationFixedCampaignTest is EcosystemAwareTest {
     /*                                State helpers                               */
     /* -------------------------------------------------------------------------- */
 
-    modifier withSimpleConfig() {
-        vm.pauseGasMetering();
-        // Build a config
-        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
+    function _simpleConfig() private view returns (AffiliationFixedCampaignConfig memory) {
+        return AffiliationFixedCampaignConfig({
             name: "test",
+            triggers: _buildTriggers(),
             capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
             activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
             campaignBank: campaignBank,
             chainingConfig: RewardChainingConfig({
                 userPercent: 5000, // 50%
                 deperditionPerLevel: 8000 // 80%
-            }),
-            triggers: _buildTriggers()
+            })
         });
+    }
+
+    modifier withSimpleConfig() {
+        vm.pauseGasMetering();
+        // Build a config
+        AffiliationFixedCampaignConfig memory config = _simpleConfig();
 
         // Continue the execution
         _campaignSetup(config);
