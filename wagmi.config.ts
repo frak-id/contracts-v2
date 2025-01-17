@@ -46,6 +46,8 @@ export default defineConfig(
                 'CampaignFactory.json',
                 'InteractionCampaign.json',
                 'ReferralCampaign.json',
+                'AffiliationFixedCampaign.json',
+                'AffiliationRangeCampaign.json',
             ]),
         },
         // Kernel v2 abis

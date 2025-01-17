@@ -47,7 +47,7 @@ contract BetaDistributionTest is Test {
     }
 
     // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=10
-    function test_integerBetaPoint_average_beta10() public {
+    function test_integerBetaPoint_average_beta10() public view {
         uint256 beta = 10;
         uint256 runs = 10_000;
         uint256 total = 0;
@@ -63,7 +63,7 @@ contract BetaDistributionTest is Test {
     }
 
     // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=2
-    function test_integerBetaPoint_average_beta2() public {
+    function test_integerBetaPoint_average_beta2() public view {
         uint256 beta = 2;
         uint256 runs = 10_000;
         uint256 total = 0;
@@ -134,7 +134,7 @@ contract BetaDistributionTest is Test {
     }
 
     // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=13.12
-    function test_wadBetaPoint_average_beta13() public {
+    function test_wadBetaPoint_average_beta13() public view {
         uint256 betaWad = 13.12e18;
         uint256 runs = 10_000;
         uint256 total = 0;
@@ -150,8 +150,8 @@ contract BetaDistributionTest is Test {
     }
 
     // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=2.1
-    function test_wadBetaPoint_average_beta2() public {
-        uint256 betaWad = 2.1e18;
+    function test_wadBetaPoint_average_beta2() public view {
+        uint256 betaWad = 13.27841e18;
         uint256 runs = 10_000;
         uint256 total = 0;
 

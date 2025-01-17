@@ -108,7 +108,7 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
     /// @dev Representing the reward trigger storage, storage location is at:
     ///     (
     ///         bytes32(uint256(keccak256('frak.campaign.affiliation-range.trigger')) - 1) &
-    ///         0x0000000011f94d0823f42e20d3b008aff3383a57ec72611438979565cc386185
+    ///         0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ///     ) | _interactionType
     function _trigger(InteractionType _interactionType) private pure returns (RewardTrigger storage storagePtr) {
         assembly {
@@ -117,13 +117,13 @@ contract AffiliationRangeCampaign is InteractionCampaign, CappedCampaign, TimeLo
     }
 
     /// @custom:storage-location erc7201:frak.campaign.affiliation-range
-    struct ReferralCampaignStorage {
+    struct AffiliationRangeCampaignStorage {
         // Mapping of user + interaction type to triggered count
         mapping(uint256 userAndInteractionType => uint16 triggeredCount) userTriggeredCount;
     }
 
     /// @dev bytes32(uint256(keccak256('frak.campaign.affiliation-range')) - 1)
-    function _storage() private pure returns (ReferralCampaignStorage storage storagePtr) {
+    function _storage() private pure returns (AffiliationRangeCampaignStorage storage storagePtr) {
         assembly {
             storagePtr.slot := 0xf1a57c6146496a7357dccde36c386e0543fac0b700812f07053bb55203c9662d
         }
