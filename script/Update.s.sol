@@ -80,9 +80,7 @@ contract Update is Script, DeterminedAddress {
 
         vm.startBroadcast();
 
-        CampaignFactory campaignFactory = new CampaignFactory{
-            salt: 0x0000000000000000000000000000000000000000dd69b074137eb245cfc20937
-        }(
+        CampaignFactory campaignFactory = new CampaignFactory{salt: bytes32(uint256(1312))}(
             ReferralRegistry(addresses.referralRegistry),
             ProductAdministratorRegistry(addresses.productAdministratorRegistry)
         );

@@ -110,6 +110,19 @@ export const affiliationFixedCampaignAbi = [
         ],
       },
       { name: 'bank', internalType: 'contract CampaignBank', type: 'address' },
+      {
+        name: 'chainingConfig',
+        internalType: 'struct RewardChainingConfig',
+        type: 'tuple',
+        components: [
+          { name: 'userPercent', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'deperditionPerLevel',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+        ],
+      },
     ],
     stateMutability: 'view',
   },
@@ -345,6 +358,19 @@ export const affiliationRangeCampaignAbi = [
         ],
       },
       { name: 'bank', internalType: 'contract CampaignBank', type: 'address' },
+      {
+        name: 'chainingConfig',
+        internalType: 'struct RewardChainingConfig',
+        type: 'tuple',
+        components: [
+          { name: 'userPercent', internalType: 'uint256', type: 'uint256' },
+          {
+            name: 'deperditionPerLevel',
+            internalType: 'uint256',
+            type: 'uint256',
+          },
+        ],
+      },
     ],
     stateMutability: 'view',
   },

@@ -78,6 +78,36 @@ contract BetaDistributionTest is Test {
         assertLt(average, 0.51e18, "Average should be lower than 0.51");
     }
 
+    // Enure every runs generate new points on the curve
+    function test_integerBetaPoint_gas() public view {
+        uint256 beta = 1;
+        BetaDistribution.getBetaIntegerPoint(beta);
+
+        beta = 1;
+        uint256 gasBefore = gasleft();
+        BetaDistribution.getBetaIntegerPoint(beta);
+        uint256 gasAfter = gasleft();
+        console.log("Gas used getBetaIntegerPoint(1): %d", gasBefore - gasAfter);
+
+        beta = 13;
+        gasBefore = gasleft();
+        BetaDistribution.getBetaIntegerPoint(beta);
+        gasAfter = gasleft();
+        console.log("Gas used getBetaIntegerPoint(13): %d", gasBefore - gasAfter);
+
+        beta = 4;
+        gasBefore = gasleft();
+        BetaDistribution.getBetaIntegerPoint(beta);
+        gasAfter = gasleft();
+        console.log("Gas used getBetaIntegerPoint(4): %d", gasBefore - gasAfter);
+
+        beta = 42;
+        gasBefore = gasleft();
+        BetaDistribution.getBetaIntegerPoint(beta);
+        gasAfter = gasleft();
+        console.log("Gas used getBetaIntegerPoint(42): %d", gasBefore - gasAfter);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                Wad beta test                               */
     /* -------------------------------------------------------------------------- */
@@ -163,5 +193,35 @@ contract BetaDistributionTest is Test {
 
         assertGt(average, 0.49e18, "Average should be greater than 0.49");
         assertLt(average, 0.51e18, "Average should be lower than 0.51");
+    }
+
+    // Enure every runs generate new points on the curve
+    function test_wadBetaPoint_gas() public view {
+        uint256 betaWad = 13.12e18;
+        BetaDistribution.getBetaWadPoint(betaWad);
+
+        betaWad = 1.312e18;
+        uint256 gasBefore = gasleft();
+        BetaDistribution.getBetaWadPoint(betaWad);
+        uint256 gasAfter = gasleft();
+        console.log("Gas used getBetaWadPoint(1.312): %d", gasBefore - gasAfter);
+
+        betaWad = 13.12e18;
+        gasBefore = gasleft();
+        BetaDistribution.getBetaWadPoint(betaWad);
+        gasAfter = gasleft();
+        console.log("Gas used getBetaWadPoint(13.12): %d", gasBefore - gasAfter);
+
+        betaWad = 4.2e18;
+        gasBefore = gasleft();
+        BetaDistribution.getBetaWadPoint(betaWad);
+        gasAfter = gasleft();
+        console.log("Gas used getBetaWadPoint(4.20): %d", gasBefore - gasAfter);
+
+        betaWad = 42.01e18;
+        gasBefore = gasleft();
+        BetaDistribution.getBetaWadPoint(betaWad);
+        gasAfter = gasleft();
+        console.log("Gas used getBetaWadPoint(42.01): %d", gasBefore - gasAfter);
     }
 }

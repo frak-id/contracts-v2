@@ -141,8 +141,16 @@ contract AffiliationRangeCampaignTest is EcosystemAwareTest {
         (string memory campaignType, string memory version, bytes32 name) = campaign.getMetadata();
 
         assertEq(campaignType, "frak.campaign.affiliation-range");
-        assertEq(version, "0.0.1");
+        assertEq(version, "0.0.2");
         assertEq(name, bytes32("test"));
+    }
+
+    function test_getChainingConfig() public withSimpleConfig {
+        // Ensure the chaining config is correct
+        (,,, RewardChainingConfig memory chainingConfig) = campaign.getConfig();
+
+        assertEq(chainingConfig.userPercent, 5000);
+        assertEq(chainingConfig.deperditionPerLevel, 8000);
     }
 
     function test_supportProductType() public withSimpleConfig {
@@ -256,7 +264,7 @@ contract AffiliationRangeCampaignTest is EcosystemAwareTest {
         assertTrue(campaign.isActive());
 
         // Get config
-        (, ActivationPeriod memory config,) = campaign.getConfig();
+        (, ActivationPeriod memory config,,) = campaign.getConfig();
         assertEq(config.start, time - 1);
         assertEq(config.end, time + 1);
 
@@ -269,7 +277,7 @@ contract AffiliationRangeCampaignTest is EcosystemAwareTest {
         campaign.updateCapConfig(CapConfig(uint48(1312), uint208(10 ether)));
 
         // Get config
-        (CapConfig memory config,,) = campaign.getConfig();
+        (CapConfig memory config,,,) = campaign.getConfig();
         assertEq(config.period, uint48(1312));
         assertEq(config.amount, uint208(10 ether));
     }

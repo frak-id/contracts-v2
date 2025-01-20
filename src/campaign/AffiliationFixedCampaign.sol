@@ -164,7 +164,7 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
     /// @dev Get the campaign metadata
     function getMetadata() public view override returns (string memory _type, string memory version, bytes32 name) {
         _type = "frak.campaign.affiliation-fixed";
-        version = "0.0.1";
+        version = "0.0.2";
         name = _interactionCampaignStorage().name;
     }
 
@@ -172,11 +172,17 @@ contract AffiliationFixedCampaign is InteractionCampaign, CappedCampaign, TimeLo
     function getConfig()
         public
         view
-        returns (CapConfig memory capConfig, ActivationPeriod memory activationPeriod, CampaignBank bank)
+        returns (
+            CapConfig memory capConfig,
+            ActivationPeriod memory activationPeriod,
+            CampaignBank bank,
+            RewardChainingConfig memory chainingConfig
+        )
     {
         capConfig = _capConfig();
         activationPeriod = _activationPeriod();
         bank = CAMPAIGN_BANK;
+        chainingConfig = RewardChainingConfig(USER_PERCENT, DEPERDITION_PER_LEVEL);
     }
 
     /// @dev Check if the campaign is active or not
