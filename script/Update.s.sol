@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {Addresses, DeterminedAddress} from "./DeterminedAddress.sol";
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
+import {CampaignFactory} from "src/campaign/CampaignFactory.sol";
 import {
     PRODUCT_TYPE_DAPP,
     PRODUCT_TYPE_FEATURE_REFERRAL,
@@ -13,7 +14,6 @@ import {
 import {InteractionFacetsFactory} from "src/interaction/InteractionFacetsFactory.sol";
 import {ProductInteractionManager} from "src/interaction/ProductInteractionManager.sol";
 import {ICampaignFactory} from "src/interfaces/ICampaignFactory.sol";
-
 import {PurchaseOracle} from "src/oracle/PurchaseOracle.sol";
 import {ProductAdministratorRegistry} from "src/registry/ProductAdministratorRegistry.sol";
 import {ProductRegistry} from "src/registry/ProductRegistry.sol";
@@ -25,8 +25,8 @@ contract Update is Script, DeterminedAddress {
         Addresses memory addresses = _getAddresses();
 
         // _updateProductInteractionManager(addresses);
-        _updateFacetFactory(addresses);
-        // _updateCampaignsFactory(addresses);
+        // _updateFacetFactory(addresses);
+        _updateCampaignsFactory(addresses);
 
         // Save the addresses in a json file
         _saveAddresses(addresses);
@@ -80,9 +80,21 @@ contract Update is Script, DeterminedAddress {
 
         vm.startBroadcast();
 
+        CampaignFactory campaignFactory = new CampaignFactory{
+            salt: 0x0000000000000000000000000000000000000000dd69b074137eb245cfc20937
+        }(
+            ReferralRegistry(addresses.referralRegistry),
+            ProductAdministratorRegistry(addresses.productAdministratorRegistry)
+        );
+
+        console.log("New campaign factory: ", address(campaignFactory));
+
         // update the campaign factory
-        productInteractionManager.updateCampaignFactory(ICampaignFactory(addresses.campaignFactory));
+        productInteractionManager.updateCampaignFactory(campaignFactory);
 
         vm.stopBroadcast();
+
+        // Update the addresses
+        addresses.campaignFactory = address(campaignFactory);
     }
 }

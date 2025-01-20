@@ -5,7 +5,8 @@ import {ProductInteractionDiamond} from "../interaction/ProductInteractionDiamon
 import {ICampaignFactory} from "../interfaces/ICampaignFactory.sol";
 import {ProductAdministratorRegistry} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
-import {ReferralCampaign, ReferralCampaignConfig} from "./ReferralCampaign.sol";
+import {AffiliationFixedCampaign, AffiliationFixedCampaignConfig} from "./AffiliationFixedCampaign.sol";
+import {AffiliationRangeCampaign, AffiliationRangeCampaignConfig} from "./AffiliationRangeCampaign.sol";
 
 /// @author @KONFeature
 /// @title CampaignFactory
@@ -28,8 +29,11 @@ contract CampaignFactory is ICampaignFactory {
     /*                                  Constants                                 */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev `bytes4(keccak256("frak.campaign.referral"))`
-    bytes4 private constant REFERRAL_CAMPAIGN_IDENTIFIER = 0x1a8750ce;
+    /// @dev `bytes4(keccak256("frak.campaign.affiliation-fixed"))`
+    bytes4 private constant AFFILIATION_FIXED_CAMPAIGN_IDENTIFIER = 0x26def63c;
+
+    /// @dev `bytes4(keccak256("frak.campaign.affiliation-range"))`
+    bytes4 private constant AFFILIATION_RANGE_CAMPAIGN_IDENTIFIER = 0xf1a57c61;
 
     /// @dev The referral registry
     ReferralRegistry private immutable REFERRAL_REGISTRY;
@@ -54,8 +58,10 @@ contract CampaignFactory is ICampaignFactory {
     {
         address campaign;
 
-        if (_identifier == REFERRAL_CAMPAIGN_IDENTIFIER) {
-            campaign = _createReferralCampaign(_interaction, _initData);
+        if (_identifier == AFFILIATION_FIXED_CAMPAIGN_IDENTIFIER) {
+            campaign = _createAffiliationFixedCampaign(_interaction, _initData);
+        } else if (_identifier == AFFILIATION_RANGE_CAMPAIGN_IDENTIFIER) {
+            campaign = _createAffiliationRangeCampaign(_interaction, _initData);
         } else {
             revert UnknownCampaignType(_identifier);
         }
@@ -67,17 +73,31 @@ contract CampaignFactory is ICampaignFactory {
         return address(campaign);
     }
 
-    /// @dev Create a new referral campaign
-    function _createReferralCampaign(ProductInteractionDiamond _interaction, bytes calldata _initData)
+    /// @dev Create a new fixed affiliation campaign
+    function _createAffiliationFixedCampaign(ProductInteractionDiamond _interaction, bytes calldata _initData)
         internal
         returns (address)
     {
         // Parse the input data
-        ReferralCampaignConfig memory config = abi.decode(_initData, (ReferralCampaignConfig));
+        AffiliationFixedCampaignConfig memory config = abi.decode(_initData, (AffiliationFixedCampaignConfig));
 
         // Create the campaign
-        ReferralCampaign campaign =
-            new ReferralCampaign(config, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, _interaction);
+        AffiliationFixedCampaign campaign =
+            new AffiliationFixedCampaign(config, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, _interaction);
+        return address(campaign);
+    }
+
+    /// @dev Create a new range affiliation campaign
+    function _createAffiliationRangeCampaign(ProductInteractionDiamond _interaction, bytes calldata _initData)
+        internal
+        returns (address)
+    {
+        // Parse the input data
+        AffiliationRangeCampaignConfig memory config = abi.decode(_initData, (AffiliationRangeCampaignConfig));
+
+        // Create the campaign
+        AffiliationRangeCampaign campaign =
+            new AffiliationRangeCampaign(config, REFERRAL_REGISTRY, PRODUCT_ADMINISTRATOR_REGISTRY, _interaction);
         return address(campaign);
     }
 }

@@ -3,10 +3,15 @@ pragma solidity ^0.8.0;
 
 import {EcosystemAwareTest} from "../EcosystemAwareTest.sol";
 import "forge-std/Console.sol";
-import {CampaignBank} from "src/campaign/CampaignBank.sol";
 import {
-    ReferralCampaign, ReferralCampaignConfig, ReferralCampaignTriggerConfig
-} from "src/campaign/ReferralCampaign.sol";
+    AffiliationFixedCampaign,
+    AffiliationFixedCampaignConfig,
+    FixedAffiliationTriggerConfig
+} from "src/campaign/AffiliationFixedCampaign.sol";
+import {CampaignBank} from "src/campaign/CampaignBank.sol";
+import {CapConfig} from "src/campaign/libs/CappedCampaign.sol";
+import {RewardChainingConfig} from "src/campaign/libs/RewardChainingCampaign.sol";
+import {ActivationPeriod} from "src/campaign/libs/TimeLockedCampaign.sol";
 import {
     InteractionType,
     InteractionTypeLib,
@@ -122,8 +127,8 @@ abstract contract InteractionTest is EcosystemAwareTest {
     function test_singleCampaign() public {
         bytes memory handleInteractionSelector = abi.encodeWithSelector(0xc375ab13);
         // Deploy a campaign
-        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
-        bytes memory initData = _getReferralCampaignConfigInitData();
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.affiliation-fixed"));
+        bytes memory initData = _getAffiliationFixedCampaignConfigInitData();
 
         // Deploy the campaign
         vm.prank(productOwner);
@@ -137,8 +142,8 @@ abstract contract InteractionTest is EcosystemAwareTest {
     function test_multiCampaign() public {
         bytes memory handleInteractionSelector = abi.encodeWithSelector(0xc375ab13);
         // Deploy a campaign
-        bytes4 campaignId = bytes4(keccak256("frak.campaign.referral"));
-        bytes memory initData = _getReferralCampaignConfigInitData();
+        bytes4 campaignId = bytes4(keccak256("frak.campaign.affiliation-fixed"));
+        bytes memory initData = _getAffiliationFixedCampaignConfigInitData();
 
         // Deploy the campaign
         vm.startPrank(productOwner);
@@ -160,23 +165,22 @@ abstract contract InteractionTest is EcosystemAwareTest {
     /*                                   Helpers                                  */
     /* -------------------------------------------------------------------------- */
 
-    function _getReferralCampaignConfigInitData() internal returns (bytes memory initData) {
+    function _getAffiliationFixedCampaignConfigInitData() internal returns (bytes memory initData) {
         vm.pauseGasMetering();
-        ReferralCampaignTriggerConfig[] memory triggers = new ReferralCampaignTriggerConfig[](1);
-        triggers[0] = ReferralCampaignTriggerConfig({
+        FixedAffiliationTriggerConfig[] memory triggers = new FixedAffiliationTriggerConfig[](1);
+        triggers[0] = FixedAffiliationTriggerConfig({
             interactionType: ReferralInteractions.REFERRED,
             baseReward: 10 ether,
-            userPercent: 5000, // 50%
-            deperditionPerLevel: 8000, // 80%
             maxCountPerUser: 1
         });
 
-        ReferralCampaignConfig memory config = ReferralCampaignConfig({
+        AffiliationFixedCampaignConfig memory config = AffiliationFixedCampaignConfig({
             name: "test",
             triggers: triggers,
-            capConfig: ReferralCampaign.CapConfig({period: uint48(0), amount: uint208(0)}),
-            activationPeriod: ReferralCampaign.ActivationPeriod({start: uint48(0), end: uint48(0)}),
-            campaignBank: campaignBank
+            capConfig: CapConfig({period: uint48(0), amount: uint208(0)}),
+            activationPeriod: ActivationPeriod({start: uint48(0), end: uint48(0)}),
+            campaignBank: campaignBank,
+            chainingConfig: RewardChainingConfig({userPercent: 5000, deperditionPerLevel: 8000})
         });
         initData = abi.encode(config);
         vm.resumeGasMetering();
