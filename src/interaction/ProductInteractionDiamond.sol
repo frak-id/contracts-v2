@@ -46,6 +46,12 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /// @dev Event when a campaign is attached to a product
     event CampaignDetached(InteractionCampaign campaign);
 
+    /// @dev Event when a scoped campaign is attached
+    event ScopedCampaignAttached(bytes16 indexed contextId, InteractionCampaign campaign);
+
+    /// @dev Event when a scoped campaign is detached
+    event ScopedCampaignDetached(bytes16 indexed contextId, InteractionCampaign campaign);
+
     /* -------------------------------------------------------------------------- */
     /*                                  Constants                                 */
     /* -------------------------------------------------------------------------- */
@@ -159,8 +165,9 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
 
     /// @dev Handle an interaction
     function handleInteraction(bytes calldata _interaction, bytes calldata _signature) external {
-        // Unpack the interaction
-        (uint8 _productTypeDenominator, bytes calldata _facetData) = _interaction.unpackForManager();
+        // Unpack the interaction (now includes contextId for scoped campaigns)
+        (uint8 _productTypeDenominator, bytes16 _rawContextId, bytes calldata _facetData) =
+            _interaction.unpackForManager();
 
         // Validate the interaction
         _validateSenderInteraction(keccak256(_facetData), _signature);
@@ -175,7 +182,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         // Send the interaction to the campaigns if we got some (at least 24 bytes since it should contain the action +
         // user with it)
         if (outputData.length > 23) {
-            _sendInteractionToCampaign(outputData);
+            _sendInteractionToCampaign(outputData, _rawContextId);
         }
     }
 
@@ -225,9 +232,29 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /*                           Campaign related logics                          */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Send an interaction to all the concerned campaigns
-    function _sendInteractionToCampaign(bytes memory _data) internal {
-        InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
+    /// @dev Send an interaction to all the concerned campaigns (default and/or scoped)
+    /// @param _data The interaction data to send to campaigns
+    /// @param _contextId The context ID (0 for default/legacy behavior)
+    function _sendInteractionToCampaign(bytes memory _data, bytes16 _contextId) internal {
+        // Execute scoped campaigns if contextId is present
+        if (uint128(_contextId) != 0) {
+            InteractionCampaign[] storage scopedCampaigns = _productInteractionStorage().scopedCampaigns[_contextId];
+            if (scopedCampaigns.length > 0) {
+                _executeCampaigns(scopedCampaigns, _data);
+            }
+        } else {
+            // Execute default campaigns for legacy behavior (contextId == 0)
+            InteractionCampaign[] storage defaultCampaigns = _productInteractionStorage().campaigns;
+            if (defaultCampaigns.length > 0) {
+                _executeCampaigns(defaultCampaigns, _data);
+            }
+        }
+    }
+
+    /// @dev Execute campaigns by calling each with the interaction data
+    /// @param campaigns The array of campaigns to execute
+    /// @param _data The interaction data to send
+    function _executeCampaigns(InteractionCampaign[] storage campaigns, bytes memory _data) private {
         uint256 length = campaigns.length;
         if (length == 0) {
             return;
@@ -335,6 +362,62 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /// @dev Get all the campaigns attached to this interaction
     function getCampaigns() external view returns (InteractionCampaign[] memory) {
         return _productInteractionStorage().campaigns;
+    }
+
+    /// @dev Attach a scoped campaign to a specific context
+    /// @param _contextId The context ID
+    /// @param _campaign The campaign to attach
+    function attachScopedCampaign(bytes16 _contextId, InteractionCampaign _campaign) external onlyCampaignManager {
+        // Get the scoped campaigns array for this context
+        InteractionCampaign[] storage campaigns = _productInteractionStorage().scopedCampaigns[_contextId];
+
+        // Ensure we don't already have this campaign attached
+        for (uint256 i = 0; i < campaigns.length; i++) {
+            if (address(campaigns[i]) == address(_campaign)) {
+                revert CampaignAlreadyPresent();
+            }
+        }
+
+        // Add the campaign and emit event
+        emit ScopedCampaignAttached(_contextId, _campaign);
+        campaigns.push(_campaign);
+    }
+
+    /// @dev Detach a scoped campaign from a specific context
+    /// @param _contextId The context ID
+    /// @param _campaign The campaign to detach
+    function detachScopedCampaign(bytes16 _contextId, InteractionCampaign _campaign) external onlyCampaignManager {
+        // Get the scoped campaigns array for this context
+        InteractionCampaign[] storage campaigns = _productInteractionStorage().scopedCampaigns[_contextId];
+
+        // Detach the campaign
+        _detachCampaign(_campaign, campaigns);
+
+        emit ScopedCampaignDetached(_contextId, _campaign);
+    }
+
+    /// @dev Detach multiple scoped campaigns from a specific context
+    /// @param _contextId The context ID
+    /// @param _campaigns The campaigns to detach
+    function detachScopedCampaigns(bytes16 _contextId, InteractionCampaign[] calldata _campaigns)
+        external
+        onlyCampaignManager
+    {
+        // Get the scoped campaigns array for this context
+        InteractionCampaign[] storage campaigns = _productInteractionStorage().scopedCampaigns[_contextId];
+
+        // Detach each campaign
+        for (uint256 i = 0; i < _campaigns.length; i++) {
+            _detachCampaign(_campaigns[i], campaigns);
+            emit ScopedCampaignDetached(_contextId, _campaigns[i]);
+        }
+    }
+
+    /// @dev Get all scoped campaigns for a specific context
+    /// @param _contextId The context ID
+    /// @return The array of campaigns attached to this context
+    function getScopedCampaigns(bytes16 _contextId) external view returns (InteractionCampaign[] memory) {
+        return _productInteractionStorage().scopedCampaigns[_contextId];
     }
 
     /* -------------------------------------------------------------------------- */

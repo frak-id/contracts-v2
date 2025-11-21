@@ -10,7 +10,7 @@ contract MockCampaign is InteractionCampaign {
     uint256 private interactionHandled;
     bool private fail;
 
-    constructor(ProductAdministratorRegistry adminRegistry, address _owner, ProductInteractionDiamond _interaction)
+    constructor(ProductAdministratorRegistry adminRegistry, ProductInteractionDiamond _interaction)
         InteractionCampaign(adminRegistry, _interaction, "mock")
     {}
 
@@ -44,6 +44,11 @@ contract MockCampaign is InteractionCampaign {
     }
 
     function getInteractionHandled() public view returns (uint256) {
+        return interactionHandled;
+    }
+
+    /// @dev Alias for getInteractionHandled for test consistency
+    function callCount() public view returns (uint256) {
         return interactionHandled;
     }
 }

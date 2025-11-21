@@ -14,6 +14,13 @@ function interactionEq(InteractionType self, InteractionType other) pure returns
     }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              Global constants                              */
+/* -------------------------------------------------------------------------- */
+
+/// @dev Version marker for scoped interactions (0xFF = 255)
+uint8 constant SCOPED_INTERACTION_MARKER = 0xFF;
+
 /// @dev Set of helper functions for product types
 library InteractionTypeLib {
     /* -------------------------------------------------------------------------- */
@@ -21,20 +28,33 @@ library InteractionTypeLib {
     /* -------------------------------------------------------------------------- */
 
     /// @dev Unpack an interaction from the manager
+    /// @param _data The interaction data to unpack
+    /// @return productTypeDenominator The product type denominator
+    /// @return contextId The context ID for scoped campaigns (0 if not scoped)
+    /// @return facetData The facet-specific data
     function unpackForManager(bytes calldata _data)
         internal
         pure
-        returns (uint8 productTypeDenominator, bytes calldata facetData)
+        returns (uint8 productTypeDenominator, bytes16 contextId, bytes calldata facetData)
     {
         unchecked {
             if (_data.length < 5) {
                 facetData = _data;
-                return (productTypeDenominator, facetData);
+                return (productTypeDenominator, contextId, facetData);
             }
 
-            productTypeDenominator = uint8(_data[0]);
-            // Facet data contain everything after the product type denominator
-            facetData = _data[1:];
+            // Check if first byte is the scoped interaction marker (0xFF)
+            if (uint8(_data[0]) == SCOPED_INTERACTION_MARKER && _data.length >= 18) {
+                // Scoped interaction format: [0xFF][contextId (16 bytes)][denominator (1 byte)][facetData]
+                contextId = bytes16(_data[1:17]);
+                productTypeDenominator = uint8(_data[17]);
+                facetData = _data[18:];
+            } else {
+                // Legacy interaction format: [denominator (1 byte)][facetData]
+                contextId = bytes16(0);
+                productTypeDenominator = uint8(_data[0]);
+                facetData = _data[1:];
+            }
         }
     }
 

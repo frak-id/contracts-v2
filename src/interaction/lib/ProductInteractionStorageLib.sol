@@ -23,8 +23,11 @@ abstract contract ProductInteractionStorageLib {
         uint256 productId;
         /// @dev The referral tree for this product
         bytes32 referralTree;
-        /// @dev Array of all the current active campaigns
+        /// @dev Array of all the current active campaigns (default campaigns, executed when contextId == 0)
         InteractionCampaign[] campaigns;
+        /// @dev Scoped campaigns mapping: contextId => campaign array
+        /// @dev Each contextId can have its own set of campaigns, allowing fine-grained control
+        mapping(bytes16 contextId => InteractionCampaign[]) scopedCampaigns;
         /// @dev Array of our logic "facets"
         mapping(uint256 productType => IInteractionFacet facet) facets;
     }
