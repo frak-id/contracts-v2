@@ -8,4 +8,4 @@ uint256 constant MINTER_ROLE = 1 << 0;
 uint256 constant UPGRADE_ROLE = 1 << 1;
 
 /// @dev The role that can validate a user interaction
-uint256 constant INTERCATION_VALIDATOR_ROLE = 1 << 2;
+uint256 constant INTERACTION_VALIDATOR_ROLE = 1 << 2;

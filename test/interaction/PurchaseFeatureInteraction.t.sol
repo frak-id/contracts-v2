@@ -13,7 +13,7 @@ import {
     PRODUCT_TYPE_FEATURE_PURCHASE,
     ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {INTERACTION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {PurchaseFeatureFacet} from "src/interaction/facets/PurchaseFeatureFacet.sol";
 import {PurchaseStatus} from "src/oracle/IPurchaseOracle.sol";

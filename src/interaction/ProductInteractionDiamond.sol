@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {InteractionCampaign} from "../campaign/InteractionCampaign.sol";
 import {InteractionTypeLib} from "../constants/InteractionType.sol";
 import {ProductTypes} from "../constants/ProductTypes.sol";
-import {INTERCATION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {INTERACTION_VALIDATOR_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {ProductAdministratorRegistry, ProductRoles} from "../registry/ProductAdministratorRegistry.sol";
 import {ReferralRegistry} from "../registry/ReferralRegistry.sol";
 import {IInteractionFacet} from "./facets/IInteractionFacet.sol";
@@ -202,7 +202,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
         );
 
         // Check if the signer as the role to validate the interaction
-        if (!hasAnyRole(ECDSA.tryRecoverCalldata(digest, _signature), INTERCATION_VALIDATOR_ROLE)) {
+        if (!hasAnyRole(ECDSA.tryRecoverCalldata(digest, _signature), INTERACTION_VALIDATOR_ROLE)) {
             revert WrongInteractionSigner();
         }
     }
@@ -225,7 +225,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
     /*                           Campaign related logics                          */
     /* -------------------------------------------------------------------------- */
 
-    /// @dev Send an inbteraction to all the concerned campaigns
+    /// @dev Send an interaction to all the concerned campaigns
     function _sendInteractionToCampaign(bytes memory _data) internal {
         InteractionCampaign[] storage campaigns = _productInteractionStorage().campaigns;
         uint256 length = campaigns.length;
@@ -235,7 +235,7 @@ contract ProductInteractionDiamond is ProductInteractionStorageLib, OwnableRoles
 
         // Treat it as mem safe assembly, even though it's not rly the case
         //  since we are overwriting the two slots before the _data arr, but since that's the last function post execute
-        // we don't rly case
+        // we don't rly care
         /// @solidity memory-safe-assembly
         assembly {
             // Store the handleInteraction selector + offset

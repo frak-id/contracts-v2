@@ -14,7 +14,7 @@ import {
 import {
     DENOMINATOR_DAPP, DENOMINATOR_WEB_SHOP, PRODUCT_TYPE_WEB_SHOP, ProductTypes
 } from "src/constants/ProductTypes.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {INTERACTION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 import {WebShopInteractionFacet} from "src/interaction/facets/WebShopInteractionFacet.sol";
 

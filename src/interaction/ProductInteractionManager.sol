@@ -270,7 +270,6 @@ contract ProductInteractionManager is OwnableRoles, UUPSUpgradeable, Initializab
         _;
     }
     /// @dev Modifier to only allow call from an allowed product manager
-
     modifier onlyInteractionManagerOrMinter(uint256 _productId) {
         if (!hasAnyRole(msg.sender, MINTER_ROLE)) {
             PRODUCT_ADMINISTRATOR_REGISTRY.onlyAnyRolesOrOwner(

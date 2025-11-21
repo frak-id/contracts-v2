@@ -18,7 +18,7 @@ import {
     PressInteractions,
     ReferralInteractions
 } from "src/constants/InteractionType.sol";
-import {INTERCATION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
+import {INTERACTION_VALIDATOR_ROLE} from "src/constants/Roles.sol";
 import {ProductInteractionDiamond} from "src/interaction/ProductInteractionDiamond.sol";
 
 /// @dev Generic contract to test interaction
@@ -46,7 +46,7 @@ abstract contract InteractionTest is EcosystemAwareTest {
 
         // Grant the validator roles
         vm.prank(productOwner);
-        _productInteraction.grantRoles(validator, INTERCATION_VALIDATOR_ROLE);
+        _productInteraction.grantRoles(validator, INTERACTION_VALIDATOR_ROLE);
 
         // Deploy a single bank
         // We don't rly need to productId here since every product has the same roles
