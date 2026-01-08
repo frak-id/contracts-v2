@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {MINTER_ROLE} from "../constants/Roles.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {ERC20} from "solady/tokens/ERC20.sol";
+
+/// @dev The role required to mint tokens
+uint256 constant MINTER_ROLE = 1 << 0;
 
 /// @author @KONFeature
 /// @title mUSDToken
@@ -15,7 +17,7 @@ contract mUSDToken is ERC20, OwnableRoles {
         _setRoles(_owner, MINTER_ROLE);
     }
 
-    /// @dev Mint some pFrk to the given address
+    /// @dev Mint some tokens to the given address
     function mint(address _to, uint256 _amount) public onlyRoles(MINTER_ROLE) {
         _mint(_to, _amount);
     }
