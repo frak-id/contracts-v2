@@ -13,41 +13,13 @@ function foundryPlugin(artifacts: string[]): Plugin[] {
 
 export default defineConfig(
     [
-        // Frak registry abis
+        // Frak internal abi
         {
-            out: "external/abi/registryAbis.ts",
-            plugins: foundryPlugin([
-                'ProductRegistry.json',
-                'ReferralRegistry.json',
-                'ProductAdministratorRegistry.json',
-                'PurchaseOracle.json',
-            ]),
-        },
-        // Frak interaction abis
-        {
-            out: "external/abi/interactionAbis.ts",
-            plugins: foundryPlugin([
-                'ProductInteractionManager.json',
-                'ProductInteractionDiamond.json',
-                'WebShopInteractionFacet.json',
-                'PressInteractionFacet.json',
-                'RetailInteractionFacet.json',
-                'DappInteractionFacet.json',
-                'ReferralFeatureFacet.json',
-                'PurchaseFeatureFacet.json',
-            ]),
-        },
-        // Frak campaign abi
-        {
-            out: "external/abi/campaignAbis.ts",
+            out: "external/abi/abis.ts",
             plugins: foundryPlugin([
                 'CampaignBank.json',
                 'CampaignBankFactory.json',
-                'CampaignFactory.json',
-                'InteractionCampaign.json',
-                'ReferralCampaign.json',
-                'AffiliationFixedCampaign.json',
-                'AffiliationRangeCampaign.json',
+                'RewarderHub.json',
             ]),
         },
         // Kernel v2 abis
