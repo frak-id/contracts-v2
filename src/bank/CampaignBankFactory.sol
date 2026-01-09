@@ -32,6 +32,9 @@ contract CampaignBankFactory {
     /// @dev The RewarderHub address
     address public immutable REWARDER_HUB;
 
+    /// @dev The CampaignBank implementation address
+    address public immutable IMPLEMENTATION;
+
     /* -------------------------------------------------------------------------- */
     /*                                 Constructor                                */
     /* -------------------------------------------------------------------------- */
@@ -41,6 +44,7 @@ contract CampaignBankFactory {
     constructor(address _rewarderHub) {
         if (_rewarderHub == address(0)) revert InvalidRewarderHub();
         REWARDER_HUB = _rewarderHub;
+        IMPLEMENTATION = address(new CampaignBank());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -51,7 +55,8 @@ contract CampaignBankFactory {
     /// @param _owner The owner of the bank (merchant)
     /// @return bank The deployed bank address
     function deployBank(address _owner) external returns (CampaignBank bank) {
-        bank = new CampaignBank(_owner, REWARDER_HUB);
+        bank = CampaignBank(IMPLEMENTATION.clone());
+        bank.init(_owner, REWARDER_HUB);
         emit BankDeployed(_owner, address(bank));
     }
 
@@ -60,20 +65,15 @@ contract CampaignBankFactory {
     /// @param _salt Salt for CREATE2
     /// @return bank The deployed bank address
     function deployBank(address _owner, bytes32 _salt) external returns (CampaignBank bank) {
-        bank = new CampaignBank{salt: _salt}(_owner, REWARDER_HUB);
+        bank = CampaignBank(IMPLEMENTATION.cloneDeterministic(_salt));
+        bank.init(_owner, REWARDER_HUB);
         emit BankDeployed(_owner, address(bank));
     }
 
     /// @notice Predict the address of a bank deployed with CREATE2
-    /// @param _owner The owner of the bank
     /// @param _salt Salt for CREATE2
     /// @return The predicted address
-    function predictBankAddress(address _owner, bytes32 _salt) external view returns (address) {
-        bytes32 bytecodeHash = keccak256(
-            abi.encodePacked(type(CampaignBank).creationCode, abi.encode(_owner, REWARDER_HUB))
-        );
-        return address(
-            uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, bytecodeHash))))
-        );
+    function predictBankAddress(bytes32 _salt) external view returns (address) {
+        return IMPLEMENTATION.predictDeterministicAddress(_salt, address(this));
     }
 }

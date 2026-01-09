@@ -4,11 +4,15 @@ pragma solidity ^0.8.0;
 import {Test} from "forge-std/Test.sol";
 import {CampaignBank, CAMPAIGN_BANK_MANAGER_ROLE} from "src/bank/CampaignBank.sol";
 import {MockErc20} from "../utils/MockErc20.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 
 /// @title CampaignBankTest
 /// @notice Comprehensive tests for CampaignBank contract
 contract CampaignBankTest is Test {
+    using LibClone for address;
+
     CampaignBank public campaignBank;
+    CampaignBank public implementation;
     MockErc20 public token;
     MockErc20 public token2;
 
@@ -18,8 +22,10 @@ contract CampaignBankTest is Test {
     address public user = makeAddr("user");
 
     function setUp() public {
-        // Deploy bank
-        campaignBank = new CampaignBank(owner, rewarderHub);
+        // Deploy implementation and clone
+        implementation = new CampaignBank();
+        campaignBank = CampaignBank(address(implementation).clone());
+        campaignBank.init(owner, rewarderHub);
 
         // Deploy mock tokens
         token = new MockErc20();
@@ -37,24 +43,35 @@ contract CampaignBankTest is Test {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                              Constructor                                   */
+    /*                              Initialization                                */
     /* -------------------------------------------------------------------------- */
 
-    function test_constructor_setsOwner() public view {
+    function test_init_setsOwner() public view {
         assertEq(campaignBank.owner(), owner);
     }
 
-    function test_constructor_setsRewarderHub() public view {
+    function test_init_setsRewarderHub() public view {
         assertEq(campaignBank.REWARDER_HUB(), rewarderHub);
     }
 
-    function test_constructor_grantsManagerRole() public view {
+    function test_init_grantsManagerRole() public view {
         assertTrue(campaignBank.hasAnyRole(owner, CAMPAIGN_BANK_MANAGER_ROLE));
     }
 
-    function test_constructor_revert_invalidRewarderHub() public {
+    function test_init_revert_invalidRewarderHub() public {
+        CampaignBank newBank = CampaignBank(address(implementation).clone());
         vm.expectRevert(CampaignBank.InvalidAddress.selector);
-        new CampaignBank(owner, address(0));
+        newBank.init(owner, address(0));
+    }
+
+    function test_init_revert_alreadyInitialized() public {
+        vm.expectRevert();
+        campaignBank.init(owner, rewarderHub);
+    }
+
+    function test_implementation_cannotBeInitialized() public {
+        vm.expectRevert();
+        implementation.init(owner, rewarderHub);
     }
 
     /* -------------------------------------------------------------------------- */

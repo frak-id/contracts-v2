@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
+import {Initializable} from "solady/utils/Initializable.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
@@ -12,7 +13,7 @@ uint256 constant CAMPAIGN_BANK_MANAGER_ROLE = 1 << 0;
 /// @notice Multi-token bank contract for merchants to fund reward campaigns
 /// @dev Each merchant has one bank that can hold multiple tokens and authorize the RewarderHub
 /// @custom:security-contact contact@frak.id
-contract CampaignBank is OwnableRoles {
+contract CampaignBank is OwnableRoles, Initializable {
     using SafeTransferLib for address;
 
     /* -------------------------------------------------------------------------- */
@@ -45,13 +46,6 @@ contract CampaignBank is OwnableRoles {
     error InvalidAddress();
 
     /* -------------------------------------------------------------------------- */
-    /*                                  Constants                                 */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev The RewarderHub address that can pull funds
-    address public immutable REWARDER_HUB;
-
-    /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
@@ -61,8 +55,15 @@ contract CampaignBank is OwnableRoles {
 
     /// @custom:storage-location erc7201:frak.bank.campaign
     struct CampaignBankStorage {
+        /// @dev The RewarderHub address that can pull funds
+        address rewarderHub;
         /// @dev Is the bank open for distribution
         bool isDistributionEnabled;
+    }
+
+    /// @notice Get the RewarderHub address
+    function REWARDER_HUB() public view returns (address) {
+        return _storage().rewarderHub;
     }
 
     function _storage() private pure returns (CampaignBankStorage storage storagePtr) {
@@ -75,16 +76,21 @@ contract CampaignBank is OwnableRoles {
     /*                                 Constructor                                */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Create a new CampaignBank
+    /// @dev Disable initializers on implementation contract
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initialize a new CampaignBank
     /// @param _owner The owner of the bank (merchant)
     /// @param _rewarderHub The RewarderHub address that will pull funds
-    constructor(address _owner, address _rewarderHub) {
+    function init(address _owner, address _rewarderHub) external initializer {
         if (_rewarderHub == address(0)) revert InvalidAddress();
 
         _initializeOwner(_owner);
         _setRoles(_owner, CAMPAIGN_BANK_MANAGER_ROLE);
 
-        REWARDER_HUB = _rewarderHub;
+        _storage().rewarderHub = _rewarderHub;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -111,9 +117,10 @@ contract CampaignBank is OwnableRoles {
     /// @param _token The token address
     /// @param _amount The allowance amount
     function updateAllowance(address _token, uint256 _amount) external onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE) {
-        if (!_storage().isDistributionEnabled) revert BankIsClosed();
+        CampaignBankStorage storage $ = _storage();
+        if (!$.isDistributionEnabled) revert BankIsClosed();
 
-        _token.safeApprove(REWARDER_HUB, _amount);
+        _token.safeApprove($.rewarderHub, _amount);
         emit AllowanceUpdated(_token, _amount);
     }
 
@@ -124,10 +131,12 @@ contract CampaignBank is OwnableRoles {
         external
         onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE)
     {
-        if (!_storage().isDistributionEnabled) revert BankIsClosed();
+        CampaignBankStorage storage $ = _storage();
+        if (!$.isDistributionEnabled) revert BankIsClosed();
 
+        address rewarderHub = $.rewarderHub;
         for (uint256 i; i < _tokens.length;) {
-            _tokens[i].safeApprove(REWARDER_HUB, _amounts[i]);
+            _tokens[i].safeApprove(rewarderHub, _amounts[i]);
             emit AllowanceUpdated(_tokens[i], _amounts[i]);
 
             unchecked {
@@ -186,7 +195,7 @@ contract CampaignBank is OwnableRoles {
     /// @dev Can be called even when distribution is enabled
     /// @param _token The token address
     function revokeAllowance(address _token) external onlyOwner {
-        _token.safeApprove(REWARDER_HUB, 0);
+        _token.safeApprove(_storage().rewarderHub, 0);
         emit AllowanceUpdated(_token, 0);
     }
 
@@ -197,7 +206,7 @@ contract CampaignBank is OwnableRoles {
     /// @dev Get allowance using low-level call to handle non-standard tokens
     function _allowance(address _token) internal view returns (uint256) {
         (bool success, bytes memory data) =
-            _token.staticcall(abi.encodeWithSignature("allowance(address,address)", address(this), REWARDER_HUB));
+            _token.staticcall(abi.encodeWithSignature("allowance(address,address)", address(this), _storage().rewarderHub));
         if (success && data.length >= 32) {
             return abi.decode(data, (uint256));
         }

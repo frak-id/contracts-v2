@@ -26,6 +26,10 @@ contract CampaignBankFactoryTest is Test {
         assertEq(factory.REWARDER_HUB(), rewarderHub);
     }
 
+    function test_constructor_setsImplementation() public view {
+        assertTrue(factory.IMPLEMENTATION() != address(0));
+    }
+
     function test_constructor_revert_invalidRewarderHub() public {
         vm.expectRevert(CampaignBankFactory.InvalidRewarderHub.selector);
         new CampaignBankFactory(address(0));
@@ -83,7 +87,7 @@ contract CampaignBankFactoryTest is Test {
     function test_deployBank_withSalt_deterministicAddress() public {
         bytes32 salt = keccak256("salt1");
 
-        address predicted = factory.predictBankAddress(merchant1, salt);
+        address predicted = factory.predictBankAddress(salt);
         CampaignBank bank = factory.deployBank(merchant1, salt);
 
         assertEq(address(bank), predicted);
@@ -109,14 +113,15 @@ contract CampaignBankFactoryTest is Test {
         factory.deployBank(merchant1, salt);
     }
 
-    function test_deployBank_withSalt_sameSaltDifferentOwner() public {
+    function test_deployBank_withSalt_sameSaltDifferentOwner_reverts() public {
         bytes32 salt = keccak256("salt1");
 
-        CampaignBank bank1 = factory.deployBank(merchant1, salt);
-        CampaignBank bank2 = factory.deployBank(merchant2, salt);
+        // First deployment succeeds
+        factory.deployBank(merchant1, salt);
 
-        // Different owners can use the same salt
-        assertTrue(address(bank1) != address(bank2));
+        // Same salt with different owner should fail (clone address is salt-based only)
+        vm.expectRevert();
+        factory.deployBank(merchant2, salt);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -126,29 +131,31 @@ contract CampaignBankFactoryTest is Test {
     function test_predictBankAddress_accuracy() public {
         bytes32 salt = keccak256("predictTest");
 
-        address predicted = factory.predictBankAddress(merchant1, salt);
+        address predicted = factory.predictBankAddress(salt);
         CampaignBank actual = factory.deployBank(merchant1, salt);
 
         assertEq(predicted, address(actual));
-    }
-
-    function test_predictBankAddress_differentOwners() public {
-        bytes32 salt = keccak256("sameSalt");
-
-        address predicted1 = factory.predictBankAddress(merchant1, salt);
-        address predicted2 = factory.predictBankAddress(merchant2, salt);
-
-        assertTrue(predicted1 != predicted2);
     }
 
     function test_predictBankAddress_differentSalts() public {
         bytes32 salt1 = keccak256("salt1");
         bytes32 salt2 = keccak256("salt2");
 
-        address predicted1 = factory.predictBankAddress(merchant1, salt1);
-        address predicted2 = factory.predictBankAddress(merchant1, salt2);
+        address predicted1 = factory.predictBankAddress(salt1);
+        address predicted2 = factory.predictBankAddress(salt2);
 
         assertTrue(predicted1 != predicted2);
+    }
+
+    function test_predictBankAddress_sameSaltSameAddress() public {
+        bytes32 salt = keccak256("sameSalt");
+
+        // With clones, predicted address depends only on salt
+        address predicted = factory.predictBankAddress(salt);
+
+        // Deploy with merchant1
+        CampaignBank bank = factory.deployBank(merchant1, salt);
+        assertEq(address(bank), predicted);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -158,7 +165,7 @@ contract CampaignBankFactoryTest is Test {
     function test_deployBank_emitsBankDeployed() public {
         // Get predicted address first
         bytes32 salt = keccak256("eventTest");
-        address predicted = factory.predictBankAddress(merchant1, salt);
+        address predicted = factory.predictBankAddress(salt);
 
         vm.expectEmit(true, true, false, false);
         emit CampaignBankFactory.BankDeployed(merchant1, predicted);
@@ -189,12 +196,10 @@ contract CampaignBankFactoryTest is Test {
         assertEq(bank.REWARDER_HUB(), rewarderHub);
     }
 
-    function testFuzz_predictBankAddress_consistency(address _owner, bytes32 _salt) public {
-        vm.assume(_owner != address(0));
-
+    function testFuzz_predictBankAddress_consistency(bytes32 _salt) public {
         // Predict twice should give same result
-        address predicted1 = factory.predictBankAddress(_owner, _salt);
-        address predicted2 = factory.predictBankAddress(_owner, _salt);
+        address predicted1 = factory.predictBankAddress(_salt);
+        address predicted2 = factory.predictBankAddress(_salt);
 
         assertEq(predicted1, predicted2);
     }
@@ -202,7 +207,7 @@ contract CampaignBankFactoryTest is Test {
     function testFuzz_predictAndDeploy_match(address _owner, bytes32 _salt) public {
         vm.assume(_owner != address(0));
 
-        address predicted = factory.predictBankAddress(_owner, _salt);
+        address predicted = factory.predictBankAddress(_salt);
         CampaignBank actual = factory.deployBank(_owner, _salt);
 
         assertEq(predicted, address(actual));
