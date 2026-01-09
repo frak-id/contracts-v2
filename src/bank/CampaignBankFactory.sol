@@ -25,6 +25,9 @@ contract CampaignBankFactory {
     /// @dev Error when the RewarderHub is not set
     error InvalidRewarderHub();
 
+    /// @dev Error when the owner address is invalid
+    error InvalidOwner();
+
     /* -------------------------------------------------------------------------- */
     /*                                  Constants                                 */
     /* -------------------------------------------------------------------------- */
@@ -55,16 +58,25 @@ contract CampaignBankFactory {
     /// @param _owner The owner of the bank (merchant)
     /// @return bank The deployed bank address
     function deployBank(address _owner) external returns (CampaignBank bank) {
+        if (_owner == address(0)) revert InvalidOwner();
         bank = CampaignBank(IMPLEMENTATION.clone());
         bank.init(_owner, REWARDER_HUB);
         emit BankDeployed(_owner, address(bank));
     }
 
     /// @notice Deploy a new CampaignBank with a deterministic address
+    /// @dev Note on front-running: There is a theoretical window between clone deployment and
+    ///      initialization where an attacker could attempt to front-run the init() call.
+    ///      However, this attack is impractical because:
+    ///      1. The attacker would need to predict the clone address (possible with CREATE2)
+    ///      2. The attacker cannot steal any funds - they would only DoS the deployment
+    ///      3. The legitimate deployer can simply use a different salt
+    ///      For high-value deployments, consider using a private mempool or Flashbots Protect.
     /// @param _owner The owner of the bank (merchant)
     /// @param _salt Salt for CREATE2
     /// @return bank The deployed bank address
     function deployBank(address _owner, bytes32 _salt) external returns (CampaignBank bank) {
+        if (_owner == address(0)) revert InvalidOwner();
         bank = CampaignBank(IMPLEMENTATION.cloneDeterministic(_salt));
         bank.init(_owner, REWARDER_HUB);
         emit BankDeployed(_owner, address(bank));

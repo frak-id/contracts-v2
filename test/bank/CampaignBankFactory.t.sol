@@ -35,6 +35,16 @@ contract CampaignBankFactoryTest is Test {
         new CampaignBankFactory(address(0));
     }
 
+    function test_deployBank_revert_invalidOwner() public {
+        vm.expectRevert(CampaignBankFactory.InvalidOwner.selector);
+        factory.deployBank(address(0));
+    }
+
+    function test_deployBank_withSalt_revert_invalidOwner() public {
+        vm.expectRevert(CampaignBankFactory.InvalidOwner.selector);
+        factory.deployBank(address(0), keccak256("salt"));
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                              deployBank                                    */
     /* -------------------------------------------------------------------------- */

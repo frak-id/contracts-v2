@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {RewarderHubBaseTest} from "./RewarderHub.base.t.sol";
-import {RewarderHub, RewardOp} from "src/reward/RewarderHub.sol";
+import {RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBatchTest
 /// @notice Tests for batch operations

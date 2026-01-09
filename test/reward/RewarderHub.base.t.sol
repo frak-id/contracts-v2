@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Test} from "forge-std/Test.sol";
-import {RewarderHub, RewardOp} from "src/reward/RewarderHub.sol";
-import {REWARDER_ROLE, RESOLVER_ROLE, UPGRADE_ROLE} from "src/constants/Roles.sol";
 import {MockErc20} from "../utils/MockErc20.sol";
+import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {RESOLVER_ROLE, REWARDER_ROLE, UPGRADE_ROLE} from "src/constants/Roles.sol";
+import {RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBaseTest
 /// @notice Base test contract with shared setup for RewarderHub tests
@@ -80,12 +80,7 @@ abstract contract RewarderHubBaseTest is Test {
         returns (RewardOp memory)
     {
         return RewardOp({
-            isLock: isLock,
-            target: target,
-            amount: amount,
-            token: _token,
-            bank: _bank,
-            attestation: attestation
+            isLock: isLock, target: target, amount: amount, token: _token, bank: _bank, attestation: attestation
         });
     }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {REWARDER_ROLE, RESOLVER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {RESOLVER_ROLE, REWARDER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {EnumerableMapLib} from "solady/utils/EnumerableMapLib.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
@@ -29,6 +29,14 @@ struct RewardOp {
 /// @title RewarderHub
 /// @notice Central hub for managing and distributing rewards across the Frak ecosystem
 /// @dev Uses eager resolution pattern - funds moved to claimable when userId is resolved
+/// @dev IMPORTANT: Token Compatibility
+///      This contract does NOT support:
+///      - Fee-on-transfer tokens: The contract credits the full transfer amount to users without
+///        measuring actual received amounts. Fee-on-transfer tokens would cause accounting
+///        discrepancies where users are credited more than the contract receives.
+///      - Rebasing tokens: The contract tracks fixed amounts in storage. Rebasing tokens that
+///        change balances over time would cause over/under-collateralization issues.
+///      Only use standard ERC20 tokens that transfer the exact requested amount.
 /// @custom:security-contact contact@frak.id
 contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, ReentrancyGuard {
     using SafeTransferLib for address;
@@ -78,9 +86,6 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
 
     /// @dev Thrown when there's nothing to recover
     error NothingToRecover();
-
-    /// @dev Thrown when bank has insufficient balance
-    error InsufficientBalance();
 
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
@@ -159,10 +164,16 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     }
 
     /// @notice Execute a batch of reward operations
-    /// @dev Ops MUST be sorted by (bank, token). Reverts if any transfer fails.
-    ///      Caller should simulate first to ensure success.
-    /// @param _ops Array of reward operations, sorted by (bank, token)
-    function batch(RewardOp[] calldata _ops) external onlyRoles(REWARDER_ROLE) {
+    /// @dev Gas Optimization: Operations SHOULD be sorted by (bank, token) for optimal gas usage.
+    ///      The function aggregates consecutive operations with the same (bank, token) pair into
+    ///      a single transfer. Unsorted operations will still execute correctly but may result
+    ///      in multiple smaller transfers instead of aggregated ones, consuming more gas.
+    ///      Example of optimal sorting: [(bankA, tokenX), (bankA, tokenX), (bankA, tokenY), (bankB, tokenX)]
+    ///      Reverts if any transfer fails. Caller should simulate first to ensure success.
+    /// @dev Security: nonReentrant guard protects against malicious token callbacks (e.g., ERC777 hooks)
+    ///      that could attempt to manipulate state during transfers.
+    /// @param _ops Array of reward operations, ideally sorted by (bank, token) for gas efficiency
+    function batch(RewardOp[] calldata _ops) external onlyRoles(REWARDER_ROLE) nonReentrant {
         uint256 len = _ops.length;
         if (len == 0) return;
 
@@ -354,19 +365,11 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /* -------------------------------------------------------------------------- */
 
     /// @dev Internal push reward implementation
-    function _pushReward(
-        address _wallet,
-        uint256 _amount,
-        address _token,
-        address _bank,
-        bytes calldata _attestation
-    ) internal {
+    function _pushReward(address _wallet, uint256 _amount, address _token, address _bank, bytes calldata _attestation)
+        internal
+    {
         if (_wallet == address(0)) revert InvalidAddress();
         if (_amount == 0) revert InvalidAmount();
-
-        // Check balance
-        uint256 balance = _token.balanceOf(_bank);
-        if (balance < _amount) revert InsufficientBalance();
 
         // Transfer tokens from bank to this contract
         _token.safeTransferFrom(_bank, address(this), _amount);
@@ -378,19 +381,11 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     }
 
     /// @dev Internal lock reward implementation
-    function _lockReward(
-        bytes32 _userId,
-        uint256 _amount,
-        address _token,
-        address _bank,
-        bytes calldata _attestation
-    ) internal {
+    function _lockReward(bytes32 _userId, uint256 _amount, address _token, address _bank, bytes calldata _attestation)
+        internal
+    {
         if (_userId == bytes32(0)) revert InvalidAddress();
         if (_amount == 0) revert InvalidAmount();
-
-        // Check balance
-        uint256 balance = _token.balanceOf(_bank);
-        if (balance < _amount) revert InsufficientBalance();
 
         // Transfer tokens from bank to this contract
         _token.safeTransferFrom(_bank, address(this), _amount);
