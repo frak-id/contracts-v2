@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {RewarderHubBaseTest} from "./RewarderHub.base.t.sol";
 import {RewarderHub} from "src/reward/RewarderHub.sol";
 import {REWARDER_ROLE, RESOLVER_ROLE, UPGRADE_ROLE} from "src/constants/Roles.sol";
+import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /// @title RewarderHubAdminTest
 /// @notice Tests for admin functions: pushReward, lockReward, resolveUserId, recoverLocked
@@ -78,7 +79,7 @@ contract RewarderHubAdminTest is RewarderHubBaseTest {
         token.approve(address(hub), 0);
 
         vm.prank(rewarder);
-        vm.expectRevert(RewarderHub.InsufficientAllowance.selector);
+        vm.expectRevert(SafeTransferLib.TransferFromFailed.selector);
         hub.pushReward(user1, 100e18, address(token), bank, attestation);
     }
 

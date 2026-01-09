@@ -82,9 +82,6 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @dev Thrown when bank has insufficient balance
     error InsufficientBalance();
 
-    /// @dev Thrown when bank has insufficient allowance
-    error InsufficientAllowance();
-
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -162,63 +159,58 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     }
 
     /// @notice Execute a batch of reward operations
-    /// @param _ops Array of reward operations
-    /// @return results Array of booleans indicating success/failure for each operation
-    function batch(RewardOp[] calldata _ops) external onlyRoles(REWARDER_ROLE) returns (bool[] memory results) {
-        results = new bool[](_ops.length);
+    /// @dev Ops MUST be sorted by (bank, token). Reverts if any transfer fails.
+    ///      Caller should simulate first to ensure success.
+    /// @param _ops Array of reward operations, sorted by (bank, token)
+    function batch(RewardOp[] calldata _ops) external onlyRoles(REWARDER_ROLE) {
+        uint256 len = _ops.length;
+        if (len == 0) return;
 
-        for (uint256 i; i < _ops.length;) {
+        RewarderHubStorage storage $ = _storage();
+
+        // Track current chunk for deferred transfer
+        address currentBank = _ops[0].bank;
+        address currentToken = _ops[0].token;
+        uint256 pendingAmount;
+
+        for (uint256 i; i < len;) {
             RewardOp calldata op = _ops[i];
 
-            // Pre-check: sufficient balance & allowance
-            uint256 balance = op.token.balanceOf(op.bank);
-            uint256 allowance = _allowance(op.token, op.bank);
-
-            if (balance < op.amount || allowance < op.amount) {
-                unchecked {
-                    ++i;
-                }
-                continue;
+            // Chunk boundary - transfer previous chunk
+            if (op.bank != currentBank || op.token != currentToken) {
+                currentToken.safeTransferFrom(currentBank, address(this), pendingAmount);
+                currentBank = op.bank;
+                currentToken = op.token;
+                pendingAmount = 0;
             }
 
-            // Execute transfer
-            bool transferSuccess = _safeTransferFrom(op.token, op.bank, op.amount);
-            if (!transferSuccess) {
-                unchecked {
-                    ++i;
-                }
-                continue;
-            }
+            // Accumulate for transfer
+            pendingAmount += op.amount;
 
-            // Update state based on operation type
-            RewarderHubStorage storage $ = _storage();
+            // Update state (rolled back if final transfer fails)
             if (op.isLock) {
-                bytes32 userId = op.target;
-                address resolved = $.resolutions[userId];
-
+                address resolved = $.resolutions[op.target];
                 if (resolved != address(0)) {
-                    // Auto-forward to resolved wallet
                     $.claimable[resolved][op.token] += op.amount;
                     emit RewardPushed(resolved, op.token, op.bank, op.amount, op.attestation);
                 } else {
-                    // Lock for anonymous user - get current and add
-                    (, uint256 current) = $.locked[userId].tryGet(op.token);
-                    $.locked[userId].set(op.token, current + op.amount);
-                    emit RewardLocked(userId, op.token, op.bank, op.amount, op.attestation);
+                    (, uint256 current) = $.locked[op.target].tryGet(op.token);
+                    $.locked[op.target].set(op.token, current + op.amount);
+                    emit RewardLocked(op.target, op.token, op.bank, op.amount, op.attestation);
                 }
             } else {
-                // Push directly to wallet
                 address wallet = address(uint160(uint256(op.target)));
                 $.claimable[wallet][op.token] += op.amount;
                 emit RewardPushed(wallet, op.token, op.bank, op.amount, op.attestation);
             }
 
-            results[i] = true;
-
             unchecked {
                 ++i;
             }
         }
+
+        // Transfer final chunk
+        currentToken.safeTransferFrom(currentBank, address(this), pendingAmount);
     }
 
     /// @notice Resolve a userId to a wallet address (one-time binding)
@@ -372,12 +364,9 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         if (_wallet == address(0)) revert InvalidAddress();
         if (_amount == 0) revert InvalidAmount();
 
-        // Check balance and allowance
+        // Check balance
         uint256 balance = _token.balanceOf(_bank);
         if (balance < _amount) revert InsufficientBalance();
-
-        uint256 allowance = _allowance(_token, _bank);
-        if (allowance < _amount) revert InsufficientAllowance();
 
         // Transfer tokens from bank to this contract
         _token.safeTransferFrom(_bank, address(this), _amount);
@@ -399,12 +388,9 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         if (_userId == bytes32(0)) revert InvalidAddress();
         if (_amount == 0) revert InvalidAmount();
 
-        // Check balance and allowance
+        // Check balance
         uint256 balance = _token.balanceOf(_bank);
         if (balance < _amount) revert InsufficientBalance();
-
-        uint256 allowance = _allowance(_token, _bank);
-        if (allowance < _amount) revert InsufficientAllowance();
 
         // Transfer tokens from bank to this contract
         _token.safeTransferFrom(_bank, address(this), _amount);
@@ -415,23 +401,6 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         $.locked[_userId].set(_token, current + _amount);
 
         emit RewardLocked(_userId, _token, _bank, _amount, _attestation);
-    }
-
-    /// @dev Get allowance using low-level call to handle non-standard tokens
-    function _allowance(address _token, address _owner) internal view returns (uint256) {
-        (bool success, bytes memory data) =
-            _token.staticcall(abi.encodeWithSignature("allowance(address,address)", _owner, address(this)));
-        if (success && data.length >= 32) {
-            return abi.decode(data, (uint256));
-        }
-        return 0;
-    }
-
-    /// @dev Safe transfer from with return value
-    function _safeTransferFrom(address _token, address _from, uint256 _amount) internal returns (bool) {
-        (bool success, bytes memory data) =
-            _token.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", _from, address(this), _amount));
-        return success && (data.length == 0 || abi.decode(data, (bool)));
     }
 
     /* -------------------------------------------------------------------------- */

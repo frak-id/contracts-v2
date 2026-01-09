@@ -5,7 +5,7 @@ import {RewarderHubBaseTest} from "./RewarderHub.base.t.sol";
 import {RewarderHub, RewardOp} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBatchTest
-/// @notice Tests for batch operations with partial failures
+/// @notice Tests for batch operations
 contract RewarderHubBatchTest is RewarderHubBaseTest {
     /* -------------------------------------------------------------------------- */
     /*                              Batch - Success                               */
@@ -18,12 +18,7 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
         ops[2] = _createRewardOp(false, _addressToBytes32(user1), 50e18, address(token2), bank);
 
         vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertEq(results.length, 3);
-        assertTrue(results[0]);
-        assertTrue(results[1]);
-        assertTrue(results[2]);
+        hub.batch(ops);
 
         assertEq(hub.getClaimable(user1, address(token)), 100e18);
         assertEq(hub.getClaimable(user2, address(token)), 200e18);
@@ -36,10 +31,7 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
         ops[1] = _createRewardOp(true, userId2, 200e18, address(token), bank);
 
         vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertTrue(results[0]);
-        assertTrue(results[1]);
+        hub.batch(ops);
 
         assertEq(hub.getLocked(userId1, address(token)), 100e18);
         assertEq(hub.getLocked(userId2, address(token)), 200e18);
@@ -53,12 +45,7 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
         ops[3] = _createRewardOp(true, userId2, 75e18, address(token2), bank);
 
         vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertTrue(results[0]);
-        assertTrue(results[1]);
-        assertTrue(results[2]);
-        assertTrue(results[3]);
+        hub.batch(ops);
 
         assertEq(hub.getClaimable(user1, address(token)), 100e18);
         assertEq(hub.getLocked(userId1, address(token)), 150e18);
@@ -75,10 +62,7 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
         ops[1] = _createRewardOp(true, userId2, 200e18, address(token), bank); // Should lock
 
         vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertTrue(results[0]);
-        assertTrue(results[1]);
+        hub.batch(ops);
 
         // userId1 was resolved, so goes to claimable
         assertEq(hub.getClaimable(user1, address(token)), 100e18);
@@ -88,106 +72,15 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
         assertEq(hub.getLocked(userId2, address(token)), 200e18);
     }
 
-    /* -------------------------------------------------------------------------- */
-    /*                           Batch - Partial Failures                         */
-    /* -------------------------------------------------------------------------- */
-
-    function test_batch_partialFailure_insufficientBalance() public {
-        // First op uses most of the balance
-        RewardOp[] memory ops = new RewardOp[](3);
-        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 900_000e18, address(token), bank);
-        ops[1] = _createRewardOp(false, _addressToBytes32(user2), 200_000e18, address(token), bank); // Should fail
-        ops[2] = _createRewardOp(false, _addressToBytes32(user1), 50_000e18, address(token), bank);
-
-        vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertTrue(results[0]);
-        assertFalse(results[1]); // Failed due to insufficient balance
-        assertTrue(results[2]);
-
-        assertEq(hub.getClaimable(user1, address(token)), 950_000e18);
-        assertEq(hub.getClaimable(user2, address(token)), 0);
-    }
-
-    function test_batch_partialFailure_insufficientAllowance() public {
-        // Set limited allowance
-        vm.prank(bank);
-        token.approve(address(hub), 150e18);
-
-        RewardOp[] memory ops = new RewardOp[](3);
-        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
-        ops[1] = _createRewardOp(false, _addressToBytes32(user2), 100e18, address(token), bank); // Should fail
-        ops[2] = _createRewardOp(false, _addressToBytes32(user1), 50e18, address(token), bank);
-
-        vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertTrue(results[0]);
-        assertFalse(results[1]); // Failed due to insufficient allowance
-        assertTrue(results[2]);
-    }
-
-    function test_batch_partialFailure_badToken() public {
-        address badToken = makeAddr("badToken");
-
-        RewardOp[] memory ops = new RewardOp[](3);
-        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
-        ops[1] = _createRewardOp(false, _addressToBytes32(user2), 100e18, badToken, bank); // Should fail
-        ops[2] = _createRewardOp(false, _addressToBytes32(user1), 50e18, address(token), bank);
-
-        vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertTrue(results[0]);
-        assertFalse(results[1]); // Failed due to bad token
-        assertTrue(results[2]);
-    }
-
-    function test_batch_partialFailure_badBank() public {
-        address badBank = makeAddr("badBank");
-
-        RewardOp[] memory ops = new RewardOp[](3);
-        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
-        ops[1] = _createRewardOp(false, _addressToBytes32(user2), 100e18, address(token), badBank); // Should fail
-        ops[2] = _createRewardOp(false, _addressToBytes32(user1), 50e18, address(token), bank);
-
-        vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertTrue(results[0]);
-        assertFalse(results[1]); // Failed due to bad bank (no balance/allowance)
-        assertTrue(results[2]);
-    }
-
-    function test_batch_allFail() public {
-        address badBank = makeAddr("badBank");
-
-        RewardOp[] memory ops = new RewardOp[](2);
-        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), badBank);
-        ops[1] = _createRewardOp(false, _addressToBytes32(user2), 100e18, address(token), badBank);
-
-        vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertFalse(results[0]);
-        assertFalse(results[1]);
-
-        assertEq(hub.getClaimable(user1, address(token)), 0);
-        assertEq(hub.getClaimable(user2, address(token)), 0);
-    }
-
     function test_batch_emptyArray() public {
         RewardOp[] memory ops = new RewardOp[](0);
 
         vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        assertEq(results.length, 0);
+        hub.batch(ops); // Should not revert
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                              Batch - Access Control                        */
+    /*                              Batch - Reverts                               */
     /* -------------------------------------------------------------------------- */
 
     function test_batch_revert_notRewarder() public {
@@ -195,6 +88,38 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
         ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
 
         vm.prank(user1);
+        vm.expectRevert();
+        hub.batch(ops);
+    }
+
+    function test_batch_revert_insufficientBalance() public {
+        RewardOp[] memory ops = new RewardOp[](1);
+        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 2_000_000e18, address(token), bank);
+
+        vm.prank(rewarder);
+        vm.expectRevert();
+        hub.batch(ops);
+    }
+
+    function test_batch_revert_insufficientAllowance() public {
+        vm.prank(bank);
+        token.approve(address(hub), 50e18);
+
+        RewardOp[] memory ops = new RewardOp[](1);
+        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
+
+        vm.prank(rewarder);
+        vm.expectRevert();
+        hub.batch(ops);
+    }
+
+    function test_batch_revert_badBank() public {
+        address badBank = makeAddr("badBank");
+
+        RewardOp[] memory ops = new RewardOp[](1);
+        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), badBank);
+
+        vm.prank(rewarder);
         vm.expectRevert();
         hub.batch(ops);
     }
@@ -241,12 +166,93 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
         }
 
         vm.prank(rewarder);
-        bool[] memory results = hub.batch(ops);
-
-        for (uint256 i = 0; i < numOps; i++) {
-            assertTrue(results[i]);
-        }
+        hub.batch(ops);
 
         assertEq(hub.getClaimable(user1, address(token)), totalExpected);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                        Batch - Realistic Benchmarks                        */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Simulate real-world batch: 5 campaigns, 2 tokens each, ~100 ops
+    /// Ops are sorted by (bank, token) as required
+    function test_batch_benchmark_100ops() public {
+        // Setup 5 banks (campaigns)
+        address[] memory banks = new address[](5);
+        for (uint256 i; i < 5; i++) {
+            banks[i] = makeAddr(string(abi.encodePacked("bank", i)));
+            token.mint(banks[i], 100_000e18);
+            token2.mint(banks[i], 100_000e18);
+            vm.startPrank(banks[i]);
+            token.approve(address(hub), type(uint256).max);
+            token2.approve(address(hub), type(uint256).max);
+            vm.stopPrank();
+        }
+
+        // Create 100 ops sorted by (bank, token)
+        // 5 banks * 2 tokens * 10 ops each = 100 ops
+        RewardOp[] memory ops = new RewardOp[](100);
+        uint256 idx;
+
+        for (uint256 b; b < 5; b++) {
+            // 10 ops for token
+            for (uint256 i; i < 10; i++) {
+                address recipient = i % 2 == 0 ? user1 : user2;
+                bool isLock = i % 3 == 0;
+                bytes32 target = isLock ? keccak256(abi.encodePacked("user", b, i)) : _addressToBytes32(recipient);
+                ops[idx++] = _createRewardOp(isLock, target, 100e18, address(token), banks[b]);
+            }
+            // 10 ops for token2
+            for (uint256 i; i < 10; i++) {
+                address recipient = i % 2 == 0 ? user1 : user2;
+                bool isLock = i % 3 == 0;
+                bytes32 target = isLock ? keccak256(abi.encodePacked("user", b, i)) : _addressToBytes32(recipient);
+                ops[idx++] = _createRewardOp(isLock, target, 50e18, address(token2), banks[b]);
+            }
+        }
+
+        vm.prank(rewarder);
+        hub.batch(ops);
+    }
+
+    /// @notice Simulate larger batch: 200 ops
+    function test_batch_benchmark_200ops() public {
+        // Setup 5 banks (campaigns)
+        address[] memory banks = new address[](5);
+        for (uint256 i; i < 5; i++) {
+            banks[i] = makeAddr(string(abi.encodePacked("bank", i)));
+            token.mint(banks[i], 500_000e18);
+            token2.mint(banks[i], 500_000e18);
+            vm.startPrank(banks[i]);
+            token.approve(address(hub), type(uint256).max);
+            token2.approve(address(hub), type(uint256).max);
+            vm.stopPrank();
+        }
+
+        // Create 200 ops sorted by (bank, token)
+        // 5 banks * 2 tokens * 20 ops each = 200 ops
+        RewardOp[] memory ops = new RewardOp[](200);
+        uint256 idx;
+
+        for (uint256 b; b < 5; b++) {
+            // 20 ops for token
+            for (uint256 i; i < 20; i++) {
+                address recipient = i % 2 == 0 ? user1 : user2;
+                bool isLock = i % 3 == 0;
+                bytes32 target = isLock ? keccak256(abi.encodePacked("user", b, i)) : _addressToBytes32(recipient);
+                ops[idx++] = _createRewardOp(isLock, target, 100e18, address(token), banks[b]);
+            }
+            // 20 ops for token2
+            for (uint256 i; i < 20; i++) {
+                address recipient = i % 2 == 0 ? user1 : user2;
+                bool isLock = i % 3 == 0;
+                bytes32 target = isLock ? keccak256(abi.encodePacked("user", b, i)) : _addressToBytes32(recipient);
+                ops[idx++] = _createRewardOp(isLock, target, 50e18, address(token2), banks[b]);
+            }
+        }
+
+        vm.prank(rewarder);
+        hub.batch(ops);
     }
 }
