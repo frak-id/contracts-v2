@@ -23,8 +23,8 @@ contract CampaignBank is OwnableRoles, Initializable {
     /// @dev Emitted when a token allowance is updated for the RewarderHub
     event AllowanceUpdated(address indexed token, uint256 amount);
 
-    /// @dev Emitted when the distribution state is updated
-    event DistributionStateUpdated(bool isDistributing);
+    /// @dev Emitted when the bank open state is updated
+    event BankStateUpdated(bool isOpen);
 
     /// @dev Emitted when tokens are deposited
     event Deposited(address indexed token, uint256 amount);
@@ -57,8 +57,12 @@ contract CampaignBank is OwnableRoles, Initializable {
     struct CampaignBankStorage {
         /// @dev The RewarderHub address that can pull funds
         address rewarderHub;
-        /// @dev Is the bank open for distribution
-        bool isDistributionEnabled;
+        /// @dev Bank open state - controls operational mode:
+        ///      - true (open): allowances can be updated, withdrawals blocked
+        ///      - false (closed): allowances cannot be updated, withdrawals allowed
+        /// @dev NOTE: This flag does NOT prevent RewarderHub from pulling funds via existing allowances.
+        ///      To fully stop fund outflow, use revokeAllowance() to remove ERC20 approvals.
+        bool isOpen;
     }
 
     /// @notice Get the RewarderHub address
@@ -97,16 +101,18 @@ contract CampaignBank is OwnableRoles, Initializable {
     /*                            Distribution Control                            */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Update the distribution state (open/close the bank)
-    /// @param _enabled Whether distribution should be enabled
-    function setDistributionState(bool _enabled) external onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE) {
-        _storage().isDistributionEnabled = _enabled;
-        emit DistributionStateUpdated(_enabled);
+    /// @notice Set the bank open state
+    /// @dev When open: allowances can be updated, withdrawals blocked
+    ///      When closed: allowances cannot be updated, withdrawals allowed
+    /// @param _isOpen Whether the bank should be open
+    function setOpen(bool _isOpen) external onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE) {
+        _storage().isOpen = _isOpen;
+        emit BankStateUpdated(_isOpen);
     }
 
-    /// @notice Check if distribution is enabled
-    function isDistributionEnabled() external view returns (bool) {
-        return _storage().isDistributionEnabled;
+    /// @notice Check if the bank is open
+    function isOpen() external view returns (bool) {
+        return _storage().isOpen;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -118,7 +124,7 @@ contract CampaignBank is OwnableRoles, Initializable {
     /// @param _amount The allowance amount
     function updateAllowance(address _token, uint256 _amount) external onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE) {
         CampaignBankStorage storage $ = _storage();
-        if (!$.isDistributionEnabled) revert BankIsClosed();
+        if (!$.isOpen) revert BankIsClosed();
 
         _token.safeApprove($.rewarderHub, _amount);
         emit AllowanceUpdated(_token, _amount);
@@ -132,7 +138,7 @@ contract CampaignBank is OwnableRoles, Initializable {
         onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE)
     {
         CampaignBankStorage storage $ = _storage();
-        if (!$.isDistributionEnabled) revert BankIsClosed();
+        if (!$.isOpen) revert BankIsClosed();
 
         address rewarderHub = $.rewarderHub;
         for (uint256 i; i < _tokens.length;) {
@@ -173,7 +179,7 @@ contract CampaignBank is OwnableRoles, Initializable {
         external
         onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE)
     {
-        if (_storage().isDistributionEnabled) revert BankIsStillOpen();
+        if (_storage().isOpen) revert BankIsStillOpen();
         if (_to == address(0)) revert InvalidAddress();
 
         _token.safeTransfer(_to, _amount);
@@ -191,12 +197,27 @@ contract CampaignBank is OwnableRoles, Initializable {
     /*                            Emergency Functions                             */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Emergency revoke all allowances for a token
-    /// @dev Can be called even when distribution is enabled
+    /// @notice Emergency revoke allowance for a token
+    /// @dev Can be called even when bank is open
     /// @param _token The token address
     function revokeAllowance(address _token) external onlyOwner {
         _token.safeApprove(_storage().rewarderHub, 0);
         emit AllowanceUpdated(_token, 0);
+    }
+
+    /// @notice Emergency revoke allowances for multiple tokens
+    /// @dev Can be called even when bank is open
+    /// @param _tokens Array of token addresses to revoke
+    function revokeAllowances(address[] calldata _tokens) external onlyOwner {
+        address rewarderHub = _storage().rewarderHub;
+        for (uint256 i; i < _tokens.length;) {
+            _tokens[i].safeApprove(rewarderHub, 0);
+            emit AllowanceUpdated(_tokens[i], 0);
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /* -------------------------------------------------------------------------- */

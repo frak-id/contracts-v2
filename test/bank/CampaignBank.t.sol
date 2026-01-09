@@ -78,37 +78,37 @@ contract CampaignBankTest is Test {
     /*                          Distribution Control                              */
     /* -------------------------------------------------------------------------- */
 
-    function test_setDistributionState_enable() public {
+    function test_setOpen_enable() public {
         vm.expectEmit(false, false, false, true);
-        emit CampaignBank.DistributionStateUpdated(true);
+        emit CampaignBank.BankStateUpdated(true);
 
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
-        assertTrue(campaignBank.isDistributionEnabled());
+        assertTrue(campaignBank.isOpen());
     }
 
-    function test_setDistributionState_disable() public {
+    function test_setOpen_disable() public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         vm.prank(owner);
-        campaignBank.setDistributionState(false);
+        campaignBank.setOpen(false);
 
-        assertFalse(campaignBank.isDistributionEnabled());
+        assertFalse(campaignBank.isOpen());
     }
 
-    function test_setDistributionState_byManager() public {
+    function test_setOpen_byManager() public {
         vm.prank(manager);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
-        assertTrue(campaignBank.isDistributionEnabled());
+        assertTrue(campaignBank.isOpen());
     }
 
-    function test_setDistributionState_revert_notAuthorized() public {
+    function test_setOpen_revert_notAuthorized() public {
         vm.prank(user);
         vm.expectRevert();
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -118,7 +118,7 @@ contract CampaignBankTest is Test {
     function test_updateAllowance_success() public {
         // Enable distribution first
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         vm.expectEmit(true, false, false, true);
         emit CampaignBank.AllowanceUpdated(address(token), 1000e18);
@@ -132,7 +132,7 @@ contract CampaignBankTest is Test {
 
     function test_updateAllowance_byManager() public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         vm.prank(manager);
         campaignBank.updateAllowance(address(token), 1000e18);
@@ -149,7 +149,7 @@ contract CampaignBankTest is Test {
 
     function test_updateAllowance_revert_notAuthorized() public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         vm.prank(user);
         vm.expectRevert();
@@ -158,7 +158,7 @@ contract CampaignBankTest is Test {
 
     function test_updateAllowances_multiple() public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         address[] memory tokens = new address[](2);
         tokens[0] = address(token);
@@ -177,7 +177,7 @@ contract CampaignBankTest is Test {
 
     function test_updateAllowances_emitsEvents() public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         address[] memory tokens = new address[](2);
         tokens[0] = address(token);
@@ -282,7 +282,7 @@ contract CampaignBankTest is Test {
         vm.startPrank(owner);
         token.approve(address(campaignBank), 1000e18);
         campaignBank.deposit(address(token), 1000e18);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
         vm.stopPrank();
 
         vm.prank(owner);
@@ -319,7 +319,7 @@ contract CampaignBankTest is Test {
     function test_revokeAllowance_success() public {
         // Setup: enable distribution and set allowance
         vm.startPrank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
         campaignBank.updateAllowance(address(token), 1000e18);
         vm.stopPrank();
 
@@ -335,7 +335,7 @@ contract CampaignBankTest is Test {
 
     function test_revokeAllowance_revert_notOwner() public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         vm.prank(owner);
         campaignBank.updateAllowance(address(token), 1000e18);
@@ -346,13 +346,81 @@ contract CampaignBankTest is Test {
         campaignBank.revokeAllowance(address(token));
     }
 
+    function test_revokeAllowances_success() public {
+        // Setup: enable and set allowances for multiple tokens
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        campaignBank.updateAllowance(address(token2), 2000e18);
+        vm.stopPrank();
+
+        // Verify allowances are set
+        assertEq(campaignBank.getAllowance(address(token)), 1000e18);
+        assertEq(campaignBank.getAllowance(address(token2)), 2000e18);
+
+        // Revoke both
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(token);
+        tokens[1] = address(token2);
+
+        vm.prank(owner);
+        campaignBank.revokeAllowances(tokens);
+
+        assertEq(campaignBank.getAllowance(address(token)), 0);
+        assertEq(campaignBank.getAllowance(address(token2)), 0);
+    }
+
+    function test_revokeAllowances_emitsEvents() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        campaignBank.updateAllowance(address(token2), 2000e18);
+        vm.stopPrank();
+
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(token);
+        tokens[1] = address(token2);
+
+        vm.expectEmit(true, false, false, true);
+        emit CampaignBank.AllowanceUpdated(address(token), 0);
+
+        vm.expectEmit(true, false, false, true);
+        emit CampaignBank.AllowanceUpdated(address(token2), 0);
+
+        vm.prank(owner);
+        campaignBank.revokeAllowances(tokens);
+    }
+
+    function test_revokeAllowances_revert_notOwner() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        vm.stopPrank();
+
+        address[] memory tokens = new address[](1);
+        tokens[0] = address(token);
+
+        // Manager cannot revoke (only owner)
+        vm.prank(manager);
+        vm.expectRevert();
+        campaignBank.revokeAllowances(tokens);
+    }
+
+    function test_revokeAllowances_emptyArray() public {
+        address[] memory tokens = new address[](0);
+
+        // Should not revert with empty array
+        vm.prank(owner);
+        campaignBank.revokeAllowances(tokens);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                              View Functions                                */
     /* -------------------------------------------------------------------------- */
 
     function test_getAllowance_returnsCorrectValue() public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         vm.prank(owner);
         campaignBank.updateAllowance(address(token), 1000e18);
@@ -377,8 +445,8 @@ contract CampaignBankTest is Test {
         assertEq(campaignBank.getBalance(address(token)), 0);
     }
 
-    function test_isDistributionEnabled_default() public view {
-        assertFalse(campaignBank.isDistributionEnabled());
+    function test_isOpen_default() public view {
+        assertFalse(campaignBank.isOpen());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -412,7 +480,7 @@ contract CampaignBankTest is Test {
 
     function testFuzz_updateAllowance_amounts(uint96 amount) public {
         vm.prank(owner);
-        campaignBank.setDistributionState(true);
+        campaignBank.setOpen(true);
 
         vm.prank(owner);
         campaignBank.updateAllowance(address(token), amount);

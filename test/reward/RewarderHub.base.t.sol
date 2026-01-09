@@ -5,7 +5,7 @@ import {MockErc20} from "../utils/MockErc20.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {RESOLVER_ROLE, REWARDER_ROLE, UPGRADE_ROLE} from "src/constants/Roles.sol";
-import {RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
+import {ResolveOp, RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBaseTest
 /// @notice Base test contract with shared setup for RewarderHub tests
@@ -70,8 +70,10 @@ abstract contract RewarderHubBaseTest is Test {
     }
 
     function _resolveUserId(bytes32 userId, address wallet) internal {
+        ResolveOp[] memory ops = new ResolveOp[](1);
+        ops[0] = ResolveOp({userId: userId, wallet: wallet});
         vm.prank(resolver);
-        hub.resolveUserId(userId, wallet);
+        hub.resolveUserIds(ops);
     }
 
     function _createRewardOp(bool isLock, bytes32 target, uint256 amount, address _token, address _bank)

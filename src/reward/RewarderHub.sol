@@ -34,6 +34,14 @@ struct ResolveOp {
     address wallet;
 }
 
+/// @dev Struct for a single recover operation in batch
+struct RecoverOp {
+    /// @dev User's identity group ID
+    bytes32 userId;
+    /// @dev Token address to recover
+    address token;
+}
+
 /// @author @KONFeature
 /// @title RewarderHub
 /// @notice Central hub for managing and distributing rewards across the Frak ecosystem
@@ -57,14 +65,10 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /* -------------------------------------------------------------------------- */
 
     /// @dev Emitted when a reward is pushed directly to a wallet
-    event RewardPushed(
-        address indexed wallet, address token, address bank, uint256 amount, bytes attestation
-    );
+    event RewardPushed(address indexed wallet, address token, address bank, uint256 amount, bytes attestation);
 
     /// @dev Emitted when a reward is locked for an anonymous user
-    event RewardLocked(
-        bytes32 indexed userId, address token, address bank, uint256 amount, bytes attestation
-    );
+    event RewardLocked(bytes32 indexed userId, address token, address bank, uint256 amount, bytes attestation);
 
     /// @dev Emitted when a userId is resolved to a wallet
     event UserIdResolved(bytes32 indexed userId, address wallet);
@@ -236,19 +240,11 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         currentToken.safeTransferFrom(currentBank, address(this), pendingAmount);
     }
 
-    /// @notice Resolve a userId to a wallet address (one-time binding)
-    /// @dev Eagerly moves all locked rewards to claimable for the wallet
-    /// @param _userId The user's identity group ID
-    /// @param _wallet The wallet address to bind to
-    function resolveUserId(bytes32 _userId, address _wallet) external onlyRoles(RESOLVER_ROLE) {
-        _resolveUserId(_userId, _wallet);
-    }
-
     /// @notice Resolve multiple userIds to wallet addresses in a single transaction
     /// @dev Eagerly moves all locked rewards to claimable for each resolved wallet
     /// @dev Each userId can only be resolved once (reverts if already resolved)
     /// @param _ops Array of resolve operations
-    function batchResolve(ResolveOp[] calldata _ops) external onlyRoles(RESOLVER_ROLE) {
+    function resolveUserIds(ResolveOp[] calldata _ops) external onlyRoles(RESOLVER_ROLE) {
         uint256 len = _ops.length;
         if (len == 0) return;
 
@@ -261,23 +257,21 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         }
     }
 
-    /// @notice Recover locked rewards for an unresolved userId
-    /// @param _userId The user's identity group ID
-    /// @param _token The token address
-    function recoverLocked(bytes32 _userId, address _token) external onlyOwner {
+    /// @notice Recover locked rewards for multiple unresolved userIds in a single transaction
+    /// @dev Each userId must NOT be resolved (reverts if any is resolved)
+    /// @param _ops Array of recover operations
+    function recoverLocked(RecoverOp[] calldata _ops) external onlyOwner {
+        uint256 len = _ops.length;
+        if (len == 0) return;
+
         RewarderHubStorage storage $ = _storage();
-
-        // Can only recover if NOT resolved (no wallet created)
-        if ($.resolutions[_userId] != address(0)) revert CannotRecoverResolved();
-
-        (bool exists, uint256 amount) = $.locked[_userId].tryGet(_token);
-        if (!exists || amount == 0) revert NothingToRecover();
-
-        $.locked[_userId].remove(_token);
-
-        _token.safeTransfer(msg.sender, amount);
-
-        emit LockedRecovered(_userId, _token, amount, msg.sender);
+        for (uint256 i; i < len;) {
+            RecoverOp calldata op = _ops[i];
+            _recoverLocked($, op.userId, op.token);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -432,8 +426,21 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         emit UserIdResolved(_userId, _wallet);
     }
 
-    /* -------------------------------------------------------------------------- */
-    /*                                  Upgrade                                   */
+    /// @dev Internal recover locked implementation
+    function _recoverLocked(RewarderHubStorage storage $, bytes32 _userId, address _token) internal {
+        // Can only recover if NOT resolved (no wallet created)
+        if ($.resolutions[_userId] != address(0)) revert CannotRecoverResolved();
+
+        (bool exists, uint256 amount) = $.locked[_userId].tryGet(_token);
+        if (!exists || amount == 0) revert NothingToRecover();
+
+        $.locked[_userId].remove(_token);
+
+        _token.safeTransfer(msg.sender, amount);
+
+        emit LockedRecovered(_userId, _token, amount, msg.sender);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                                  Upgrade                                   */
     /* -------------------------------------------------------------------------- */

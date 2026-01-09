@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {RewarderHubBaseTest} from "./RewarderHub.base.t.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {RESOLVER_ROLE, REWARDER_ROLE, UPGRADE_ROLE} from "src/constants/Roles.sol";
-import {ResolveOp, RewarderHub} from "src/reward/RewarderHub.sol";
+import {RecoverOp, ResolveOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubAdminTest
 /// @notice Tests for admin functions: pushReward, lockReward, resolveUserId, recoverLocked
@@ -140,63 +140,10 @@ contract RewarderHubAdminTest is RewarderHubBaseTest {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                               resolveUserId                                */
+    /*                              resolveUserIds                                 */
     /* -------------------------------------------------------------------------- */
 
-    function test_resolveUserId_success() public {
-        // Lock some rewards first
-        _lockReward(userId1, 100e18);
-
-        vm.expectEmit(true, true, false, false);
-        emit RewarderHub.UserIdResolved(userId1, user1);
-
-        _resolveUserId(userId1, user1);
-
-        assertEq(hub.getResolution(userId1), user1);
-        // Verify eager resolution moved funds to claimable
-        assertEq(hub.getClaimable(user1, address(token)), 100e18);
-        assertEq(hub.getLocked(userId1, address(token)), 0);
-    }
-
-    function test_resolveUserId_multipleToSameWallet() public {
-        // Lock rewards for both userIds
-        _lockReward(userId1, 100e18);
-        _lockReward(userId2, 50e18);
-
-        _resolveUserId(userId1, user1);
-        _resolveUserId(userId2, user1);
-
-        assertEq(hub.getResolution(userId1), user1);
-        assertEq(hub.getResolution(userId2), user1);
-        // Verify both were moved to claimable
-        assertEq(hub.getClaimable(user1, address(token)), 150e18);
-    }
-
-    function test_resolveUserId_revert_notResolver() public {
-        vm.prank(user1);
-        vm.expectRevert();
-        hub.resolveUserId(userId1, user1);
-    }
-
-    function test_resolveUserId_revert_invalidWallet() public {
-        vm.prank(resolver);
-        vm.expectRevert(RewarderHub.InvalidAddress.selector);
-        hub.resolveUserId(userId1, address(0));
-    }
-
-    function test_resolveUserId_revert_alreadyResolved() public {
-        _resolveUserId(userId1, user1);
-
-        vm.prank(resolver);
-        vm.expectRevert(RewarderHub.AlreadyResolved.selector);
-        hub.resolveUserId(userId1, user2);
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                               batchResolve                                 */
-    /* -------------------------------------------------------------------------- */
-
-    function test_batchResolve_success() public {
+    function test_resolveUserIds_success() public {
         // Lock rewards for multiple userIds
         _lockReward(userId1, 100e18);
         _lockReward(userId2, 200e18);
@@ -211,7 +158,7 @@ contract RewarderHubAdminTest is RewarderHubBaseTest {
         emit RewarderHub.UserIdResolved(userId2, user2);
 
         vm.prank(resolver);
-        hub.batchResolve(ops);
+        hub.resolveUserIds(ops);
 
         // Verify resolutions
         assertEq(hub.getResolution(userId1), user1);
@@ -224,7 +171,26 @@ contract RewarderHubAdminTest is RewarderHubBaseTest {
         assertEq(hub.getLocked(userId2, address(token)), 0);
     }
 
-    function test_batchResolve_multipleUserIdsToSameWallet() public {
+    function test_resolveUserIds_singleOp() public {
+        // Lock some rewards first
+        _lockReward(userId1, 100e18);
+
+        ResolveOp[] memory ops = new ResolveOp[](1);
+        ops[0] = ResolveOp({userId: userId1, wallet: user1});
+
+        vm.expectEmit(true, true, false, false);
+        emit RewarderHub.UserIdResolved(userId1, user1);
+
+        vm.prank(resolver);
+        hub.resolveUserIds(ops);
+
+        assertEq(hub.getResolution(userId1), user1);
+        // Verify eager resolution moved funds to claimable
+        assertEq(hub.getClaimable(user1, address(token)), 100e18);
+        assertEq(hub.getLocked(userId1, address(token)), 0);
+    }
+
+    function test_resolveUserIds_multipleUserIdsToSameWallet() public {
         // Lock rewards for multiple userIds
         _lockReward(userId1, 100e18);
         _lockReward(userId2, 50e18);
@@ -235,39 +201,39 @@ contract RewarderHubAdminTest is RewarderHubBaseTest {
         ops[1] = ResolveOp({userId: userId2, wallet: user1});
 
         vm.prank(resolver);
-        hub.batchResolve(ops);
+        hub.resolveUserIds(ops);
 
         assertEq(hub.getResolution(userId1), user1);
         assertEq(hub.getResolution(userId2), user1);
         assertEq(hub.getClaimable(user1, address(token)), 150e18);
     }
 
-    function test_batchResolve_emptyArray() public {
+    function test_resolveUserIds_emptyArray() public {
         ResolveOp[] memory ops = new ResolveOp[](0);
 
         vm.prank(resolver);
-        hub.batchResolve(ops); // Should not revert
+        hub.resolveUserIds(ops); // Should not revert
     }
 
-    function test_batchResolve_revert_notResolver() public {
+    function test_resolveUserIds_revert_notResolver() public {
         ResolveOp[] memory ops = new ResolveOp[](1);
         ops[0] = ResolveOp({userId: userId1, wallet: user1});
 
         vm.prank(user1);
         vm.expectRevert();
-        hub.batchResolve(ops);
+        hub.resolveUserIds(ops);
     }
 
-    function test_batchResolve_revert_invalidWallet() public {
+    function test_resolveUserIds_revert_invalidWallet() public {
         ResolveOp[] memory ops = new ResolveOp[](1);
         ops[0] = ResolveOp({userId: userId1, wallet: address(0)});
 
         vm.prank(resolver);
         vm.expectRevert(RewarderHub.InvalidAddress.selector);
-        hub.batchResolve(ops);
+        hub.resolveUserIds(ops);
     }
 
-    function test_batchResolve_revert_alreadyResolved() public {
+    function test_resolveUserIds_revert_alreadyResolved() public {
         _resolveUserId(userId1, user1);
 
         ResolveOp[] memory ops = new ResolveOp[](2);
@@ -276,7 +242,7 @@ contract RewarderHubAdminTest is RewarderHubBaseTest {
 
         vm.prank(resolver);
         vm.expectRevert(RewarderHub.AlreadyResolved.selector);
-        hub.batchResolve(ops);
+        hub.resolveUserIds(ops);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -284,41 +250,112 @@ contract RewarderHubAdminTest is RewarderHubBaseTest {
     /* -------------------------------------------------------------------------- */
 
     function test_recoverLocked_success() public {
+        // Lock rewards for multiple userIds with different tokens
+        _lockReward(userId1, 100e18);
+        vm.prank(rewarder);
+        hub.lockReward(userId2, 200e18, address(token2), bank, attestation);
+
+        uint256 ownerToken1Before = token.balanceOf(owner);
+        uint256 ownerToken2Before = token2.balanceOf(owner);
+
+        RecoverOp[] memory ops = new RecoverOp[](2);
+        ops[0] = RecoverOp({userId: userId1, token: address(token)});
+        ops[1] = RecoverOp({userId: userId2, token: address(token2)});
+
+        vm.expectEmit(true, true, false, true);
+        emit RewarderHub.LockedRecovered(userId1, address(token), 100e18, owner);
+        vm.expectEmit(true, true, false, true);
+        emit RewarderHub.LockedRecovered(userId2, address(token2), 200e18, owner);
+
+        vm.prank(owner);
+        hub.recoverLocked(ops);
+
+        // Verify locked is cleared
+        assertEq(hub.getLocked(userId1, address(token)), 0);
+        assertEq(hub.getLocked(userId2, address(token2)), 0);
+
+        // Verify owner received funds
+        assertEq(token.balanceOf(owner), ownerToken1Before + 100e18);
+        assertEq(token2.balanceOf(owner), ownerToken2Before + 200e18);
+    }
+
+    function test_recoverLocked_singleOp() public {
         _lockReward(userId1, 100e18);
 
         uint256 ownerBalanceBefore = token.balanceOf(owner);
+
+        RecoverOp[] memory ops = new RecoverOp[](1);
+        ops[0] = RecoverOp({userId: userId1, token: address(token)});
 
         vm.expectEmit(true, true, false, true);
         emit RewarderHub.LockedRecovered(userId1, address(token), 100e18, owner);
 
         vm.prank(owner);
-        hub.recoverLocked(userId1, address(token));
+        hub.recoverLocked(ops);
 
         assertEq(hub.getLocked(userId1, address(token)), 0);
         assertEq(token.balanceOf(owner), ownerBalanceBefore + 100e18);
     }
 
+    function test_recoverLocked_sameUserIdMultipleTokens() public {
+        // Lock multiple tokens for same userId
+        _lockReward(userId1, 100e18);
+        vm.prank(rewarder);
+        hub.lockReward(userId1, 50e18, address(token2), bank, attestation);
+
+        RecoverOp[] memory ops = new RecoverOp[](2);
+        ops[0] = RecoverOp({userId: userId1, token: address(token)});
+        ops[1] = RecoverOp({userId: userId1, token: address(token2)});
+
+        vm.prank(owner);
+        hub.recoverLocked(ops);
+
+        assertEq(hub.getLocked(userId1, address(token)), 0);
+        assertEq(hub.getLocked(userId1, address(token2)), 0);
+    }
+
+    function test_recoverLocked_emptyArray() public {
+        RecoverOp[] memory ops = new RecoverOp[](0);
+
+        vm.prank(owner);
+        hub.recoverLocked(ops); // Should not revert
+    }
+
     function test_recoverLocked_revert_notOwner() public {
         _lockReward(userId1, 100e18);
 
+        RecoverOp[] memory ops = new RecoverOp[](1);
+        ops[0] = RecoverOp({userId: userId1, token: address(token)});
+
         vm.prank(rewarder);
         vm.expectRevert();
-        hub.recoverLocked(userId1, address(token));
+        hub.recoverLocked(ops);
     }
 
     function test_recoverLocked_revert_alreadyResolved() public {
         _lockReward(userId1, 100e18);
+        _lockReward(userId2, 50e18);
         _resolveUserId(userId1, user1);
+
+        RecoverOp[] memory ops = new RecoverOp[](2);
+        ops[0] = RecoverOp({userId: userId1, token: address(token)}); // Already resolved
+        ops[1] = RecoverOp({userId: userId2, token: address(token)});
 
         vm.prank(owner);
         vm.expectRevert(RewarderHub.CannotRecoverResolved.selector);
-        hub.recoverLocked(userId1, address(token));
+        hub.recoverLocked(ops);
     }
 
     function test_recoverLocked_revert_nothingToRecover() public {
+        _lockReward(userId1, 100e18);
+
+        RecoverOp[] memory ops = new RecoverOp[](2);
+        ops[0] = RecoverOp({userId: userId1, token: address(token)});
+        ops[1] = RecoverOp({userId: userId2, token: address(token)}); // Nothing locked
+
         vm.prank(owner);
         vm.expectRevert(RewarderHub.NothingToRecover.selector);
-        hub.recoverLocked(userId1, address(token));
+        hub.recoverLocked(ops);
     }
 
     /* -------------------------------------------------------------------------- */
