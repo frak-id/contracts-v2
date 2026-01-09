@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {REWARDER_ROLE, RESOLVER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+import {EnumerableMapLib} from "solady/utils/EnumerableMapLib.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
@@ -27,10 +28,11 @@ struct RewardOp {
 /// @author @KONFeature
 /// @title RewarderHub
 /// @notice Central hub for managing and distributing rewards across the Frak ecosystem
-/// @dev Uses lazy resolution pattern for anonymous users who create wallets later
+/// @dev Uses eager resolution pattern - funds moved to claimable when userId is resolved
 /// @custom:security-contact contact@frak.id
 contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, ReentrancyGuard {
     using SafeTransferLib for address;
+    using EnumerableMapLib for EnumerableMapLib.AddressToUint256Map;
 
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
@@ -95,12 +97,10 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     struct RewarderHubStorage {
         /// @dev Claimable rewards: wallet => token => amount
         mapping(address wallet => mapping(address token => uint256 amount)) claimable;
-        /// @dev Locked rewards for anonymous users: userId => token => amount
-        mapping(bytes32 userId => mapping(address token => uint256 amount)) locked;
+        /// @dev Locked rewards for anonymous users: userId => (token => amount) enumerable map
+        mapping(bytes32 userId => EnumerableMapLib.AddressToUint256Map) locked;
         /// @dev Resolution mapping: userId => resolved wallet address
         mapping(bytes32 userId => address wallet) resolutions;
-        /// @dev Reverse mapping for lazy claim: wallet => array of resolved userIds
-        mapping(address wallet => bytes32[] userIds) walletUserIds;
     }
 
     function _storage() private pure returns (RewarderHubStorage storage storagePtr) {
@@ -191,23 +191,25 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
             }
 
             // Update state based on operation type
+            RewarderHubStorage storage $ = _storage();
             if (op.isLock) {
                 bytes32 userId = op.target;
-                address resolved = _storage().resolutions[userId];
+                address resolved = $.resolutions[userId];
 
                 if (resolved != address(0)) {
                     // Auto-forward to resolved wallet
-                    _storage().claimable[resolved][op.token] += op.amount;
+                    $.claimable[resolved][op.token] += op.amount;
                     emit RewardPushed(resolved, op.token, op.bank, op.amount, op.attestation);
                 } else {
-                    // Lock for anonymous user
-                    _storage().locked[userId][op.token] += op.amount;
+                    // Lock for anonymous user - get current and add
+                    (, uint256 current) = $.locked[userId].tryGet(op.token);
+                    $.locked[userId].set(op.token, current + op.amount);
                     emit RewardLocked(userId, op.token, op.bank, op.amount, op.attestation);
                 }
             } else {
                 // Push directly to wallet
                 address wallet = address(uint160(uint256(op.target)));
-                _storage().claimable[wallet][op.token] += op.amount;
+                $.claimable[wallet][op.token] += op.amount;
                 emit RewardPushed(wallet, op.token, op.bank, op.amount, op.attestation);
             }
 
@@ -220,14 +222,39 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     }
 
     /// @notice Resolve a userId to a wallet address (one-time binding)
+    /// @dev Eagerly moves all locked rewards to claimable for the wallet
     /// @param _userId The user's identity group ID
     /// @param _wallet The wallet address to bind to
     function resolveUserId(bytes32 _userId, address _wallet) external onlyRoles(RESOLVER_ROLE) {
         if (_wallet == address(0)) revert InvalidAddress();
-        if (_storage().resolutions[_userId] != address(0)) revert AlreadyResolved();
 
-        _storage().resolutions[_userId] = _wallet;
-        _storage().walletUserIds[_wallet].push(_userId);
+        RewarderHubStorage storage $ = _storage();
+        if ($.resolutions[_userId] != address(0)) revert AlreadyResolved();
+
+        $.resolutions[_userId] = _wallet;
+
+        // Eager resolution: move all locked funds to claimable
+        EnumerableMapLib.AddressToUint256Map storage lockedMap = $.locked[_userId];
+        uint256 len = lockedMap.length();
+
+        // Iterate and move all to claimable
+        for (uint256 i; i < len;) {
+            (address token, uint256 amount) = lockedMap.at(i);
+            $.claimable[_wallet][token] += amount;
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Clear the map (iterate backwards to avoid index shifting)
+        for (uint256 i = len; i > 0;) {
+            unchecked {
+                --i;
+            }
+            (address token,) = lockedMap.at(i);
+            lockedMap.remove(token);
+        }
 
         emit UserIdResolved(_userId, _wallet);
     }
@@ -236,13 +263,15 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @param _userId The user's identity group ID
     /// @param _token The token address
     function recoverLocked(bytes32 _userId, address _token) external onlyOwner {
+        RewarderHubStorage storage $ = _storage();
+
         // Can only recover if NOT resolved (no wallet created)
-        if (_storage().resolutions[_userId] != address(0)) revert CannotRecoverResolved();
+        if ($.resolutions[_userId] != address(0)) revert CannotRecoverResolved();
 
-        uint256 amount = _storage().locked[_userId][_token];
-        if (amount == 0) revert NothingToRecover();
+        (bool exists, uint256 amount) = $.locked[_userId].tryGet(_token);
+        if (!exists || amount == 0) revert NothingToRecover();
 
-        delete _storage().locked[_userId][_token];
+        $.locked[_userId].remove(_token);
 
         _token.safeTransfer(msg.sender, amount);
 
@@ -259,27 +288,10 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     function claim(address _token) external nonReentrant returns (uint256 claimed) {
         RewarderHubStorage storage $ = _storage();
 
-        // 1. Direct claimable
         claimed = $.claimable[msg.sender][_token];
-        $.claimable[msg.sender][_token] = 0;
-
-        // 2. Iterate resolved userIds (lazy resolution)
-        bytes32[] storage userIds = $.walletUserIds[msg.sender];
-        uint256 len = userIds.length;
-
-        for (uint256 i; i < len;) {
-            uint256 lockedAmount = $.locked[userIds[i]][_token];
-            if (lockedAmount > 0) {
-                claimed += lockedAmount;
-                delete $.locked[userIds[i]][_token];
-            }
-
-            unchecked {
-                ++i;
-            }
-        }
-
         if (claimed == 0) revert NothingToClaim();
+
+        $.claimable[msg.sender][_token] = 0;
 
         _token.safeTransfer(msg.sender, claimed);
 
@@ -293,31 +305,12 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         claimed = new uint256[](_tokens.length);
         RewarderHubStorage storage $ = _storage();
 
-        // Cache userIds for this wallet
-        bytes32[] storage userIds = $.walletUserIds[msg.sender];
-        uint256 userIdsLen = userIds.length;
-
         for (uint256 t; t < _tokens.length;) {
             address token = _tokens[t];
-
-            // 1. Direct claimable
             uint256 amount = $.claimable[msg.sender][token];
-            $.claimable[msg.sender][token] = 0;
-
-            // 2. Iterate resolved userIds
-            for (uint256 i; i < userIdsLen;) {
-                uint256 lockedAmount = $.locked[userIds[i]][token];
-                if (lockedAmount > 0) {
-                    amount += lockedAmount;
-                    delete $.locked[userIds[i]][token];
-                }
-
-                unchecked {
-                    ++i;
-                }
-            }
 
             if (amount > 0) {
+                $.claimable[msg.sender][token] = 0;
                 token.safeTransfer(msg.sender, amount);
                 emit RewardClaimed(msg.sender, token, amount);
             }
@@ -334,27 +327,12 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /*                              View Functions                                */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Get the total claimable amount for a wallet (includes resolved userIds)
+    /// @notice Get the claimable amount for a wallet
     /// @param _wallet The wallet address
     /// @param _token The token address
-    /// @return total The total claimable amount
-    function getClaimable(address _wallet, address _token) external view returns (uint256 total) {
-        RewarderHubStorage storage $ = _storage();
-
-        // Direct claimable
-        total = $.claimable[_wallet][_token];
-
-        // Add resolved userIds amounts
-        bytes32[] storage userIds = $.walletUserIds[_wallet];
-        uint256 len = userIds.length;
-
-        for (uint256 i; i < len;) {
-            total += $.locked[userIds[i]][_token];
-
-            unchecked {
-                ++i;
-            }
-        }
+    /// @return amount The claimable amount
+    function getClaimable(address _wallet, address _token) external view returns (uint256 amount) {
+        return _storage().claimable[_wallet][_token];
     }
 
     /// @notice Get the locked amount for a userId
@@ -362,7 +340,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @param _token The token address
     /// @return amount The locked amount
     function getLocked(bytes32 _userId, address _token) external view returns (uint256 amount) {
-        return _storage().locked[_userId][_token];
+        (, amount) = _storage().locked[_userId].tryGet(_token);
     }
 
     /// @notice Get the resolved wallet for a userId
@@ -372,11 +350,11 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         return _storage().resolutions[_userId];
     }
 
-    /// @notice Get all userIds resolved to a wallet
-    /// @param _wallet The wallet address
-    /// @return userIds Array of resolved userIds
-    function getResolvedUserIds(address _wallet) external view returns (bytes32[] memory) {
-        return _storage().walletUserIds[_wallet];
+    /// @notice Get all tokens with locked rewards for a userId
+    /// @param _userId The user's identity group ID
+    /// @return Array of token addresses with locked rewards
+    function getLockedTokens(bytes32 _userId) external view returns (address[] memory) {
+        return _storage().locked[_userId].keys();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -431,8 +409,10 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         // Transfer tokens from bank to this contract
         _token.safeTransferFrom(_bank, address(this), _amount);
 
-        // Update locked
-        _storage().locked[_userId][_token] += _amount;
+        // Update locked map (get current + add)
+        RewarderHubStorage storage $ = _storage();
+        (, uint256 current) = $.locked[_userId].tryGet(_token);
+        $.locked[_userId].set(_token, current + _amount);
 
         emit RewardLocked(_userId, _token, _bank, _amount, _attestation);
     }
