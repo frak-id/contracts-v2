@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {Initializable} from "solady/utils/Initializable.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+import {Initializable} from "solady/utils/Initializable.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 
 /// @dev The role required to manage the bank (deposit, withdraw, update state)
@@ -205,8 +205,9 @@ contract CampaignBank is OwnableRoles, Initializable {
 
     /// @dev Get allowance using low-level call to handle non-standard tokens
     function _allowance(address _token) internal view returns (uint256) {
-        (bool success, bytes memory data) =
-            _token.staticcall(abi.encodeWithSignature("allowance(address,address)", address(this), _storage().rewarderHub));
+        (bool success, bytes memory data) = _token.staticcall(
+            abi.encodeWithSignature("allowance(address,address)", address(this), _storage().rewarderHub)
+        );
         if (success && data.length >= 32) {
             return abi.decode(data, (uint256));
         }

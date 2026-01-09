@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Test} from "forge-std/Test.sol";
-import {CampaignBank, CAMPAIGN_BANK_MANAGER_ROLE} from "src/bank/CampaignBank.sol";
 import {MockErc20} from "../utils/MockErc20.sol";
+import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {CAMPAIGN_BANK_MANAGER_ROLE, CampaignBank} from "src/bank/CampaignBank.sol";
 
 /// @title CampaignBankTest
 /// @notice Comprehensive tests for CampaignBank contract

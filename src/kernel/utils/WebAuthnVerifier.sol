@@ -62,7 +62,9 @@ library WebAuthnVerifier {
             assembly {
                 // Extract the challenge from the clientData
                 calldatacopy(
-                    add(challengeExtracted, 32), add(clientData.offset, challengeOffset), mload(challengeExtracted)
+                    add(challengeExtracted, 32),
+                    add(clientData.offset, challengeOffset),
+                    mload(challengeExtracted)
                 )
 
                 // Check that the challenge extracted from the clientData is the same as the one provided in the userOp

@@ -69,9 +69,10 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
     }
 
     function getInitializeData() internal view override returns (bytes memory) {
-        return abi.encodeWithSelector(
-            KernelStorage.initialize.selector, webAuthNValidator, abi.encode(authenticatorId, x, y)
-        );
+        return
+            abi.encodeWithSelector(
+                KernelStorage.initialize.selector, webAuthNValidator, abi.encode(authenticatorId, x, y)
+            );
     }
 
     function test_default_validator_enable() external override {
@@ -233,8 +234,12 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         (uint256 pubX, uint256 pubY) = _getPublicKey(_privateKey);
 
         // Build all the data required
-        (bytes32 msgToSign, bytes memory authenticatorData, bytes memory clientData, uint256 clientChallengeDataOffset)
-        = _prepapreWebAuthnMsg(_hash);
+        (
+            bytes32 msgToSign,
+            bytes memory authenticatorData,
+            bytes memory clientData,
+            uint256 clientChallengeDataOffset
+        ) = _prepapreWebAuthnMsg(_hash);
 
         // Then sign them
         (uint256 r, uint256 s) = _getP256Signature(_privateKey, msgToSign);
@@ -254,8 +259,12 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         (uint256 pubX, uint256 pubY) = _getPublicKey(_privateKey);
 
         // Build all the data required
-        (bytes32 msgToSign, bytes memory authenticatorData, bytes memory clientData, uint256 clientChallengeDataOffset)
-        = _prepapreWebAuthnMsg(_hash);
+        (
+            bytes32 msgToSign,
+            bytes memory authenticatorData,
+            bytes memory clientData,
+            uint256 clientChallengeDataOffset
+        ) = _prepapreWebAuthnMsg(_hash);
 
         // Then sign them
         (uint256 r, uint256 s) = _getP256Signature(_privateKey, msgToSign);
@@ -278,8 +287,12 @@ contract WebAuthnFclValidatorTest is KernelTestBase {
         view
         returns (bytes memory signature)
     {
-        (bytes32 msgToSign, bytes memory authenticatorData, bytes memory clientData, uint256 clientChallengeDataOffset)
-        = _prepapreWebAuthnMsg(_hash);
+        (
+            bytes32 msgToSign,
+            bytes memory authenticatorData,
+            bytes memory clientData,
+            uint256 clientChallengeDataOffset
+        ) = _prepapreWebAuthnMsg(_hash);
         console.log("Challenge offset: %x", clientChallengeDataOffset);
         console.log("Challenge to sign: %x", uint256(msgToSign));
         console.log("Authenticator data (legth: %x)", authenticatorData.length);

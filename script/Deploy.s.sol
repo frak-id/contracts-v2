@@ -7,13 +7,13 @@ import "forge-std/console.sol";
 import {Addresses, DeterminedAddress, KernelAddresses} from "./DeterminedAddress.sol";
 
 // Kernel
+import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 import {MultiWebAuthNRecoveryAction} from "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol";
 import {MultiWebAuthNValidatorV2} from "src/kernel/webauthn/MultiWebAuthNValidator.sol";
-import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 
 // Reward system
-import {RewarderHub} from "src/reward/RewarderHub.sol";
 import {CampaignBankFactory} from "src/bank/CampaignBankFactory.sol";
+import {RewarderHub} from "src/reward/RewarderHub.sol";
 
 // Token
 import {mUSDToken} from "src/tokens/mUSDToken.sol";

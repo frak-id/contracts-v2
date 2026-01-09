@@ -17,7 +17,6 @@ library MultiWebAuthNSignatureLib {
     /// - 135-137 -> clientDataLEngth -> CDL
     /// - 138-(138+ADL) -> authData
     /// - (138+ADL)-(138+ADL+CDL) -> clientData
-
     /// @dev Check if we want to use onchain p256 or not
     function useOnChainP256(bytes calldata _self) internal pure returns (bool useNativeP256) {
         assembly {

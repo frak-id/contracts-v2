@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
+import {CAMPAIGN_BANK_MANAGER_ROLE, CampaignBank} from "src/bank/CampaignBank.sol";
 import {CampaignBankFactory} from "src/bank/CampaignBankFactory.sol";
-import {CampaignBank, CAMPAIGN_BANK_MANAGER_ROLE} from "src/bank/CampaignBank.sol";
 
 /// @title CampaignBankFactoryTest
 /// @notice Comprehensive tests for CampaignBankFactory contract

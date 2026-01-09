@@ -15,7 +15,6 @@ library WebAuthNSignatureLib {
     /// - 100-102 -> clientDataLEngth -> CDL
     /// - 103-(103+ADL) -> authData
     /// - (103+ADL)-(103+ADL+CDL) -> clientData
-
     /// @dev Extract the authenticator id from the signature received
     function getR(bytes calldata _self) internal pure returns (uint256 _r) {
         assembly {

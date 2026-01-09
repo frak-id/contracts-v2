@@ -71,8 +71,9 @@ contract DeterminedAddress is Script {
     function _getKernelAddresses() internal returns (KernelAddresses memory) {
         string memory file = _chainFile(kernelFile);
 
-        KernelAddresses memory emptyAddress =
-            KernelAddresses({p256Wrapper: address(0), webAuthNValidator: address(0), webAuthNRecoveryAction: address(0)});
+        KernelAddresses memory emptyAddress = KernelAddresses({
+            p256Wrapper: address(0), webAuthNValidator: address(0), webAuthNRecoveryAction: address(0)
+        });
 
         // Check if the file exist
         if (!vm.exists(file)) {
@@ -120,7 +121,8 @@ contract DeterminedAddress is Script {
         string memory jsonKey = "KERNEL_ADDRESSES_JSON";
         vm.serializeAddress(jsonKey, "p256Wrapper", addresses.p256Wrapper);
         vm.serializeAddress(jsonKey, "webAuthNValidator", addresses.webAuthNValidator);
-        string memory finalJson = vm.serializeAddress(jsonKey, "webAuthNRecoveryAction", addresses.webAuthNRecoveryAction);
+        string memory finalJson =
+            vm.serializeAddress(jsonKey, "webAuthNRecoveryAction", addresses.webAuthNRecoveryAction);
 
         vm.writeJson(finalJson, kernelFile);
         vm.writeJson(finalJson, _chainFile(kernelFile));
