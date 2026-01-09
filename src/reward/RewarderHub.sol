@@ -5,6 +5,7 @@ import {RESOLVER_ROLE, REWARDER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {EnumerableMapLib} from "solady/utils/EnumerableMapLib.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
+import {LibBytes} from "solady/utils/LibBytes.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
@@ -25,6 +26,14 @@ struct RewardOp {
     bytes attestation;
 }
 
+/// @dev Struct for a single resolve operation in batch
+struct ResolveOp {
+    /// @dev User's identity group ID
+    bytes32 userId;
+    /// @dev Wallet address to bind to
+    address wallet;
+}
+
 /// @author @KONFeature
 /// @title RewarderHub
 /// @notice Central hub for managing and distributing rewards across the Frak ecosystem
@@ -40,6 +49,7 @@ struct RewardOp {
 /// @custom:security-contact contact@frak.id
 contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, ReentrancyGuard {
     using SafeTransferLib for address;
+    using LibBytes for bytes32;
     using EnumerableMapLib for EnumerableMapLib.AddressToUint256Map;
 
     /* -------------------------------------------------------------------------- */
@@ -48,22 +58,22 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
 
     /// @dev Emitted when a reward is pushed directly to a wallet
     event RewardPushed(
-        address indexed wallet, address indexed token, address indexed bank, uint256 amount, bytes attestation
+        address indexed wallet, address token, address bank, uint256 amount, bytes attestation
     );
 
     /// @dev Emitted when a reward is locked for an anonymous user
     event RewardLocked(
-        bytes32 indexed userId, address indexed token, address indexed bank, uint256 amount, bytes attestation
+        bytes32 indexed userId, address token, address bank, uint256 amount, bytes attestation
     );
 
     /// @dev Emitted when a userId is resolved to a wallet
-    event UserIdResolved(bytes32 indexed userId, address indexed wallet);
+    event UserIdResolved(bytes32 indexed userId, address wallet);
 
     /// @dev Emitted when rewards are claimed by a user
-    event RewardClaimed(address indexed wallet, address indexed token, uint256 amount);
+    event RewardClaimed(address indexed wallet, address token, uint256 amount);
 
     /// @dev Emitted when locked rewards are recovered by admin
-    event LockedRecovered(bytes32 indexed userId, address indexed token, uint256 amount, address to);
+    event LockedRecovered(bytes32 indexed userId, address token, uint256 amount, address to);
 
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
@@ -198,19 +208,21 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
             // Accumulate for transfer
             pendingAmount += op.amount;
 
-            // Update state (rolled back if final transfer fails)
+            // Determine wallet: either resolved userId, or direct wallet address
+            address wallet;
             if (op.isLock) {
-                address resolved = $.resolutions[op.target];
-                if (resolved != address(0)) {
-                    $.claimable[resolved][op.token] += op.amount;
-                    emit RewardPushed(resolved, op.token, op.bank, op.amount, op.attestation);
-                } else {
-                    (, uint256 current) = $.locked[op.target].tryGet(op.token);
-                    $.locked[op.target].set(op.token, current + op.amount);
-                    emit RewardLocked(op.target, op.token, op.bank, op.amount, op.attestation);
-                }
+                wallet = $.resolutions[op.target];
             } else {
-                address wallet = address(uint160(uint256(op.target)));
+                wallet = op.target.lsbToAddress();
+            }
+
+            // If locked and not resolved -> lock rewards, otherwise push to wallet
+            if (op.isLock && wallet == address(0)) {
+                EnumerableMapLib.AddressToUint256Map storage lockedPtr = $.locked[op.target];
+                (, uint256 current) = lockedPtr.tryGet(op.token);
+                lockedPtr.set(op.token, current + op.amount);
+                emit RewardLocked(op.target, op.token, op.bank, op.amount, op.attestation);
+            } else {
                 $.claimable[wallet][op.token] += op.amount;
                 emit RewardPushed(wallet, op.token, op.bank, op.amount, op.attestation);
             }
@@ -229,37 +241,24 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @param _userId The user's identity group ID
     /// @param _wallet The wallet address to bind to
     function resolveUserId(bytes32 _userId, address _wallet) external onlyRoles(RESOLVER_ROLE) {
-        if (_wallet == address(0)) revert InvalidAddress();
+        _resolveUserId(_userId, _wallet);
+    }
 
-        RewarderHubStorage storage $ = _storage();
-        if ($.resolutions[_userId] != address(0)) revert AlreadyResolved();
+    /// @notice Resolve multiple userIds to wallet addresses in a single transaction
+    /// @dev Eagerly moves all locked rewards to claimable for each resolved wallet
+    /// @dev Each userId can only be resolved once (reverts if already resolved)
+    /// @param _ops Array of resolve operations
+    function batchResolve(ResolveOp[] calldata _ops) external onlyRoles(RESOLVER_ROLE) {
+        uint256 len = _ops.length;
+        if (len == 0) return;
 
-        $.resolutions[_userId] = _wallet;
-
-        // Eager resolution: move all locked funds to claimable
-        EnumerableMapLib.AddressToUint256Map storage lockedMap = $.locked[_userId];
-        uint256 len = lockedMap.length();
-
-        // Iterate and move all to claimable
         for (uint256 i; i < len;) {
-            (address token, uint256 amount) = lockedMap.at(i);
-            $.claimable[_wallet][token] += amount;
-
+            ResolveOp calldata op = _ops[i];
+            _resolveUserId(op.userId, op.wallet);
             unchecked {
                 ++i;
             }
         }
-
-        // Clear the map (iterate backwards to avoid index shifting)
-        for (uint256 i = len; i > 0;) {
-            unchecked {
-                --i;
-            }
-            (address token,) = lockedMap.at(i);
-            lockedMap.remove(token);
-        }
-
-        emit UserIdResolved(_userId, _wallet);
     }
 
     /// @notice Recover locked rewards for an unresolved userId
@@ -398,6 +397,43 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         emit RewardLocked(_userId, _token, _bank, _amount, _attestation);
     }
 
+    /// @dev Internal resolve userId implementation
+    function _resolveUserId(bytes32 _userId, address _wallet) internal {
+        if (_wallet == address(0)) revert InvalidAddress();
+
+        RewarderHubStorage storage $ = _storage();
+        if ($.resolutions[_userId] != address(0)) revert AlreadyResolved();
+
+        $.resolutions[_userId] = _wallet;
+
+        // Eager resolution: move all locked funds to claimable
+        EnumerableMapLib.AddressToUint256Map storage lockedMap = $.locked[_userId];
+        uint256 len = lockedMap.length();
+
+        // Iterate and move all to claimable
+        for (uint256 i; i < len;) {
+            (address token, uint256 amount) = lockedMap.at(i);
+            $.claimable[_wallet][token] += amount;
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Clear the map (iterate backwards to avoid index shifting)
+        for (uint256 i = len; i > 0;) {
+            unchecked {
+                --i;
+            }
+            (address token,) = lockedMap.at(i);
+            lockedMap.remove(token);
+        }
+
+        emit UserIdResolved(_userId, _wallet);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  Upgrade                                   */
     /* -------------------------------------------------------------------------- */
     /*                                  Upgrade                                   */
     /* -------------------------------------------------------------------------- */

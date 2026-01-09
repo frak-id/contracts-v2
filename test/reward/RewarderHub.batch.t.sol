@@ -2,11 +2,14 @@
 pragma solidity ^0.8.0;
 
 import {RewarderHubBaseTest} from "./RewarderHub.base.t.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
+import {REWARDER_ROLE} from "src/constants/Roles.sol";
 import {RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBatchTest
 /// @notice Tests for batch operations
 contract RewarderHubBatchTest is RewarderHubBaseTest {
+    using LibClone for address;
     /* -------------------------------------------------------------------------- */
     /*                              Batch - Success                               */
     /* -------------------------------------------------------------------------- */
@@ -77,6 +80,133 @@ contract RewarderHubBatchTest is RewarderHubBaseTest {
 
         vm.prank(rewarder);
         hub.batch(ops); // Should not revert
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                         Batch - Unsorted (still works)                     */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Unsorted by token: alternating tokens from same bank
+    /// @dev Should work but triggers more transfers than sorted version
+    function test_batch_unsorted_byToken() public {
+        // Alternating tokens: token, token2, token, token2
+        RewardOp[] memory ops = new RewardOp[](4);
+        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
+        ops[1] = _createRewardOp(false, _addressToBytes32(user1), 50e18, address(token2), bank);
+        ops[2] = _createRewardOp(false, _addressToBytes32(user2), 200e18, address(token), bank);
+        ops[3] = _createRewardOp(false, _addressToBytes32(user2), 75e18, address(token2), bank);
+
+        vm.prank(rewarder);
+        hub.batch(ops);
+
+        // Verify final state is correct regardless of order
+        assertEq(hub.getClaimable(user1, address(token)), 100e18);
+        assertEq(hub.getClaimable(user1, address(token2)), 50e18);
+        assertEq(hub.getClaimable(user2, address(token)), 200e18);
+        assertEq(hub.getClaimable(user2, address(token2)), 75e18);
+    }
+
+    /// @notice Unsorted by bank: alternating banks with same token
+    /// @dev Should work but triggers more transfers than sorted version
+    function test_batch_unsorted_byBank() public {
+        // Setup second bank
+        address bank2 = makeAddr("bank2");
+        token.mint(bank2, 1_000_000e18);
+        vm.prank(bank2);
+        token.approve(address(hub), type(uint256).max);
+
+        // Alternating banks: bank, bank2, bank, bank2
+        RewardOp[] memory ops = new RewardOp[](4);
+        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
+        ops[1] = _createRewardOp(false, _addressToBytes32(user1), 150e18, address(token), bank2);
+        ops[2] = _createRewardOp(false, _addressToBytes32(user2), 200e18, address(token), bank);
+        ops[3] = _createRewardOp(false, _addressToBytes32(user2), 250e18, address(token), bank2);
+
+        vm.prank(rewarder);
+        hub.batch(ops);
+
+        // Verify final state is correct regardless of order
+        assertEq(hub.getClaimable(user1, address(token)), 250e18); // 100 + 150
+        assertEq(hub.getClaimable(user2, address(token)), 450e18); // 200 + 250
+    }
+
+    /// @notice Fully shuffled: random order of banks and tokens
+    /// @dev Worst case for gas, but must still work correctly
+    function test_batch_unsorted_fullyShuffled() public {
+        // Setup second bank
+        address bank2 = makeAddr("bank2");
+        token.mint(bank2, 1_000_000e18);
+        token2.mint(bank2, 1_000_000e18);
+        vm.startPrank(bank2);
+        token.approve(address(hub), type(uint256).max);
+        token2.approve(address(hub), type(uint256).max);
+        vm.stopPrank();
+
+        // Fully shuffled: bank1/token, bank2/token2, bank1/token2, bank2/token, bank1/token, bank2/token2
+        RewardOp[] memory ops = new RewardOp[](6);
+        ops[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
+        ops[1] = _createRewardOp(true, userId1, 50e18, address(token2), bank2);
+        ops[2] = _createRewardOp(false, _addressToBytes32(user2), 75e18, address(token2), bank);
+        ops[3] = _createRewardOp(true, userId2, 200e18, address(token), bank2);
+        ops[4] = _createRewardOp(false, _addressToBytes32(user1), 150e18, address(token), bank);
+        ops[5] = _createRewardOp(true, userId1, 25e18, address(token2), bank2);
+
+        vm.prank(rewarder);
+        hub.batch(ops);
+
+        // Verify all state updates are correct
+        assertEq(hub.getClaimable(user1, address(token)), 250e18); // 100 + 150
+        assertEq(hub.getClaimable(user2, address(token2)), 75e18);
+        assertEq(hub.getLocked(userId1, address(token2)), 75e18); // 50 + 25
+        assertEq(hub.getLocked(userId2, address(token)), 200e18);
+    }
+
+    /// @notice Compare sorted vs unsorted to ensure same final state
+    function test_batch_sortedVsUnsorted_sameResult() public {
+        // Setup second bank
+        address bank2 = makeAddr("bank2");
+        token.mint(bank2, 1_000_000e18);
+        vm.prank(bank2);
+        token.approve(address(hub), type(uint256).max);
+
+        // Unsorted batch
+        RewardOp[] memory unsortedOps = new RewardOp[](4);
+        unsortedOps[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
+        unsortedOps[1] = _createRewardOp(false, _addressToBytes32(user1), 200e18, address(token), bank2);
+        unsortedOps[2] = _createRewardOp(false, _addressToBytes32(user1), 150e18, address(token), bank);
+        unsortedOps[3] = _createRewardOp(false, _addressToBytes32(user1), 50e18, address(token), bank2);
+
+        vm.prank(rewarder);
+        hub.batch(unsortedOps);
+
+        uint256 unsortedResult = hub.getClaimable(user1, address(token));
+
+        // Reset state for sorted test using a fresh hub
+        RewarderHub hub2 = RewarderHub(address(new RewarderHub()).clone());
+        hub2.init(owner);
+        vm.prank(owner);
+        hub2.grantRoles(rewarder, REWARDER_ROLE);
+
+        vm.prank(bank);
+        token.approve(address(hub2), type(uint256).max);
+        vm.prank(bank2);
+        token.approve(address(hub2), type(uint256).max);
+
+        // Sorted batch (by bank)
+        RewardOp[] memory sortedOps = new RewardOp[](4);
+        sortedOps[0] = _createRewardOp(false, _addressToBytes32(user1), 100e18, address(token), bank);
+        sortedOps[1] = _createRewardOp(false, _addressToBytes32(user1), 150e18, address(token), bank);
+        sortedOps[2] = _createRewardOp(false, _addressToBytes32(user1), 200e18, address(token), bank2);
+        sortedOps[3] = _createRewardOp(false, _addressToBytes32(user1), 50e18, address(token), bank2);
+
+        vm.prank(rewarder);
+        hub2.batch(sortedOps);
+
+        uint256 sortedResult = hub2.getClaimable(user1, address(token));
+
+        // Both should produce same final state
+        assertEq(unsortedResult, sortedResult);
+        assertEq(unsortedResult, 500e18); // 100 + 200 + 150 + 50
     }
 
     /* -------------------------------------------------------------------------- */
