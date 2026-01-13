@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import {MockErc20} from "../utils/MockErc20.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
-import {REWARDER_ROLE} from "src/constants/Roles.sol";
-import {RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
+import {COMPLIANCE_ROLE, REWARDER_ROLE} from "src/constants/Roles.sol";
+import {FrozenFundsRecoverOp, RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBaseTest
 /// @notice Base test contract with shared setup for RewarderHub tests
@@ -18,6 +18,7 @@ abstract contract RewarderHubBaseTest is Test {
 
     address public owner = makeAddr("owner");
     address public rewarder = makeAddr("rewarder");
+    address public compliance = makeAddr("compliance");
     address public bank = makeAddr("bank");
     address public user1 = makeAddr("user1");
     address public user2 = makeAddr("user2");
@@ -37,6 +38,7 @@ abstract contract RewarderHubBaseTest is Test {
         // Setup roles
         vm.startPrank(owner);
         hub.grantRoles(rewarder, REWARDER_ROLE);
+        hub.grantRoles(compliance, COMPLIANCE_ROLE);
         vm.stopPrank();
 
         // Fund bank with tokens

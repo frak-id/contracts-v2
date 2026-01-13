@@ -50,10 +50,6 @@ contract CampaignBankTest is Test {
         assertEq(campaignBank.owner(), owner);
     }
 
-    function test_init_setsRewarderHub() public view {
-        assertEq(campaignBank.REWARDER_HUB(), rewarderHub);
-    }
-
     function test_init_grantsManagerRole() public view {
         assertTrue(campaignBank.hasAnyRole(owner, CAMPAIGN_BANK_MANAGER_ROLE));
     }

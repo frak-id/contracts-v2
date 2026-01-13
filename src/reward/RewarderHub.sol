@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import {REWARDER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
+import {COMPLIANCE_ROLE, REWARDER_ROLE, UPGRADE_ROLE} from "../constants/Roles.sol";
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
 import {ReentrancyGuard} from "solady/utils/ReentrancyGuard.sol";
@@ -20,6 +20,14 @@ struct RewardOp {
     address bank;
     /// @dev Attestation data for audit trail
     bytes attestation;
+}
+
+/// @dev Struct for a single frozen funds recovery operation
+struct FrozenFundsRecoverOp {
+    /// @dev Wallet address to recover funds from
+    address wallet;
+    /// @dev Token address to recover
+    address token;
 }
 
 /// @author @KONFeature
@@ -47,6 +55,15 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @dev Emitted when rewards are claimed by a user
     event RewardClaimed(address indexed wallet, address token, uint256 amount);
 
+    /// @dev Emitted when a user is frozen
+    event UserFrozen(address indexed wallet, uint256 timestamp);
+
+    /// @dev Emitted when a user is unfrozen
+    event UserUnfrozen(address indexed wallet);
+
+    /// @dev Emitted when frozen funds are recovered
+    event FrozenFundsRecovered(address indexed wallet, address token, uint256 amount, address recipient);
+
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
@@ -60,6 +77,25 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @dev Thrown when there's nothing to claim
     error NothingToClaim();
 
+    /// @dev Thrown when user is frozen and tries to claim
+    error UserIsFrozen();
+
+    /// @dev Thrown when trying to unfreeze a user that is not frozen
+    error UserNotFrozen();
+
+    /// @dev Thrown when trying to freeze a user that is already frozen
+    error UserAlreadyFrozen();
+
+    /// @dev Thrown when trying to recover funds before freeze period has elapsed
+    error FreezePeriodNotElapsed();
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  Constants                                 */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Duration a user must be frozen before funds can be recovered (60 days)
+    uint256 public constant FREEZE_DURATION = 60 days;
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
@@ -72,6 +108,8 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     struct RewarderHubStorage {
         /// @dev Claimable rewards: wallet => token => amount
         mapping(address wallet => mapping(address token => uint256 amount)) claimable;
+        /// @dev Frozen wallets: wallet => timestamp when frozen (0 = not frozen)
+        mapping(address wallet => uint256 frozenAt) frozen;
     }
 
     function _storage() private pure returns (RewarderHubStorage storage storagePtr) {
@@ -161,6 +199,67 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     }
 
     /* -------------------------------------------------------------------------- */
+    /*                           Compliance Functions                             */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Freeze a user, preventing them from claiming rewards
+    /// @param _wallet The wallet address to freeze
+    function freezeUser(address _wallet) external onlyRoles(COMPLIANCE_ROLE) {
+        if (_wallet == address(0)) revert InvalidAddress();
+
+        RewarderHubStorage storage $ = _storage();
+        if ($.frozen[_wallet] != 0) revert UserAlreadyFrozen();
+
+        $.frozen[_wallet] = block.timestamp;
+
+        emit UserFrozen(_wallet, block.timestamp);
+    }
+
+    /// @notice Unfreeze a user, allowing them to claim rewards again
+    /// @param _wallet The wallet address to unfreeze
+    function unfreezeUser(address _wallet) external onlyRoles(COMPLIANCE_ROLE) {
+        RewarderHubStorage storage $ = _storage();
+        if ($.frozen[_wallet] == 0) revert UserNotFrozen();
+
+        $.frozen[_wallet] = 0;
+
+        emit UserUnfrozen(_wallet);
+    }
+
+    /// @notice Recover funds from users who have been frozen for longer than FREEZE_DURATION
+    /// @param _ops Array of wallet-token pairs to recover
+    /// @param _recipient Address to send recovered funds to
+    function recoverFrozenFunds(FrozenFundsRecoverOp[] calldata _ops, address _recipient)
+        external
+        onlyRoles(COMPLIANCE_ROLE)
+        nonReentrant
+    {
+        if (_recipient == address(0)) revert InvalidAddress();
+
+        RewarderHubStorage storage $ = _storage();
+
+        for (uint256 i; i < _ops.length;) {
+            FrozenFundsRecoverOp calldata op = _ops[i];
+            uint256 frozenAt = $.frozen[op.wallet];
+
+            // Must be frozen and freeze period must have elapsed
+            if (frozenAt == 0) revert UserNotFrozen();
+            if (block.timestamp < frozenAt + FREEZE_DURATION) revert FreezePeriodNotElapsed();
+
+            uint256 amount = $.claimable[op.wallet][op.token];
+            if (amount > 0) {
+                $.claimable[op.wallet][op.token] = 0;
+                op.token.safeTransfer(_recipient, amount);
+                emit FrozenFundsRecovered(op.wallet, op.token, amount, _recipient);
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
     /*                              User Functions                                */
     /* -------------------------------------------------------------------------- */
 
@@ -169,6 +268,9 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @return claimed The amount claimed
     function claim(address _token) external nonReentrant returns (uint256 claimed) {
         RewarderHubStorage storage $ = _storage();
+
+        // Check if user is frozen
+        if ($.frozen[msg.sender] != 0) revert UserIsFrozen();
 
         claimed = $.claimable[msg.sender][_token];
         if (claimed == 0) revert NothingToClaim();
@@ -186,6 +288,9 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     function claimBatch(address[] calldata _tokens) external nonReentrant returns (uint256[] memory claimed) {
         claimed = new uint256[](_tokens.length);
         RewarderHubStorage storage $ = _storage();
+
+        // Check if user is frozen
+        if ($.frozen[msg.sender] != 0) revert UserIsFrozen();
 
         for (uint256 t; t < _tokens.length;) {
             address token = _tokens[t];
@@ -215,6 +320,15 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @return amount The claimable amount
     function getClaimable(address _wallet, address _token) external view returns (uint256 amount) {
         return _storage().claimable[_wallet][_token];
+    }
+
+    /// @notice Get freeze information for a wallet
+    /// @param _wallet The wallet address
+    /// @return frozenAt Timestamp when wallet was frozen (0 if not frozen)
+    /// @return canRecover Whether funds can be recovered (frozen for longer than FREEZE_DURATION)
+    function getFreezeInfo(address _wallet) external view returns (uint256 frozenAt, bool canRecover) {
+        frozenAt = _storage().frozen[_wallet];
+        canRecover = frozenAt != 0 && block.timestamp >= frozenAt + FREEZE_DURATION;
     }
 
     /* -------------------------------------------------------------------------- */

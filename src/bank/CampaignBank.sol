@@ -65,11 +65,6 @@ contract CampaignBank is OwnableRoles, Initializable {
         bool isOpen;
     }
 
-    /// @notice Get the RewarderHub address
-    function REWARDER_HUB() public view returns (address) {
-        return _storage().rewarderHub;
-    }
-
     function _storage() private pure returns (CampaignBankStorage storage storagePtr) {
         assembly {
             storagePtr.slot := _CAMPAIGN_BANK_STORAGE_SLOT

@@ -22,10 +22,6 @@ contract CampaignBankFactoryTest is Test {
     /*                              Constructor                                   */
     /* -------------------------------------------------------------------------- */
 
-    function test_constructor_setsRewarderHub() public view {
-        assertEq(factory.REWARDER_HUB(), rewarderHub);
-    }
-
     function test_constructor_setsImplementation() public view {
         assertTrue(factory.IMPLEMENTATION() != address(0));
     }
@@ -57,7 +53,6 @@ contract CampaignBankFactoryTest is Test {
 
         assertTrue(address(bank) != address(0));
         assertEq(bank.owner(), merchant1);
-        assertEq(bank.REWARDER_HUB(), rewarderHub);
         assertTrue(bank.hasAnyRole(merchant1, CAMPAIGN_BANK_MANAGER_ROLE));
     }
 
@@ -91,7 +86,6 @@ contract CampaignBankFactoryTest is Test {
 
         assertTrue(address(bank) != address(0));
         assertEq(bank.owner(), merchant1);
-        assertEq(bank.REWARDER_HUB(), rewarderHub);
     }
 
     function test_deployBank_withSalt_deterministicAddress() public {
@@ -193,17 +187,12 @@ contract CampaignBankFactoryTest is Test {
         CampaignBank bank = factory.deployBank(_owner);
 
         assertEq(bank.owner(), _owner);
-        assertEq(bank.REWARDER_HUB(), rewarderHub);
     }
 
     function testFuzz_deployBank_anySalt(bytes32 _salt) public {
         CampaignBank bank = factory.deployBank(merchant1, _salt);
 
         assertEq(bank.owner(), merchant1);
-
-        // Verify prediction works
-        // Note: Can't predict after deployment, so we check the bank properties
-        assertEq(bank.REWARDER_HUB(), rewarderHub);
     }
 
     function testFuzz_predictBankAddress_consistency(bytes32 _salt) public {

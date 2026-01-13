@@ -105,14 +105,14 @@ Central hub for managing and distributing rewards across the Frak ecosystem.
 
 Key features:
 - Pulls funds from CampaignBank contracts via ERC20 allowances.
-- Supports two reward modes:
-  - **Push**: Direct rewards to known wallet addresses.
-  - **Lock**: Rewards for anonymous users (identified by userId), claimed later when identity is resolved.
-- Eager resolution pattern: locked funds are moved to claimable when userId is resolved to a wallet.
+- Pushes rewards directly to wallet addresses.
 - Batch operations for gas-efficient reward distribution.
+- User freeze/compliance functionality:
+  - Freeze users to prevent them from claiming rewards.
+  - Recover funds from users frozen for longer than 60 days.
 - Role-based access control:
-  - `REWARDER_ROLE`: Can push/lock rewards.
-  - `RESOLVER_ROLE`: Can resolve userIds to wallet addresses.
+  - `REWARDER_ROLE`: Can push rewards.
+  - `COMPLIANCE_ROLE`: Can freeze/unfreeze users and recover frozen funds.
   - `UPGRADE_ROLE`: Can upgrade the contract (UUPS pattern).
 
 Token compatibility:
@@ -195,8 +195,8 @@ The `constants/` directory contains shared constants.
 
 Defines role constants used across the system:
 - `UPGRADE_ROLE`: Permission to upgrade contracts.
-- `REWARDER_ROLE`: Permission to push/lock rewards.
-- `RESOLVER_ROLE`: Permission to resolve userIds to wallets.
+- `REWARDER_ROLE`: Permission to push rewards.
+- `COMPLIANCE_ROLE`: Permission to freeze/unfreeze users and recover frozen funds.
 
 ### Errors.sol
 
