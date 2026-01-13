@@ -64,6 +64,9 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @dev Emitted when frozen funds are recovered
     event FrozenFundsRecovered(address indexed wallet, address token, uint256 amount, address recipient);
 
+    /// @dev Emitted when excess tokens are withdrawn
+    event ExcessWithdrawn(address indexed token, uint256 amount, address recipient);
+
     /* -------------------------------------------------------------------------- */
     /*                                   Errors                                   */
     /* -------------------------------------------------------------------------- */
@@ -89,6 +92,9 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @dev Thrown when trying to recover funds before freeze period has elapsed
     error FreezePeriodNotElapsed();
 
+    /// @dev Thrown when there's no excess to withdraw
+    error NothingToWithdraw();
+
     /* -------------------------------------------------------------------------- */
     /*                                  Constants                                 */
     /* -------------------------------------------------------------------------- */
@@ -110,6 +116,8 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         mapping(address wallet => mapping(address token => uint256 amount)) claimable;
         /// @dev Frozen wallets: wallet => timestamp when frozen (0 = not frozen)
         mapping(address wallet => uint256 frozenAt) frozen;
+        /// @dev Total pending balance per token (owed to users)
+        mapping(address token => uint256 amount) pendingBalance;
     }
 
     function _storage() private pure returns (RewarderHubStorage storage storagePtr) {
@@ -177,6 +185,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
             // Chunk boundary - transfer previous chunk
             if (op.bank != currentBank || op.token != currentToken) {
                 currentToken.safeTransferFrom(currentBank, address(this), pendingAmount);
+                $.pendingBalance[currentToken] += pendingAmount;
                 currentBank = op.bank;
                 currentToken = op.token;
                 pendingAmount = 0;
@@ -185,9 +194,10 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
             // Accumulate for transfer
             pendingAmount += op.amount;
 
-            // Push reward to wallet
-            $.claimable[op.wallet][op.token] += op.amount;
-            emit RewardPushed(op.wallet, op.token, op.bank, op.amount, op.attestation);
+            // Push reward to wallet and track pending balance
+            address wallet = op.wallet;
+            $.claimable[wallet][currentToken] += op.amount;
+            emit RewardPushed(wallet, currentToken, currentBank, op.amount, op.attestation);
 
             unchecked {
                 ++i;
@@ -196,6 +206,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
 
         // Transfer final chunk
         currentToken.safeTransferFrom(currentBank, address(this), pendingAmount);
+        $.pendingBalance[currentToken] += pendingAmount;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -249,6 +260,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
             uint256 amount = $.claimable[op.wallet][op.token];
             if (amount > 0) {
                 $.claimable[op.wallet][op.token] = 0;
+                $.pendingBalance[op.token] -= amount;
                 op.token.safeTransfer(_recipient, amount);
                 emit FrozenFundsRecovered(op.wallet, op.token, amount, _recipient);
             }
@@ -257,6 +269,42 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
                 ++i;
             }
         }
+    }
+
+    /// @notice Withdraw excess tokens that are not owed to users
+    /// @dev Use address(0) for native ETH withdrawal
+    /// @param _token The token address to withdraw (address(0) for native ETH)
+    /// @param _recipient Address to send excess funds to
+    /// @return excess The amount of excess withdrawn
+    function withdrawExcess(address _token, address _recipient)
+        external
+        onlyRoles(COMPLIANCE_ROLE)
+        nonReentrant
+        returns (uint256 excess)
+    {
+        if (_recipient == address(0)) revert InvalidAddress();
+
+        RewarderHubStorage storage $ = _storage();
+
+        if (_token == address(0)) {
+            // Native ETH - no pending balance tracked for native, withdraw full balance
+            excess = address(this).balance;
+        } else {
+            // ERC20 token
+            uint256 balance = _token.balanceOf(address(this));
+            uint256 pending = $.pendingBalance[_token];
+            excess = balance > pending ? balance - pending : 0;
+        }
+
+        if (excess == 0) revert NothingToWithdraw();
+
+        if (_token == address(0)) {
+            SafeTransferLib.safeTransferETH(_recipient, excess);
+        } else {
+            _token.safeTransfer(_recipient, excess);
+        }
+
+        emit ExcessWithdrawn(_token, excess, _recipient);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -276,6 +324,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         if (claimed == 0) revert NothingToClaim();
 
         $.claimable[msg.sender][_token] = 0;
+        $.pendingBalance[_token] -= claimed;
 
         _token.safeTransfer(msg.sender, claimed);
 
@@ -298,6 +347,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
 
             if (amount > 0) {
                 $.claimable[msg.sender][token] = 0;
+                $.pendingBalance[token] -= amount;
                 token.safeTransfer(msg.sender, amount);
                 emit RewardClaimed(msg.sender, token, amount);
             }
@@ -331,6 +381,13 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         canRecover = frozenAt != 0 && block.timestamp >= frozenAt + FREEZE_DURATION;
     }
 
+    /// @notice Get the total pending balance for a token (amount owed to users)
+    /// @param _token The token address
+    /// @return amount The total pending balance
+    function getPendingBalance(address _token) external view returns (uint256 amount) {
+        return _storage().pendingBalance[_token];
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                            Internal Functions                              */
     /* -------------------------------------------------------------------------- */
@@ -345,8 +402,10 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         // Transfer tokens from bank to this contract
         _token.safeTransferFrom(_bank, address(this), _amount);
 
-        // Update claimable
-        _storage().claimable[_wallet][_token] += _amount;
+        // Update claimable and pending balance
+        RewarderHubStorage storage $ = _storage();
+        $.claimable[_wallet][_token] += _amount;
+        $.pendingBalance[_token] += _amount;
 
         emit RewardPushed(_wallet, _token, _bank, _amount, _attestation);
     }
