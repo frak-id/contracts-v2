@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import {MockErc20} from "../utils/MockErc20.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
-import {RESOLVER_ROLE, REWARDER_ROLE, UPGRADE_ROLE} from "src/constants/Roles.sol";
-import {ResolveOp, RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
+import {REWARDER_ROLE} from "src/constants/Roles.sol";
+import {RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBaseTest
 /// @notice Base test contract with shared setup for RewarderHub tests
@@ -18,13 +18,9 @@ abstract contract RewarderHubBaseTest is Test {
 
     address public owner = makeAddr("owner");
     address public rewarder = makeAddr("rewarder");
-    address public resolver = makeAddr("resolver");
     address public bank = makeAddr("bank");
     address public user1 = makeAddr("user1");
     address public user2 = makeAddr("user2");
-
-    bytes32 public userId1 = keccak256("userId1");
-    bytes32 public userId2 = keccak256("userId2");
 
     bytes public attestation = "test-attestation";
 
@@ -41,7 +37,6 @@ abstract contract RewarderHubBaseTest is Test {
         // Setup roles
         vm.startPrank(owner);
         hub.grantRoles(rewarder, REWARDER_ROLE);
-        hub.grantRoles(resolver, RESOLVER_ROLE);
         vm.stopPrank();
 
         // Fund bank with tokens
@@ -64,29 +59,11 @@ abstract contract RewarderHubBaseTest is Test {
         hub.pushReward(wallet, amount, address(token), bank, attestation);
     }
 
-    function _lockReward(bytes32 userId, uint256 amount) internal {
-        vm.prank(rewarder);
-        hub.lockReward(userId, amount, address(token), bank, attestation);
-    }
-
-    function _resolveUserId(bytes32 userId, address wallet) internal {
-        ResolveOp[] memory ops = new ResolveOp[](1);
-        ops[0] = ResolveOp({userId: userId, wallet: wallet});
-        vm.prank(resolver);
-        hub.resolveUserIds(ops);
-    }
-
-    function _createRewardOp(bool isLock, bytes32 target, uint256 amount, address _token, address _bank)
+    function _createRewardOp(address wallet, uint256 amount, address _token, address _bank)
         internal
         view
         returns (RewardOp memory)
     {
-        return RewardOp({
-            isLock: isLock, target: target, amount: amount, token: _token, bank: _bank, attestation: attestation
-        });
-    }
-
-    function _addressToBytes32(address addr) internal pure returns (bytes32) {
-        return bytes32(uint256(uint160(addr)));
+        return RewardOp({wallet: wallet, amount: amount, token: _token, bank: _bank, attestation: attestation});
     }
 }

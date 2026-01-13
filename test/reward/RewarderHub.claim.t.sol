@@ -11,7 +11,7 @@ contract RewarderHubClaimTest is RewarderHubBaseTest {
     /*                                   claim                                    */
     /* -------------------------------------------------------------------------- */
 
-    function test_claim_directClaimable() public {
+    function test_claim_success() public {
         _pushReward(user1, 100e18);
 
         uint256 balanceBefore = token.balanceOf(user1);
@@ -27,56 +27,16 @@ contract RewarderHubClaimTest is RewarderHubBaseTest {
         assertEq(hub.getClaimable(user1, address(token)), 0);
     }
 
-    function test_claim_fromResolvedUserId() public {
-        // Lock reward for userId
-        _lockReward(userId1, 100e18);
-
-        // Resolve userId to user1
-        _resolveUserId(userId1, user1);
-
-        // User can claim the locked reward
-        vm.prank(user1);
-        uint256 claimed = hub.claim(address(token));
-
-        assertEq(claimed, 100e18);
-        assertEq(token.balanceOf(user1), 100e18);
-        assertEq(hub.getLocked(userId1, address(token)), 0);
-    }
-
-    function test_claim_combinedDirectAndResolved() public {
-        // Push direct reward
+    function test_claim_multipleRewards() public {
+        // Push multiple rewards
         _pushReward(user1, 100e18);
+        _pushReward(user1, 50e18);
 
-        // Lock reward for userId
-        _lockReward(userId1, 50e18);
-
-        // Resolve userId to user1
-        _resolveUserId(userId1, user1);
-
-        // User can claim both
         vm.prank(user1);
         uint256 claimed = hub.claim(address(token));
 
         assertEq(claimed, 150e18);
         assertEq(token.balanceOf(user1), 150e18);
-    }
-
-    function test_claim_multipleResolvedUserIds() public {
-        // Lock rewards for multiple userIds
-        _lockReward(userId1, 100e18);
-        _lockReward(userId2, 200e18);
-
-        // Resolve both to same user
-        _resolveUserId(userId1, user1);
-        _resolveUserId(userId2, user1);
-
-        // User can claim all
-        vm.prank(user1);
-        uint256 claimed = hub.claim(address(token));
-
-        assertEq(claimed, 300e18);
-        assertEq(hub.getLocked(userId1, address(token)), 0);
-        assertEq(hub.getLocked(userId2, address(token)), 0);
     }
 
     function test_claim_onlyClaimsRequestedToken() public {
@@ -95,9 +55,8 @@ contract RewarderHubClaimTest is RewarderHubBaseTest {
         assertEq(hub.getClaimable(user1, address(token2)), 200e18);
     }
 
-    function test_claim_clearsLockedAfterClaim() public {
-        _lockReward(userId1, 100e18);
-        _resolveUserId(userId1, user1);
+    function test_claim_clearsClaimableAfterClaim() public {
+        _pushReward(user1, 100e18);
 
         // First claim
         vm.prank(user1);
@@ -149,27 +108,6 @@ contract RewarderHubClaimTest is RewarderHubBaseTest {
         assertEq(token2.balanceOf(user1), 200e18);
     }
 
-    function test_claimBatch_withResolvedUserIds() public {
-        // Lock rewards
-        _lockReward(userId1, 100e18);
-
-        vm.prank(rewarder);
-        hub.lockReward(userId1, 200e18, address(token2), bank, attestation);
-
-        // Resolve
-        _resolveUserId(userId1, user1);
-
-        address[] memory tokens = new address[](2);
-        tokens[0] = address(token);
-        tokens[1] = address(token2);
-
-        vm.prank(user1);
-        uint256[] memory claimed = hub.claimBatch(tokens);
-
-        assertEq(claimed[0], 100e18);
-        assertEq(claimed[1], 200e18);
-    }
-
     function test_claimBatch_partialClaims() public {
         // Only push token1
         _pushReward(user1, 100e18);
@@ -214,31 +152,6 @@ contract RewarderHubClaimTest is RewarderHubBaseTest {
         hub.claimBatch(tokens);
     }
 
-    function test_claimBatch_combinedDirectAndResolved() public {
-        // Direct push
-        _pushReward(user1, 100e18);
-
-        // Lock for userId
-        _lockReward(userId1, 50e18);
-
-        // Another lock for userId in token2
-        vm.prank(rewarder);
-        hub.lockReward(userId1, 75e18, address(token2), bank, attestation);
-
-        // Resolve
-        _resolveUserId(userId1, user1);
-
-        address[] memory tokens = new address[](2);
-        tokens[0] = address(token);
-        tokens[1] = address(token2);
-
-        vm.prank(user1);
-        uint256[] memory claimed = hub.claimBatch(tokens);
-
-        assertEq(claimed[0], 150e18); // 100 direct + 50 locked
-        assertEq(claimed[1], 75e18); // 75 locked
-    }
-
     /* -------------------------------------------------------------------------- */
     /*                              Claim - Fuzz Tests                            */
     /* -------------------------------------------------------------------------- */
@@ -255,18 +168,14 @@ contract RewarderHubClaimTest is RewarderHubBaseTest {
         assertEq(token.balanceOf(user1), amount);
     }
 
-    function testFuzz_claim_multipleUserIds(uint8 numUserIds) public {
-        vm.assume(numUserIds > 0 && numUserIds <= 10);
+    function testFuzz_claim_multipleRewards(uint8 numRewards) public {
+        vm.assume(numRewards > 0 && numRewards <= 10);
 
         uint256 totalExpected = 0;
 
-        for (uint256 i = 0; i < numUserIds; i++) {
-            bytes32 userId = keccak256(abi.encodePacked("userId", i));
+        for (uint256 i = 0; i < numRewards; i++) {
             uint256 amount = (i + 1) * 10e18;
-
-            _lockReward(userId, amount);
-            _resolveUserId(userId, user1);
-
+            _pushReward(user1, amount);
             totalExpected += amount;
         }
 
