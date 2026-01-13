@@ -155,7 +155,18 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         external
         onlyRoles(REWARDER_ROLE)
     {
-        _pushReward(_wallet, _amount, _token, _bank, _attestation);
+        if (_wallet == address(0)) revert InvalidAddress();
+        if (_amount == 0) revert InvalidAmount();
+
+        // Transfer tokens from bank to this contract
+        _token.safeTransferFrom(_bank, address(this), _amount);
+
+        // Update claimable and pending balance
+        RewarderHubStorage storage $ = _storage();
+        $.claimable[_wallet][_token] += _amount;
+        $.pendingBalance[_token] += _amount;
+
+        emit RewardPushed(_wallet, _token, _bank, _amount, _attestation);
     }
 
     /// @notice Execute a batch of reward operations
@@ -333,26 +344,23 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
 
     /// @notice Claim rewards for multiple tokens
     /// @param _tokens Array of token addresses to claim
-    /// @return claimed Array of amounts claimed per token
-    function claimBatch(address[] calldata _tokens) external nonReentrant returns (uint256[] memory claimed) {
-        claimed = new uint256[](_tokens.length);
+    function claimBatch(address[] calldata _tokens) external nonReentrant {
         RewarderHubStorage storage $ = _storage();
 
         // Check if user is frozen
         if ($.frozen[msg.sender] != 0) revert UserIsFrozen();
 
+        // Claimable storage reference
+        mapping(address token => uint256 amount) storage claimable = $.claimable[msg.sender];
+
         for (uint256 t; t < _tokens.length;) {
             address token = _tokens[t];
-            uint256 amount = $.claimable[msg.sender][token];
+            uint256 amount = claimable[token];
 
-            if (amount > 0) {
-                $.claimable[msg.sender][token] = 0;
-                $.pendingBalance[token] -= amount;
-                token.safeTransfer(msg.sender, amount);
-                emit RewardClaimed(msg.sender, token, amount);
-            }
-
-            claimed[t] = amount;
+            claimable[token] = 0;
+            $.pendingBalance[token] -= amount;
+            token.safeTransfer(msg.sender, amount);
+            emit RewardClaimed(msg.sender, token, amount);
 
             unchecked {
                 ++t;
@@ -386,28 +394,6 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     /// @return amount The total pending balance
     function getPendingBalance(address _token) external view returns (uint256 amount) {
         return _storage().pendingBalance[_token];
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                            Internal Functions                              */
-    /* -------------------------------------------------------------------------- */
-
-    /// @dev Internal push reward implementation
-    function _pushReward(address _wallet, uint256 _amount, address _token, address _bank, bytes calldata _attestation)
-        internal
-    {
-        if (_wallet == address(0)) revert InvalidAddress();
-        if (_amount == 0) revert InvalidAmount();
-
-        // Transfer tokens from bank to this contract
-        _token.safeTransferFrom(_bank, address(this), _amount);
-
-        // Update claimable and pending balance
-        RewarderHubStorage storage $ = _storage();
-        $.claimable[_wallet][_token] += _amount;
-        $.pendingBalance[_token] += _amount;
-
-        emit RewardPushed(_wallet, _token, _bank, _amount, _attestation);
     }
 
     /* -------------------------------------------------------------------------- */

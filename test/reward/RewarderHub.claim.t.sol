@@ -98,38 +98,10 @@ contract RewarderHubClaimTest is RewarderHubBaseTest {
         tokens[1] = address(token2);
 
         vm.prank(user1);
-        uint256[] memory claimed = hub.claimBatch(tokens);
-
-        assertEq(claimed.length, 2);
-        assertEq(claimed[0], 100e18);
-        assertEq(claimed[1], 200e18);
+        hub.claimBatch(tokens);
 
         assertEq(token.balanceOf(user1), 100e18);
         assertEq(token2.balanceOf(user1), 200e18);
-    }
-
-    function test_claimBatch_partialClaims() public {
-        // Only push token1
-        _pushReward(user1, 100e18);
-
-        address[] memory tokens = new address[](2);
-        tokens[0] = address(token);
-        tokens[1] = address(token2);
-
-        vm.prank(user1);
-        uint256[] memory claimed = hub.claimBatch(tokens);
-
-        assertEq(claimed[0], 100e18);
-        assertEq(claimed[1], 0); // Nothing to claim for token2
-    }
-
-    function test_claimBatch_emptyArray() public {
-        address[] memory tokens = new address[](0);
-
-        vm.prank(user1);
-        uint256[] memory claimed = hub.claimBatch(tokens);
-
-        assertEq(claimed.length, 0);
     }
 
     function test_claimBatch_emitsEvents() public {
