@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity 0.8.23;
 
-import "forge-std/Script.sol";
-
+import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
-import "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 import {LibString} from "solady/utils/LibString.sol";
 
 /// @dev Addresses for the Frak ecosystem
@@ -24,16 +23,35 @@ struct KernelAddresses {
     address webAuthNRecoveryAction;
 }
 
-/// @dev simple contract storing our predetermined address
+/// @dev Binary hashes for deployed contracts
+struct BinHashes {
+    // Reward system
+    bytes32 rewarderHub;
+    bytes32 campaignBankFactory;
+    // Token
+    bytes32 mUSDToken;
+    // Kernel
+    bytes32 p256Wrapper;
+    bytes32 webAuthNValidator;
+    bytes32 webAuthNRecoveryAction;
+}
+
+/// @dev Simple contract storing our predetermined addresses
+/// @author @KONFeature
 contract DeterminedAddress is Script {
     using stdJson for string;
 
     // JSON files
     string internal addressesFile = "./external/addresses.json";
     string internal kernelFile = "./external/kernelAddresses.json";
+    string internal binHashFile = "./external/binHashes.json";
 
     // Config
     address internal airdropper = 0x35F3e191523C8701aD315551dCbDcC5708efD7ec;
+
+    /* -------------------------------------------------------------------------- */
+    /*                              Address Management                            */
+    /* -------------------------------------------------------------------------- */
 
     function _getAddresses() internal returns (Addresses memory) {
         string memory file = _chainFile(addressesFile);
@@ -62,9 +80,9 @@ contract DeterminedAddress is Script {
         }
 
         return Addresses({
-            rewarderHub: json.readAddress(".rewarderHub"),
-            campaignBankFactory: json.readAddress(".campaignBankFactory"),
-            mUSDToken: json.readAddress(".mUSDToken")
+            rewarderHub: _readAddressSafe(json, ".rewarderHub"),
+            campaignBankFactory: _readAddressSafe(json, ".campaignBankFactory"),
+            mUSDToken: _readAddressSafe(json, ".mUSDToken")
         });
     }
 
@@ -96,9 +114,9 @@ contract DeterminedAddress is Script {
         }
 
         return KernelAddresses({
-            p256Wrapper: json.readAddress(".p256Wrapper"),
-            webAuthNValidator: json.readAddress(".webAuthNValidator"),
-            webAuthNRecoveryAction: json.readAddress(".webAuthNRecoveryAction")
+            p256Wrapper: _readAddressSafe(json, ".p256Wrapper"),
+            webAuthNValidator: _readAddressSafe(json, ".webAuthNValidator"),
+            webAuthNRecoveryAction: _readAddressSafe(json, ".webAuthNRecoveryAction")
         });
     }
 
@@ -128,6 +146,35 @@ contract DeterminedAddress is Script {
         vm.writeJson(finalJson, _chainFile(kernelFile));
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                              BinHash Management                            */
+    /* -------------------------------------------------------------------------- */
+
+    function _emptyBinHash() internal pure returns (BinHashes memory) {
+        return BinHashes({
+            rewarderHub: bytes32(0),
+            campaignBankFactory: bytes32(0),
+            mUSDToken: bytes32(0),
+            p256Wrapper: bytes32(0),
+            webAuthNValidator: bytes32(0),
+            webAuthNRecoveryAction: bytes32(0)
+        });
+    }
+
+    /// @dev Save the bin hashes in a json file
+    function _saveBinHashes(BinHashes memory hashes) internal {
+        string memory jsonKey = "BIN_HASHES_JSON";
+        vm.serializeBytes32(jsonKey, "rewarderHub", hashes.rewarderHub);
+        vm.serializeBytes32(jsonKey, "campaignBankFactory", hashes.campaignBankFactory);
+        vm.serializeBytes32(jsonKey, "mUSDToken", hashes.mUSDToken);
+        vm.serializeBytes32(jsonKey, "p256Wrapper", hashes.p256Wrapper);
+        vm.serializeBytes32(jsonKey, "webAuthNValidator", hashes.webAuthNValidator);
+        string memory finalJson = vm.serializeBytes32(jsonKey, "webAuthNRecoveryAction", hashes.webAuthNRecoveryAction);
+
+        vm.writeJson(finalJson, binHashFile);
+        vm.writeJson(finalJson, _chainFile(binHashFile));
+    }
+
     /// @dev Save the binary of a contract to a file
     function _saveBin(string memory name, bytes memory _creationCode) internal returns (bytes32 hash) {
         return _saveBin(name, _creationCode, "");
@@ -144,6 +191,10 @@ contract DeterminedAddress is Script {
 
         hash = keccak256(bin);
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Helpers                                  */
+    /* -------------------------------------------------------------------------- */
 
     function _chainFile(string memory baseFile) internal view returns (string memory) {
         // Remove .json extension and add chain id
@@ -170,5 +221,14 @@ contract DeterminedAddress is Script {
         }
 
         return string.concat(baseName, ".", LibString.toString(block.chainid), ".json");
+    }
+
+    /// @dev Safely read an address from JSON, returning address(0) if key doesn't exist
+    function _readAddressSafe(string memory json, string memory key) internal pure returns (address) {
+        bytes memory data = vm.parseJson(json, key);
+        if (data.length == 0) {
+            return address(0);
+        }
+        return abi.decode(data, (address));
     }
 }

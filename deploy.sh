@@ -32,5 +32,5 @@ forge script script/$SCRIPT_PATH --rpc-url $ARBITRUM_SEPOLIA_RPC_URL --account m
 # forge script script/$SCRIPT_PATH --rpc-url $ARBITRUM_SEPOLIA_RPC_URL --account mainnettDeployer --sender 0xaE4e57b886541829BA70eFC84340653c41e2908C
 
 # echo "Deploying contracts to arbitrum"
-forge script script/$SCRIPT_PATH --rpc-url $ARBITRUM_RPC_URL --account mainnettDeployer --sender 0xaE4e57b886541829BA70eFC84340653c41e2908C --broadcast --verify
+# forge script script/$SCRIPT_PATH --rpc-url $ARBITRUM_RPC_URL --account mainnettDeployer --sender 0xaE4e57b886541829BA70eFC84340653c41e2908C --broadcast --verify
 # forge script script/$SCRIPT_PATH --rpc-url $ARBITRUM_RPC_URL --account mainnettDeployer --sender 0xaE4e57b886541829BA70eFC84340653c41e2908C

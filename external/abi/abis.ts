@@ -7,13 +7,6 @@ export const campaignBankAbi = [
   {
     type: 'function',
     inputs: [],
-    name: 'REWARDER_HUB',
-    outputs: [{ name: '', internalType: 'address', type: 'address' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
     name: 'cancelOwnershipHandover',
     outputs: [],
     stateMutability: 'payable',
@@ -440,14 +433,20 @@ export const rewarderHubAbi = [
   { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
   {
     type: 'function',
+    inputs: [],
+    name: 'FREEZE_DURATION',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
     inputs: [
       {
         name: '_ops',
         internalType: 'struct RewardOp[]',
         type: 'tuple[]',
         components: [
-          { name: 'isLock', internalType: 'bool', type: 'bool' },
-          { name: 'target', internalType: 'bytes32', type: 'bytes32' },
+          { name: 'wallet', internalType: 'address', type: 'address' },
           { name: 'amount', internalType: 'uint256', type: 'uint256' },
           { name: 'token', internalType: 'address', type: 'address' },
           { name: 'bank', internalType: 'address', type: 'address' },
@@ -477,9 +476,7 @@ export const rewarderHubAbi = [
     type: 'function',
     inputs: [{ name: '_tokens', internalType: 'address[]', type: 'address[]' }],
     name: 'claimBatch',
-    outputs: [
-      { name: 'claimed', internalType: 'uint256[]', type: 'uint256[]' },
-    ],
+    outputs: [],
     stateMutability: 'nonpayable',
   },
   {
@@ -493,6 +490,13 @@ export const rewarderHubAbi = [
   },
   {
     type: 'function',
+    inputs: [{ name: '_wallet', internalType: 'address', type: 'address' }],
+    name: 'freezeUser',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [
       { name: '_wallet', internalType: 'address', type: 'address' },
       { name: '_token', internalType: 'address', type: 'address' },
@@ -503,26 +507,19 @@ export const rewarderHubAbi = [
   },
   {
     type: 'function',
-    inputs: [
-      { name: '_userId', internalType: 'bytes32', type: 'bytes32' },
-      { name: '_token', internalType: 'address', type: 'address' },
+    inputs: [{ name: '_wallet', internalType: 'address', type: 'address' }],
+    name: 'getFreezeInfo',
+    outputs: [
+      { name: 'frozenAt', internalType: 'uint256', type: 'uint256' },
+      { name: 'canRecover', internalType: 'bool', type: 'bool' },
     ],
-    name: 'getLocked',
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: '_token', internalType: 'address', type: 'address' }],
+    name: 'getPendingBalance',
     outputs: [{ name: 'amount', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: '_userId', internalType: 'bytes32', type: 'bytes32' }],
-    name: 'getLockedTokens',
-    outputs: [{ name: '', internalType: 'address[]', type: 'address[]' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [{ name: '_userId', internalType: 'bytes32', type: 'bytes32' }],
-    name: 'getResolution',
-    outputs: [{ name: 'wallet', internalType: 'address', type: 'address' }],
     stateMutability: 'view',
   },
   {
@@ -559,19 +556,6 @@ export const rewarderHubAbi = [
     type: 'function',
     inputs: [{ name: '_owner', internalType: 'address', type: 'address' }],
     name: 'init',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
-      { name: '_userId', internalType: 'bytes32', type: 'bytes32' },
-      { name: '_amount', internalType: 'uint256', type: 'uint256' },
-      { name: '_token', internalType: 'address', type: 'address' },
-      { name: '_bank', internalType: 'address', type: 'address' },
-      { name: '_attestation', internalType: 'bytes', type: 'bytes' },
-    ],
-    name: 'lockReward',
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -616,15 +600,16 @@ export const rewarderHubAbi = [
     inputs: [
       {
         name: '_ops',
-        internalType: 'struct RecoverOp[]',
+        internalType: 'struct FrozenFundsRecoverOp[]',
         type: 'tuple[]',
         components: [
-          { name: 'userId', internalType: 'bytes32', type: 'bytes32' },
+          { name: 'wallet', internalType: 'address', type: 'address' },
           { name: 'token', internalType: 'address', type: 'address' },
         ],
       },
+      { name: '_recipient', internalType: 'address', type: 'address' },
     ],
-    name: 'recoverLocked',
+    name: 'recoverFrozenFunds',
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -652,23 +637,6 @@ export const rewarderHubAbi = [
   {
     type: 'function',
     inputs: [
-      {
-        name: '_ops',
-        internalType: 'struct ResolveOp[]',
-        type: 'tuple[]',
-        components: [
-          { name: 'userId', internalType: 'bytes32', type: 'bytes32' },
-          { name: 'wallet', internalType: 'address', type: 'address' },
-        ],
-      },
-    ],
-    name: 'resolveUserIds',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [
       { name: 'user', internalType: 'address', type: 'address' },
       { name: 'roles', internalType: 'uint256', type: 'uint256' },
     ],
@@ -692,6 +660,13 @@ export const rewarderHubAbi = [
   },
   {
     type: 'function',
+    inputs: [{ name: '_wallet', internalType: 'address', type: 'address' }],
+    name: 'unfreezeUser',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     inputs: [
       { name: 'newImplementation', internalType: 'address', type: 'address' },
       { name: 'data', internalType: 'bytes', type: 'bytes' },
@@ -701,26 +676,48 @@ export const rewarderHubAbi = [
     stateMutability: 'payable',
   },
   {
-    type: 'event',
-    anonymous: false,
+    type: 'function',
     inputs: [
-      {
-        name: 'version',
-        internalType: 'uint64',
-        type: 'uint64',
-        indexed: false,
-      },
+      { name: '_token', internalType: 'address', type: 'address' },
+      { name: '_recipient', internalType: 'address', type: 'address' },
     ],
-    name: 'Initialized',
+    name: 'withdrawExcess',
+    outputs: [{ name: 'excess', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'nonpayable',
   },
   {
     type: 'event',
     anonymous: false,
     inputs: [
       {
-        name: 'userId',
-        internalType: 'bytes32',
-        type: 'bytes32',
+        name: 'token',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'amount',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'recipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'ExcessWithdrawn',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'wallet',
+        internalType: 'address',
+        type: 'address',
         indexed: true,
       },
       {
@@ -735,9 +732,27 @@ export const rewarderHubAbi = [
         type: 'uint256',
         indexed: false,
       },
-      { name: 'to', internalType: 'address', type: 'address', indexed: false },
+      {
+        name: 'recipient',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
     ],
-    name: 'LockedRecovered',
+    name: 'FrozenFundsRecovered',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'version',
+        internalType: 'uint64',
+        type: 'uint64',
+        indexed: false,
+      },
+    ],
+    name: 'Initialized',
   },
   {
     type: 'event',
@@ -814,43 +829,6 @@ export const rewarderHubAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'userId',
-        internalType: 'bytes32',
-        type: 'bytes32',
-        indexed: true,
-      },
-      {
-        name: 'token',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-      {
-        name: 'bank',
-        internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-      {
-        name: 'amount',
-        internalType: 'uint256',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        name: 'attestation',
-        internalType: 'bytes',
-        type: 'bytes',
-        indexed: false,
-      },
-    ],
-    name: 'RewardLocked',
-  },
-  {
-    type: 'event',
-    anonymous: false,
-    inputs: [
-      {
         name: 'wallet',
         internalType: 'address',
         type: 'address',
@@ -915,24 +893,35 @@ export const rewarderHubAbi = [
     anonymous: false,
     inputs: [
       {
-        name: 'userId',
-        internalType: 'bytes32',
-        type: 'bytes32',
+        name: 'wallet',
+        internalType: 'address',
+        type: 'address',
         indexed: true,
       },
+      {
+        name: 'timestamp',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'UserFrozen',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
       {
         name: 'wallet',
         internalType: 'address',
         type: 'address',
-        indexed: false,
+        indexed: true,
       },
     ],
-    name: 'UserIdResolved',
+    name: 'UserUnfrozen',
   },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
-  { type: 'error', inputs: [], name: 'AlreadyResolved' },
-  { type: 'error', inputs: [], name: 'CannotRecoverResolved' },
-  { type: 'error', inputs: [], name: 'IndexOutOfBounds' },
+  { type: 'error', inputs: [], name: 'FreezePeriodNotElapsed' },
   { type: 'error', inputs: [], name: 'InvalidAddress' },
   { type: 'error', inputs: [], name: 'InvalidAmount' },
   { type: 'error', inputs: [], name: 'InvalidInitialization' },
@@ -940,9 +929,12 @@ export const rewarderHubAbi = [
   { type: 'error', inputs: [], name: 'NoHandoverRequest' },
   { type: 'error', inputs: [], name: 'NotInitializing' },
   { type: 'error', inputs: [], name: 'NothingToClaim' },
-  { type: 'error', inputs: [], name: 'NothingToRecover' },
+  { type: 'error', inputs: [], name: 'NothingToWithdraw' },
   { type: 'error', inputs: [], name: 'Reentrancy' },
   { type: 'error', inputs: [], name: 'Unauthorized' },
   { type: 'error', inputs: [], name: 'UnauthorizedCallContext' },
   { type: 'error', inputs: [], name: 'UpgradeFailed' },
+  { type: 'error', inputs: [], name: 'UserAlreadyFrozen' },
+  { type: 'error', inputs: [], name: 'UserIsFrozen' },
+  { type: 'error', inputs: [], name: 'UserNotFrozen' },
 ] as const
