@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GNU GPLv3
 pragma solidity ^0.8.23;
 
-import {console} from "forge-std/Console.sol";
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 import {LibPRNG} from "solady/utils/LibPRNG.sol";
 

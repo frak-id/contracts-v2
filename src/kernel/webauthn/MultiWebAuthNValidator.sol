@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {MultiWebAuthNSignatureLib} from "../types/MultiWebAuthNSignatureLib.sol";
-import {WebAuthNSignatureLib} from "../types/WebAuthNSignatureLib.sol";
 import {WebAuthnVerifier} from "../utils/WebAuthnVerifier.sol";
 import {UserOperation} from "I4337/interfaces/UserOperation.sol";
 import {ValidationData} from "kernel-v2/common/Types.sol";

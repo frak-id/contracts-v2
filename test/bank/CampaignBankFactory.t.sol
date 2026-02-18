@@ -141,7 +141,7 @@ contract CampaignBankFactoryTest is Test {
         assertEq(predicted, address(actual));
     }
 
-    function test_predictBankAddress_differentSalts() public {
+    function test_predictBankAddress_differentSalts() public view {
         bytes32 salt1 = keccak256("salt1");
         bytes32 salt2 = keccak256("salt2");
 
@@ -195,7 +195,7 @@ contract CampaignBankFactoryTest is Test {
         assertEq(bank.owner(), merchant1);
     }
 
-    function testFuzz_predictBankAddress_consistency(bytes32 _salt) public {
+    function testFuzz_predictBankAddress_consistency(bytes32 _salt) public view {
         // Predict twice should give same result
         address predicted1 = factory.predictBankAddress(_salt);
         address predicted2 = factory.predictBankAddress(_salt);

@@ -108,7 +108,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
 
     /// @dev bytes32(uint256(keccak256('frak.reward.hub')) - 1)
     bytes32 private constant _REWARDER_HUB_STORAGE_SLOT =
-        0x5765d97f39456ee4cd0e1fa62a9e5c3f6b4a0c7d8e9f0a1b2c3d4e5f6a7b8c9d;
+        0x80d56bc456a9b0bce784773e70c2c8411949905660dea58b162e8c9414c91951;
 
     /// @custom:storage-location erc7201:frak.reward.hub
     struct RewarderHubStorage {
@@ -154,6 +154,7 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
     function pushReward(address _wallet, uint256 _amount, address _token, address _bank, bytes calldata _attestation)
         external
         onlyRoles(REWARDER_ROLE)
+        nonReentrant
     {
         if (_wallet == address(0)) revert InvalidAddress();
         if (_amount == 0) revert InvalidAmount();
@@ -356,6 +357,8 @@ contract RewarderHub is OwnableRoles, UUPSUpgradeable, Initializable, Reentrancy
         for (uint256 t; t < _tokens.length;) {
             address token = _tokens[t];
             uint256 amount = claimable[token];
+
+            if (amount == 0) { unchecked { ++t; } continue; }
 
             claimable[token] = 0;
             $.pendingBalance[token] -= amount;

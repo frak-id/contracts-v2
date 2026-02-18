@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {Initializable} from "solady/utils/Initializable.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+import {ERC20} from "solady/tokens/ERC20.sol";
 
 /// @dev The role required to manage the bank (deposit, withdraw, update state)
 uint256 constant CAMPAIGN_BANK_MANAGER_ROLE = 1 << 0;
@@ -45,13 +46,16 @@ contract CampaignBank is OwnableRoles, Initializable {
     /// @dev Error when trying to set zero address
     error InvalidAddress();
 
+    /// @dev Error when different array length are provided
+    error ArrayLengthMismatch();
+
     /* -------------------------------------------------------------------------- */
     /*                                   Storage                                  */
     /* -------------------------------------------------------------------------- */
 
     /// @dev bytes32(uint256(keccak256('frak.bank.campaign')) - 1)
     bytes32 private constant _CAMPAIGN_BANK_STORAGE_SLOT =
-        0x8a2c3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b;
+        0xa587d35f3322253c27743d45d6fcbf1932f3bc32733bfaa28c285e2c47e1e9c0;
 
     /// @custom:storage-location erc7201:frak.bank.campaign
     struct CampaignBankStorage {
@@ -132,6 +136,8 @@ contract CampaignBank is OwnableRoles, Initializable {
         external
         onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE)
     {
+        if (_tokens.length != _amounts.length) revert ArrayLengthMismatch();
+
         CampaignBankStorage storage $ = _storage();
         if (!$.isOpen) revert BankIsClosed();
 
@@ -222,7 +228,7 @@ contract CampaignBank is OwnableRoles, Initializable {
     /// @dev Get allowance using low-level call to handle non-standard tokens
     function _allowance(address _token) internal view returns (uint256) {
         (bool success, bytes memory data) = _token.staticcall(
-            abi.encodeWithSignature("allowance(address,address)", address(this), _storage().rewarderHub)
+            abi.encodeWithSelector(ERC20.allowance.selector, address(this), _storage().rewarderHub)
         );
         if (success && data.length >= 32) {
             return abi.decode(data, (uint256));

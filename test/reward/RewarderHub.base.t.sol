@@ -5,7 +5,7 @@ import {MockErc20} from "../utils/MockErc20.sol";
 import {Test} from "forge-std/Test.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 import {COMPLIANCE_ROLE, REWARDER_ROLE} from "src/constants/Roles.sol";
-import {FrozenFundsRecoverOp, RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
+import {RewardOp, RewarderHub} from "src/reward/RewarderHub.sol";
 
 /// @title RewarderHubBaseTest
 /// @notice Base test contract with shared setup for RewarderHub tests

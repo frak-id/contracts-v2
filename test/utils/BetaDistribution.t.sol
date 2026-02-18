@@ -3,9 +3,7 @@ pragma solidity 0.8.23;
 
 import {console} from "forge-std/Console.sol";
 import {Test} from "forge-std/Test.sol";
-
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
-import {LibPRNG} from "solady/utils/LibPRNG.sol";
 import {BetaDistribution} from "src/utils/BetaDistribution.sol";
 
 contract BetaDistributionTest is Test {
