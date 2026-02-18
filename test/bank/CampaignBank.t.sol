@@ -483,4 +483,243 @@ contract CampaignBankTest is Test {
 
         assertEq(campaignBank.getAllowance(address(token)), amount);
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                    Security Edge Cases - Array Mismatch                    */
+    /* -------------------------------------------------------------------------- */
+
+    function test_updateAllowances_revert_arrayLengthMismatch_tokensLonger() public {
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(token);
+        tokens[1] = address(token2);
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1000e18;
+
+        vm.prank(owner);
+        vm.expectRevert(CampaignBank.ArrayLengthMismatch.selector);
+        campaignBank.updateAllowances(tokens, amounts);
+    }
+
+    function test_updateAllowances_revert_arrayLengthMismatch_amountsLonger() public {
+        address[] memory tokens = new address[](1);
+        tokens[0] = address(token);
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 1000e18;
+        amounts[1] = 2000e18;
+
+        vm.prank(owner);
+        vm.expectRevert(CampaignBank.ArrayLengthMismatch.selector);
+        campaignBank.updateAllowances(tokens, amounts);
+    }
+
+    function test_updateAllowances_emptyArrays() public {
+        vm.prank(owner);
+        campaignBank.setOpen(true);
+
+        address[] memory tokens = new address[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        vm.prank(owner);
+        campaignBank.updateAllowances(tokens, amounts);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                 Security Edge Cases - Closed Bank Pullability              */
+    /* -------------------------------------------------------------------------- */
+
+    function test_closedBank_existingAllowanceStillUsable() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        token.approve(address(campaignBank), 1000e18);
+        campaignBank.deposit(address(token), 1000e18);
+        campaignBank.setOpen(false);
+        vm.stopPrank();
+
+        assertFalse(campaignBank.isOpen());
+        assertEq(token.balanceOf(address(campaignBank)), 1000e18);
+
+        vm.prank(rewarderHub);
+        token.transferFrom(address(campaignBank), rewarderHub, 300e18);
+
+        assertEq(token.balanceOf(rewarderHub), 300e18);
+        assertEq(token.balanceOf(address(campaignBank)), 700e18);
+    }
+
+    function test_closedBank_cannotUpdateAllowance() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.setOpen(false);
+        vm.stopPrank();
+
+        vm.prank(owner);
+        vm.expectRevert(CampaignBank.BankIsClosed.selector);
+        campaignBank.updateAllowance(address(token), 1000e18);
+    }
+
+    function test_closedBank_canWithdrawAfterClose() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        token.approve(address(campaignBank), 1000e18);
+        campaignBank.deposit(address(token), 1000e18);
+        campaignBank.setOpen(false);
+        campaignBank.withdraw(address(token), 400e18, user);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(user), 400e18);
+        assertEq(token.balanceOf(address(campaignBank)), 600e18);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                 Security Edge Cases - Initialization Security              */
+    /* -------------------------------------------------------------------------- */
+
+    function test_init_zeroOwnerAccepted() public {
+        CampaignBank newBank = CampaignBank(address(implementation).clone());
+
+        // Solady's OwnableRoles does not revert on address(0) ownership transfer
+        // This means a zero-owner bank becomes permanently ownerless
+        newBank.init(address(0), rewarderHub);
+
+        assertEq(newBank.owner(), address(0));
+    }
+
+    function test_init_ownerHasManagerRole() public view {
+        assertTrue(campaignBank.hasAnyRole(owner, CAMPAIGN_BANK_MANAGER_ROLE));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                Security Edge Cases - Role Access Control                   */
+    /* -------------------------------------------------------------------------- */
+
+    function test_managerCannotRevokeAllowance() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        vm.stopPrank();
+
+        vm.prank(manager);
+        vm.expectRevert();
+        campaignBank.revokeAllowance(address(token));
+    }
+
+    function test_managerCannotRevokeAllowances() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        vm.stopPrank();
+
+        address[] memory tokens = new address[](1);
+        tokens[0] = address(token);
+
+        vm.prank(manager);
+        vm.expectRevert();
+        campaignBank.revokeAllowances(tokens);
+    }
+
+    function test_randomUserCannotDeposit() public {
+        address randomUser = makeAddr("randomUser");
+        token.mint(randomUser, 1000e18);
+
+        vm.startPrank(randomUser);
+        token.approve(address(campaignBank), 1000e18);
+        vm.expectRevert();
+        campaignBank.deposit(address(token), 1000e18);
+        vm.stopPrank();
+    }
+
+    function test_randomUserCannotSetOpen() public {
+        address randomUser = makeAddr("randomUser");
+
+        vm.prank(randomUser);
+        vm.expectRevert();
+        campaignBank.setOpen(true);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                 Security Edge Cases - State Transitions                    */
+    /* -------------------------------------------------------------------------- */
+
+    function test_setOpen_toggleMultipleTimes() public {
+        vm.prank(owner);
+        campaignBank.setOpen(true);
+        assertTrue(campaignBank.isOpen());
+
+        vm.prank(owner);
+        campaignBank.setOpen(false);
+        assertFalse(campaignBank.isOpen());
+
+        vm.prank(owner);
+        campaignBank.setOpen(true);
+        assertTrue(campaignBank.isOpen());
+
+        vm.prank(owner);
+        campaignBank.setOpen(false);
+        assertFalse(campaignBank.isOpen());
+    }
+
+    function test_deposit_whileBankClosed() public {
+        vm.startPrank(owner);
+        token.approve(address(campaignBank), 1000e18);
+        campaignBank.deposit(address(token), 1000e18);
+        vm.stopPrank();
+
+        assertEq(campaignBank.getBalance(address(token)), 1000e18);
+    }
+
+    function test_deposit_whileBankOpen() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        token.approve(address(campaignBank), 1000e18);
+        campaignBank.deposit(address(token), 1000e18);
+        vm.stopPrank();
+
+        assertEq(campaignBank.getBalance(address(token)), 1000e18);
+    }
+
+    function test_withdraw_fullBalance() public {
+        vm.startPrank(owner);
+        token.approve(address(campaignBank), 1000e18);
+        campaignBank.deposit(address(token), 1000e18);
+        campaignBank.withdraw(address(token), 1000e18, user);
+        vm.stopPrank();
+
+        assertEq(campaignBank.getBalance(address(token)), 0);
+        assertEq(token.balanceOf(user), 1000e18);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*              Security Edge Cases - Allowance Management                    */
+    /* -------------------------------------------------------------------------- */
+
+    function test_updateAllowance_overwritePreviousAllowance() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        campaignBank.updateAllowance(address(token), 500e18);
+        vm.stopPrank();
+
+        assertEq(campaignBank.getAllowance(address(token)), 500e18);
+    }
+
+    function test_updateAllowance_setToZero() public {
+        vm.startPrank(owner);
+        campaignBank.setOpen(true);
+        campaignBank.updateAllowance(address(token), 1000e18);
+        campaignBank.updateAllowance(address(token), 0);
+        vm.stopPrank();
+
+        assertEq(campaignBank.getAllowance(address(token)), 0);
+    }
+
+    function test_revokeAllowance_whenNoAllowanceSet() public {
+        assertEq(campaignBank.getAllowance(address(token)), 0);
+
+        vm.prank(owner);
+        campaignBank.revokeAllowance(address(token));
+
+        assertEq(campaignBank.getAllowance(address(token)), 0);
+    }
 }
