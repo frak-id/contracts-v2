@@ -343,6 +343,7 @@ export const campaignBankAbi = [
     name: 'Withdrawn',
   },
   { type: 'error', inputs: [], name: 'AlreadyInitialized' },
+  { type: 'error', inputs: [], name: 'ArrayLengthMismatch' },
   { type: 'error', inputs: [], name: 'BankIsClosed' },
   { type: 'error', inputs: [], name: 'BankIsStillOpen' },
   { type: 'error', inputs: [], name: 'InvalidAddress' },
