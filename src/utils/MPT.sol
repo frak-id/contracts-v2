@@ -46,11 +46,7 @@ library MPT {
     }
 
     /// @dev Verify a leaf in a MPT tree
-    function verifyLeaf(bytes32 root, uint256 key, bytes[] calldata proof)
-        internal
-        pure
-        returns (bytes memory result)
-    {
+    function verifyLeaf(bytes32 root, uint256 key, bytes[] calldata proof) internal pure returns (bytes memory result) {
         uint256 nibble = 0;
         RLPReader.RLPItem[] memory node;
         for (uint256 index = 0; index < proof.length; ++index) {

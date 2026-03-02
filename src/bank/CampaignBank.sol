@@ -1,0 +1,238 @@
+// SPDX-License-Identifier: GNU GPLv3
+pragma solidity 0.8.23;
+
+import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
+import {Initializable} from "solady/utils/Initializable.sol";
+import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+import {ERC20} from "solady/tokens/ERC20.sol";
+
+/// @dev The role required to manage the bank (deposit, withdraw, update state)
+uint256 constant CAMPAIGN_BANK_MANAGER_ROLE = 1 << 0;
+
+/// @author @KONFeature
+/// @title CampaignBank
+/// @notice Multi-token bank contract for merchants to fund reward campaigns
+/// @dev Each merchant has one bank that can hold multiple tokens and authorize the RewarderHub
+/// @custom:security-contact contact@frak.id
+contract CampaignBank is OwnableRoles, Initializable {
+    using SafeTransferLib for address;
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Events                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Emitted when a token allowance is updated for the RewarderHub
+    event AllowanceUpdated(address indexed token, uint256 amount);
+
+    /// @dev Emitted when the bank open state is updated
+    event BankStateUpdated(bool isOpen);
+
+    /// @dev Emitted when tokens are deposited
+    event Deposited(address indexed token, uint256 amount);
+
+    /// @dev Emitted when tokens are withdrawn
+    event Withdrawn(address indexed token, uint256 amount, address to);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Error when trying to distribute while bank is closed
+    error BankIsClosed();
+
+    /// @dev Error when trying to withdraw while bank is open
+    error BankIsStillOpen();
+
+    /// @dev Error when trying to set zero address
+    error InvalidAddress();
+
+    /// @dev Error when different array length are provided
+    error ArrayLengthMismatch();
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Storage                                  */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev bytes32(uint256(keccak256('frak.bank.campaign')) - 1)
+    bytes32 private constant _CAMPAIGN_BANK_STORAGE_SLOT =
+        0xa587d35f3322253c27743d45d6fcbf1932f3bc32733bfaa28c285e2c47e1e9c0;
+
+    /// @custom:storage-location erc7201:frak.bank.campaign
+    struct CampaignBankStorage {
+        /// @dev The RewarderHub address that can pull funds
+        address rewarderHub;
+        /// @dev Bank open state - controls operational mode:
+        ///      - true (open): allowances can be updated, withdrawals blocked
+        ///      - false (closed): allowances cannot be updated, withdrawals allowed
+        /// @dev NOTE: This flag does NOT prevent RewarderHub from pulling funds via existing allowances.
+        ///      To fully stop fund outflow, use revokeAllowance() to remove ERC20 approvals.
+        bool isOpen;
+    }
+
+    function _storage() private pure returns (CampaignBankStorage storage storagePtr) {
+        assembly {
+            storagePtr.slot := _CAMPAIGN_BANK_STORAGE_SLOT
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 Constructor                                */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Disable initializers on implementation contract
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initialize a new CampaignBank
+    /// @param _owner The owner of the bank (merchant)
+    /// @param _rewarderHub The RewarderHub address that will pull funds
+    function init(address _owner, address _rewarderHub) external initializer {
+        if (_rewarderHub == address(0)) revert InvalidAddress();
+
+        _initializeOwner(_owner);
+        _setRoles(_owner, CAMPAIGN_BANK_MANAGER_ROLE);
+
+        _storage().rewarderHub = _rewarderHub;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                            Distribution Control                            */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Set the bank open state
+    /// @dev When open: allowances can be updated, withdrawals blocked
+    ///      When closed: allowances cannot be updated, withdrawals allowed
+    /// @param _isOpen Whether the bank should be open
+    function setOpen(bool _isOpen) external onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE) {
+        _storage().isOpen = _isOpen;
+        emit BankStateUpdated(_isOpen);
+    }
+
+    /// @notice Check if the bank is open
+    function isOpen() external view returns (bool) {
+        return _storage().isOpen;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                             Allowance Management                           */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Update the allowance for a token to the RewarderHub
+    /// @param _token The token address
+    /// @param _amount The allowance amount
+    function updateAllowance(address _token, uint256 _amount) external onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE) {
+        CampaignBankStorage storage $ = _storage();
+        if (!$.isOpen) revert BankIsClosed();
+
+        _token.safeApprove($.rewarderHub, _amount);
+        emit AllowanceUpdated(_token, _amount);
+    }
+
+    /// @notice Update allowances for multiple tokens at once
+    /// @param _tokens Array of token addresses
+    /// @param _amounts Array of allowance amounts
+    function updateAllowances(address[] calldata _tokens, uint256[] calldata _amounts)
+        external
+        onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE)
+    {
+        if (_tokens.length != _amounts.length) revert ArrayLengthMismatch();
+
+        CampaignBankStorage storage $ = _storage();
+        if (!$.isOpen) revert BankIsClosed();
+
+        address rewarderHub = $.rewarderHub;
+        for (uint256 i; i < _tokens.length;) {
+            _tokens[i].safeApprove(rewarderHub, _amounts[i]);
+            emit AllowanceUpdated(_tokens[i], _amounts[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /// @notice Get the current allowance for a token
+    /// @param _token The token address
+    /// @return The current allowance to RewarderHub
+    function getAllowance(address _token) external view returns (uint256) {
+        return _allowance(_token);
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                            Deposit & Withdrawal                            */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Deposit tokens into the bank
+    /// @param _token The token address
+    /// @param _amount The amount to deposit
+    function deposit(address _token, uint256 _amount) external onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE) {
+        _token.safeTransferFrom(msg.sender, address(this), _amount);
+        emit Deposited(_token, _amount);
+    }
+
+    /// @notice Withdraw tokens from the bank
+    /// @dev Can only withdraw when distribution is disabled
+    /// @param _token The token address
+    /// @param _amount The amount to withdraw
+    /// @param _to The recipient address
+    function withdraw(address _token, uint256 _amount, address _to)
+        external
+        onlyRolesOrOwner(CAMPAIGN_BANK_MANAGER_ROLE)
+    {
+        if (_storage().isOpen) revert BankIsStillOpen();
+        if (_to == address(0)) revert InvalidAddress();
+
+        _token.safeTransfer(_to, _amount);
+        emit Withdrawn(_token, _amount, _to);
+    }
+
+    /// @notice Get the balance of a token in the bank
+    /// @param _token The token address
+    /// @return The token balance
+    function getBalance(address _token) external view returns (uint256) {
+        return _token.balanceOf(address(this));
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                            Emergency Functions                             */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Emergency revoke allowance for a token
+    /// @dev Can be called even when bank is open
+    /// @param _token The token address
+    function revokeAllowance(address _token) external onlyOwner {
+        _token.safeApprove(_storage().rewarderHub, 0);
+        emit AllowanceUpdated(_token, 0);
+    }
+
+    /// @notice Emergency revoke allowances for multiple tokens
+    /// @dev Can be called even when bank is open
+    /// @param _tokens Array of token addresses to revoke
+    function revokeAllowances(address[] calldata _tokens) external onlyOwner {
+        address rewarderHub = _storage().rewarderHub;
+        for (uint256 i; i < _tokens.length;) {
+            _tokens[i].safeApprove(rewarderHub, 0);
+            emit AllowanceUpdated(_tokens[i], 0);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                            Internal Functions                              */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Get allowance using low-level call to handle non-standard tokens
+    function _allowance(address _token) internal view returns (uint256) {
+        (bool success, bytes memory data) = _token.staticcall(
+            abi.encodeWithSelector(ERC20.allowance.selector, address(this), _storage().rewarderHub)
+        );
+        if (success && data.length >= 32) {
+            return abi.decode(data, (uint256));
+        }
+        return 0;
+    }
+}

@@ -1,0 +1,91 @@
+// SPDX-License-Identifier: GNU GPLv3
+pragma solidity 0.8.23;
+
+import {CampaignBank} from "./CampaignBank.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
+
+/// @author @KONFeature
+/// @title CampaignBankFactory
+/// @notice Factory for deploying CampaignBank contracts for merchants
+/// @custom:security-contact contact@frak.id
+contract CampaignBankFactory {
+    using LibClone for address;
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Events                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Emitted when a new bank is deployed
+    event BankDeployed(address indexed owner, address indexed bank);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev Error when the RewarderHub is not set
+    error InvalidRewarderHub();
+
+    /// @dev Error when the owner address is invalid
+    error InvalidOwner();
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  Constants                                 */
+    /* -------------------------------------------------------------------------- */
+
+    /// @dev The RewarderHub address
+    address public immutable REWARDER_HUB;
+
+    /// @dev The CampaignBank implementation address
+    address public immutable IMPLEMENTATION;
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 Constructor                                */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Create a new CampaignBankFactory
+    /// @param _rewarderHub The RewarderHub address
+    constructor(address _rewarderHub) {
+        if (_rewarderHub == address(0)) revert InvalidRewarderHub();
+        REWARDER_HUB = _rewarderHub;
+        IMPLEMENTATION = address(new CampaignBank());
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                              Factory Functions                             */
+    /* -------------------------------------------------------------------------- */
+
+    /// @notice Deploy a new CampaignBank for a merchant
+    /// @param _owner The owner of the bank (merchant)
+    /// @return bank The deployed bank address
+    function deployBank(address _owner) external returns (CampaignBank bank) {
+        if (_owner == address(0)) revert InvalidOwner();
+        bank = CampaignBank(IMPLEMENTATION.clone());
+        bank.init(_owner, REWARDER_HUB);
+        emit BankDeployed(_owner, address(bank));
+    }
+
+    /// @notice Deploy a new CampaignBank with a deterministic address
+    /// @dev Note on front-running: There is a theoretical window between clone deployment and
+    ///      initialization where an attacker could attempt to front-run the init() call.
+    ///      However, this attack is impractical because:
+    ///      1. The attacker would need to predict the clone address (possible with CREATE2)
+    ///      2. The attacker cannot steal any funds - they would only DoS the deployment
+    ///      3. The legitimate deployer can simply use a different salt
+    ///      For high-value deployments, consider using a private mempool or Flashbots Protect.
+    /// @param _owner The owner of the bank (merchant)
+    /// @param _salt Salt for CREATE2
+    /// @return bank The deployed bank address
+    function deployBank(address _owner, bytes32 _salt) external returns (CampaignBank bank) {
+        if (_owner == address(0)) revert InvalidOwner();
+        bank = CampaignBank(IMPLEMENTATION.cloneDeterministic(_salt));
+        bank.init(_owner, REWARDER_HUB);
+        emit BankDeployed(_owner, address(bank));
+    }
+
+    /// @notice Predict the address of a bank deployed with CREATE2
+    /// @param _salt Salt for CREATE2
+    /// @return The predicted address
+    function predictBankAddress(bytes32 _salt) external view returns (address) {
+        return IMPLEMENTATION.predictDeterministicAddress(_salt, address(this));
+    }
+}

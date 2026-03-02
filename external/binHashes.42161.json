@@ -1,0 +1,8 @@
+{
+  "campaignBankFactory": "0x625e675b949fba8a4d2404df3afb192c1495c1afca5b0d58dbf30e41cbdb95f6",
+  "mUSDToken": "0xb082c8b775bdf3d56097df03df0f3606a74e8b7a94215ae21c6d1031fb7675fc",
+  "p256Wrapper": "0xfc9b8875e96b043d21014d2b78575de739b36c2c6769e85db50a5b14b5ee3aea",
+  "rewarderHub": "0xb84a0b3dce676ce8c4a2a3ad660fe10f7f5ba19ef2234972e60735f0b32c198c",
+  "webAuthNRecoveryAction": "0x3d9c3a063255def2e81ab5182807d14e8ed68d2e47953d18d4060876a9cc46fc",
+  "webAuthNValidator": "0xc61ececf0a9031fe211b850122501131c668f027ed71a71d9fe803549c48de03"
+}

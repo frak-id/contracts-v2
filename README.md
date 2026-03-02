@@ -1,25 +1,20 @@
 # Frak - Contracts v2
 
-This repository hosts the smart contracts related to the Nexus dApp, within the [Frak](https://frak.id/) ecosystem. 
+This repository hosts the smart contracts related to the Nexus dApp, within the [Frak](https://frak.id/) ecosystem.
 
-This project contains a suite of smart contracts that manage product registrations, user interactions, referral systems, and reward campaigns.
+This project contains a suite of smart contracts that manage reward distribution, merchant banking, and Kernel smart wallet authentication.
 
 ## Addresses
 
 ### Frak ecosystem
 
-Addresses of the Frak contracts, deployed on Arbitrum and Arbitrum Sepolia.
+Addresses of the Frak contracts, deployed on Arbitrum One and Arbitrum Sepolia.
 
-| Name                           | Address                                       |
-|--------------------------------|-----------------------------------------------|
-| Product Registry               | `0x9100000000290000D9a49572110030ba00E0F40b`  |
-| Referral Registry              | `0x5439e7b27500f7000A6DCD00006D000082510000`  |
-| Product Administrator Registry | `0x0000000000000823EaD12075a50A2a6520966e5c`  |
-| Purchase Oracle                | `0x0000EC17000000e783CA00Ee06890000114C100d`  |
-| Product Interaction Manager    | `0x0000000000009720dc2B0D893f7Ec2a878d21AeC`  |
-| Facet Factory                  | `0x0000003b064eCB7cdB7ff052c4Ee80Dff10000Cd`  |
-| Campaign Factory               | `0x0000000000278e0EFbC5968020A798AaB1571E5c`  |
-| Campaign Bank Factory          | `0x00000000003604CF2d09f4Aa3B878843A765015d`  |
+| Name                | Address                                       |
+|---------------------|-----------------------------------------------|
+| RewarderHub         | `0x2832c6D07621ae8335AEBa17a5A3747f032ff168`  |
+| CampaignBankFactory | `0x9aD5b5fe2b484dBa9c019660ef085FFe8A6908E1`  |
+| mUSDToken           | `0x43838DCb58a61325eC5F31FD70aB8cd3540733d1`  |
 
 ### Kernel plugins
 
@@ -27,168 +22,200 @@ Plugins for the Kernel smart accounts.
 
 | Name                                  | Address                                       |
 |---------------------------------------|-----------------------------------------------|
-| Generic                                                                               |
 | P256 Signature checker Wrapper        | `0x00e4005A00007384000000B0a8A0F300DD9fCAFA`  |
 | MultiWebAuthN - Kernel v2             | `0x0000000000Fb9604350a25E826B050D859FE7b77`  |
 | MultiWebAuthN Recovery - Kernel v2    | `0x000000000093c960bC9F9Dc93509E394a96c7FD9`  |
-| Interaction delegator                 | `0x0000000000915Bae6248227914666Afd11Ad706e`  |
-| Interaction delegator validator       | `0x00000000002f84e026BbA7983F3c189D0C6dc8Fa`  |
-| Interaction delegator action          | `0x00000000001BF7FE0EEBf7c66E1e624D52a12FAD`  |
-
 
 ## Folder Structure
 
 ```
 src
-├── campaign
+├── bank
 │   ├── CampaignBank.sol
-│   ├── CampaignBankFactory.sol
-│   ├── InteractionCampaign.sol
-│   └── ReferralCampaign.sol
-│   ├── CampaignFactory.sol
+│   └── CampaignBankFactory.sol
 ├── constants
-├── interaction
-│   ├── InteractionFacetsFactory.sol
-│   ├── ProductInteractionDiamond.sol
-│   ├── ProductInteractionManager.sol
-│   ├── facets
-│   │   ├── DappInteractionFacet.sol
-│   │   ├── IInteractionFacet.sol
-│   │   ├── PressInteractionFacet.sol
-│   │   ├── PurchaseInteractionFacet.sol
-│   │   ├── WebShopInteractionFacet.sol
-│   │   └── ReferralFeatureFacet.sol
-│   └── lib
-├── interfaces
+│   ├── Errors.sol
+│   └── Roles.sol
 ├── kernel
-│   ├── interaction
 │   ├── types
+│   │   ├── MultiWebAuthNSignatureLib.sol
+│   │   ├── SingleWebAuthNSignatureLib.sol
+│   │   └── WebAuthNSignatureLib.sol
 │   ├── utils
+│   │   ├── P256VerifierWrapper.sol
+│   │   └── WebAuthnVerifier.sol
 │   └── webauthn
-├── modules
-├── oracle
-│   └── PurchaseOracle.sol
-├── registry
-│   ├── ProductAdministratorRegistry.sol
-│   ├── ProductRegistry.sol
-│   └── ReferralRegistry.sol
-└── tokens
+│       ├── MultiWebAuthNRecoveryAction.sol
+│       └── MultiWebAuthNValidator.sol
+├── reward
+│   └── RewarderHub.sol
+├── tokens
+│   └── mUSDToken.sol
+└── utils
+    ├── BetaDistribution.sol
+    └── MPT.sol
 ```
-## Registries
 
-The `registry/` directory houses contracts that function as essential data registries within the Frak ecosystem. These registries manage crucial information about products, referrals, and administrative roles.
+## Bank
 
-### ProductRegistry.sol
+The `bank/` directory contains contracts for merchant fund management within the Frak ecosystem.
 
-The ProductRegistry manages metadata associated with products within the Frak ecosystem.
+### CampaignBank.sol
 
-Key features:
-- Represents each product as a unique ERC-721 token.
-- Identifies products by a unique domain.
-- Stores product metadata: name, domain, and supported product types.
-- Handles product registration, metadata updates, ownership transfers, and product discovery.
-
-### ReferralRegistry.sol
-
-The ReferralRegistry manages referral trees for implementing referral programs and reward distributions.
+A multi-token bank contract that allows merchants to fund reward campaigns.
 
 Key features:
-- Supports creation of multiple referral trees, each identified by a unique `bytes32` selector.
-- Tracks referrals within each tree, establishing relationships between referrers and referees.
-- Controls write access to referral trees to ensure only authorized contracts or users can add new referrals.
+- Each merchant has one bank that can hold multiple ERC20 tokens.
+- Authorizes the RewarderHub to pull funds via ERC20 allowances.
+- Bank state toggle (`isOpen`) controls operational mode:
+  - When open: allowances can be updated, withdrawals are blocked.
+  - When closed: allowances cannot be updated, withdrawals are allowed.
+- Owner-only emergency functions to revoke allowances.
+- Role-based access control for bank managers.
 
-### ProductAdministratorRegistry.sol
+Important notes:
+- The `isOpen` flag does NOT prevent RewarderHub from pulling funds via existing allowances.
+- To fully stop fund outflow, use `revokeAllowance()` or `revokeAllowances()` to remove ERC20 approvals.
 
-The ProductAdministratorRegistry manages roles and permissions for products within the Frak ecosystem.
+### CampaignBankFactory.sol
+
+Factory contract for deploying CampaignBank instances.
 
 Key features:
-- Greatly inspired by solady's OwnableRoles contract, but uses productId as a key.
-- Interacts with ProductRegistry to verify product ownership.
-- Only the owner of a product can update permissions for users.
-- Provides role-based access control for product-related operations.
+- Deploys minimal proxy clones of the CampaignBank implementation.
+- Supports deterministic deployment via CREATE2 with salt parameter.
+- Automatically configures new banks with the RewarderHub address.
+- Provides address prediction for CREATE2 deployments.
+
+## Reward
+
+The `reward/` directory contains the central reward distribution system.
+
+### RewarderHub.sol
+
+Central hub for managing and distributing rewards across the Frak ecosystem.
+
+Key features:
+- Pulls funds from CampaignBank contracts via ERC20 allowances.
+- Pushes rewards directly to wallet addresses.
+- Batch operations for gas-efficient reward distribution.
+- User freeze/compliance functionality:
+  - Freeze users to prevent them from claiming rewards.
+  - Recover funds from users frozen for longer than 60 days.
+- Role-based access control:
+  - `REWARDER_ROLE`: Can push rewards.
+  - `COMPLIANCE_ROLE`: Can freeze/unfreeze users and recover frozen funds.
+  - `UPGRADE_ROLE`: Can upgrade the contract (UUPS pattern).
+
+Token compatibility:
+- Does NOT support fee-on-transfer tokens.
+- Does NOT support rebasing tokens.
+- Only use standard ERC20 tokens that transfer the exact requested amount.
 
 Integration:
-These registries work together to provide a comprehensive management system for the Frak ecosystem:
-- The ProductRegistry serves as the source of truth for product information.
-- The ReferralRegistry enables the implementation of complex referral programs.
-- The ProductAdministratorRegistry ensures that only authorized users can perform specific actions on products.
+- Works in conjunction with CampaignBank contracts to pull funds.
+- Merchants deposit tokens into their CampaignBank and set allowances for the RewarderHub.
+- The RewarderHub pulls tokens as rewards are distributed.
 
-Other components of the system, such as the interaction diamonds and campaign contracts, frequently interact with these registries to retrieve information, verify permissions, and update states as necessary.
+## Kernel
 
-## Interactions
+The `kernel/` directory contains plugins for Kernel v2 smart wallet authentication using WebAuthn/Passkeys.
 
-The `interaction/` directory manages user interactions with products using a custom adaptation of the diamond pattern.
+### MultiWebAuthNValidator.sol
 
-### ProductInteractionDiamond.sol
-
-- Implements a custom version of the diamond pattern, acting as the main contract for product interactions.
-- Uses delegatecall to interact with specific facets based on product type or feature.
-- Maintains root storage for shared data across facets.
+A WebAuthn validator plugin for Kernel v2 smart wallets.
 
 Key features:
-- Each ProductInteractionDiamond is associated with a single product.
-- Facets are not bound to specific method signatures, allowing for more flexible interaction handling.
-- Does not implement looping through facets; instead, it directly delegates to the appropriate facet based on the product type or feature.
+- Enables passkey-based authentication for smart accounts.
+- Supports multiple passkeys per wallet (add, remove, set primary).
+- Uses secp256r1 (P-256) curve for signature verification.
+- Supports both RIP-7212 precompile and on-chain P256 verifier fallback.
+- Compatible with browser WebAuthn APIs.
 
-### InteractionFacetsFactory.sol
+### MultiWebAuthNRecoveryAction.sol
 
-- Responsible for creating and deploying new interaction facets.
-
-### ProductInteractionManager.sol
-
-- Central orchestrator for deploying and managing ProductInteractionDiamond contracts.
-- Coordinates with the ProductRegistry to determine the appropriate interaction facets based on product metadata.
-
-### Facets
-
-The `facets/` subdirectory contains specific interaction logic for different product types or features:
-
-- `DappInteractionFacet.sol`: Handles interactions specific to dapp products.
-- `PressInteractionFacet.sol`: Manages interactions related to press products.
-- `ReferralFeatureFacet.sol`: Implements referral-related interactions.
-- `IInteractionFacet.sol`: Likely an interface defining common interaction methods.
-
-Each facet implements logic for a specific type of product or a particular feature, and can be called via delegatecall from the main ProductInteractionDiamond contract.
-
-Integration:
-- The interaction system interacts with the registries (ProductRegistry, ReferralRegistry, ProductAdministratorRegistry) to retrieve product information, manage referrals, and check permissions.
-- It may also interact with campaign contracts to trigger rewards based on user interactions.
-
-Note: The exact details of how facets are selected and called, and how storage is shared between the main diamond contract and its facets, may vary based on the specific implementation of this custom diamond pattern adaptation.
-
-## Campaigns
-
-The `campaign/` directory contains contracts related to campaign management and execution within the Frak ecosystem. These contracts work in conjunction with the interaction system to reward users based on their activities.
-
-### CampaignFactory.sol
-
-- Responsible for creating and deploying new campaign contracts.
-- Likely manages the lifecycle of campaigns, including creation, activation, and potentially deactivation.
+Recovery action contract for adding passkeys to a smart account.
 
 Key features:
-- May interact with the ProductAdministratorRegistry to ensure only authorized users can create or manage campaigns for specific products.
+- Used in conjunction with recovery mechanisms to add new passkeys.
+- Delegates to MultiWebAuthNValidator for passkey addition.
 
-### InteractionCampaign.sol
+### Supporting Libraries
 
-- An abstract contract providing the base logic for campaigns that distribute rewards based on user interactions with products.
+- `WebAuthnVerifier.sol`: Core WebAuthn signature verification logic.
+- `P256VerifierWrapper.sol`: Wrapper for P-256 signature verification.
+- `MultiWebAuthNSignatureLib.sol`: Signature parsing for multi-passkey scenarios.
+- `SingleWebAuthNSignatureLib.sol`: Signature parsing for single-passkey scenarios.
+- `WebAuthNSignatureLib.sol`: Common WebAuthn signature structures.
+
+## Tokens
+
+The `tokens/` directory contains token contracts.
+
+### mUSDToken.sol
+
+A USD stablecoin token used within the Frak ecosystem.
 
 Key features:
-- Likely defines an interface for handling user interactions and managing campaign state.
-- May include common functionality shared across different types of campaigns.
+- Standard ERC20 implementation.
+- Role-based minting via `MINTER_ROLE`.
+- Deployed on mainnet for production use.
 
-### ReferralCampaign.sol
+## Utils
 
-- A concrete implementation of InteractionCampaign, focused on rewarding users for referring new users to the platform.
+The `utils/` directory contains utility libraries.
+
+### BetaDistribution.sol
+
+A library for sampling points from a Beta(2,β) probability distribution.
 
 Key features:
-- Likely integrates with the ReferralRegistry to track referral relationships.
-- May implement specific reward distribution logic for referral activities.
+- Implements Beta distribution sampling using the Gamma distribution relationship.
+- Supports both integer and decimal β values via linear interpolation.
+- Uses WAD (1e18) fixed-point arithmetic.
+- Useful for probabilistic reward distribution mechanisms.
 
-Integration:
-- These campaign contracts interact with the ProductInteractionDiamond and various registries to:
-  - Receive information about user interactions.
-  - Verify product and user information.
-  - Check permissions for campaign-related actions.
-  - Update campaign states and distribute rewards.
+### MPT.sol
 
-Note: The exact mechanisms for reward calculation, distribution, and the specific types of campaigns supported may vary based on the implementation details of these contracts.
+Merkle Patricia Trie utilities.
+
+## Constants
+
+The `constants/` directory contains shared constants.
+
+### Roles.sol
+
+Defines role constants used across the system:
+- `UPGRADE_ROLE`: Permission to upgrade contracts.
+- `REWARDER_ROLE`: Permission to push rewards.
+- `COMPLIANCE_ROLE`: Permission to freeze/unfreeze users and recover frozen funds.
+
+### Errors.sol
+
+Shared error definitions.
+
+## Development
+
+### Build & Test
+
+```bash
+forge build                          # Build all contracts
+forge test                           # Run all tests
+forge test -vvv                      # Verbose output with traces
+forge test --match-test test_name    # Run single test by name
+forge test --match-contract Name     # Run tests in specific contract
+```
+
+### Linting & Formatting
+
+```bash
+forge fmt                            # Format all Solidity files
+forge fmt --check                    # Check formatting without changes
+bun run lint                         # Lint src/**/*.sol with solhint
+```
+
+### Generate ABIs
+
+```bash
+bun run generate                     # Generate TypeScript ABIs via wagmi
+```

@@ -20,6 +20,6 @@
     "node": "^18.16.0"
   },
   "dependencies": {
-    "solhint": "^5.0.3"
+    "solhint": "^5.0.5"
   }
 }
