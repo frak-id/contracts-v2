@@ -21,6 +21,8 @@ struct KernelAddresses {
     address p256Wrapper;
     address webAuthNValidator;
     address webAuthNRecoveryAction;
+    // Monerium
+    address moneriumSignMsgAction;
 }
 
 /// @dev Binary hashes for deployed contracts
@@ -34,6 +36,7 @@ struct BinHashes {
     bytes32 p256Wrapper;
     bytes32 webAuthNValidator;
     bytes32 webAuthNRecoveryAction;
+    bytes32 moneriumSignMsgAction;
 }
 
 /// @dev Simple contract storing our predetermined addresses
@@ -90,7 +93,10 @@ contract DeterminedAddress is Script {
         string memory file = _chainFile(kernelFile);
 
         KernelAddresses memory emptyAddress = KernelAddresses({
-            p256Wrapper: address(0), webAuthNValidator: address(0), webAuthNRecoveryAction: address(0)
+            p256Wrapper: address(0),
+            webAuthNValidator: address(0),
+            webAuthNRecoveryAction: address(0),
+            moneriumSignMsgAction: address(0)
         });
 
         // Check if the file exist
@@ -116,7 +122,8 @@ contract DeterminedAddress is Script {
         return KernelAddresses({
             p256Wrapper: _readAddressSafe(json, ".p256Wrapper"),
             webAuthNValidator: _readAddressSafe(json, ".webAuthNValidator"),
-            webAuthNRecoveryAction: _readAddressSafe(json, ".webAuthNRecoveryAction")
+            webAuthNRecoveryAction: _readAddressSafe(json, ".webAuthNRecoveryAction"),
+            moneriumSignMsgAction: _readAddressSafe(json, ".moneriumSignMsgAction")
         });
     }
 
@@ -139,8 +146,8 @@ contract DeterminedAddress is Script {
         string memory jsonKey = "KERNEL_ADDRESSES_JSON";
         vm.serializeAddress(jsonKey, "p256Wrapper", addresses.p256Wrapper);
         vm.serializeAddress(jsonKey, "webAuthNValidator", addresses.webAuthNValidator);
-        string memory finalJson =
-            vm.serializeAddress(jsonKey, "webAuthNRecoveryAction", addresses.webAuthNRecoveryAction);
+        vm.serializeAddress(jsonKey, "webAuthNRecoveryAction", addresses.webAuthNRecoveryAction);
+        string memory finalJson = vm.serializeAddress(jsonKey, "moneriumSignMsgAction", addresses.moneriumSignMsgAction);
 
         vm.writeJson(finalJson, kernelFile);
         vm.writeJson(finalJson, _chainFile(kernelFile));
@@ -157,7 +164,8 @@ contract DeterminedAddress is Script {
             mUSDToken: bytes32(0),
             p256Wrapper: bytes32(0),
             webAuthNValidator: bytes32(0),
-            webAuthNRecoveryAction: bytes32(0)
+            webAuthNRecoveryAction: bytes32(0),
+            moneriumSignMsgAction: bytes32(0)
         });
     }
 
@@ -169,7 +177,8 @@ contract DeterminedAddress is Script {
         vm.serializeBytes32(jsonKey, "mUSDToken", hashes.mUSDToken);
         vm.serializeBytes32(jsonKey, "p256Wrapper", hashes.p256Wrapper);
         vm.serializeBytes32(jsonKey, "webAuthNValidator", hashes.webAuthNValidator);
-        string memory finalJson = vm.serializeBytes32(jsonKey, "webAuthNRecoveryAction", hashes.webAuthNRecoveryAction);
+        vm.serializeBytes32(jsonKey, "webAuthNRecoveryAction", hashes.webAuthNRecoveryAction);
+        string memory finalJson = vm.serializeBytes32(jsonKey, "moneriumSignMsgAction", hashes.moneriumSignMsgAction);
 
         vm.writeJson(finalJson, binHashFile);
         vm.writeJson(finalJson, _chainFile(binHashFile));

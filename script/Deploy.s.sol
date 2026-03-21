@@ -15,6 +15,7 @@ import {RewarderHub} from "src/reward/RewarderHub.sol";
 import {MINTER_ROLE, mUSDToken} from "src/tokens/mUSDToken.sol";
 
 // Kernel
+import {MoneriumSignMsgAction} from "src/kernel/monerium/MoneriumSignMsgAction.sol";
 import {P256VerifierWrapper} from "src/kernel/utils/P256VerifierWrapper.sol";
 import {MultiWebAuthNRecoveryAction} from "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol";
 import {MultiWebAuthNValidatorV2} from "src/kernel/webauthn/MultiWebAuthNValidator.sol";
@@ -66,6 +67,7 @@ contract Deploy is Script, DeterminedAddress {
         console.log(" - P256VerifierWrapper:         %s", kAddresses.p256Wrapper);
         console.log(" - MultiWebAuthNValidator:      %s", kAddresses.webAuthNValidator);
         console.log(" - MultiWebAuthNRecoveryAction: %s", kAddresses.webAuthNRecoveryAction);
+        console.log(" - MoneriumSignMsgAction:       %s", kAddresses.moneriumSignMsgAction);
 
         _saveKernelAddresses(kAddresses);
 
@@ -195,6 +197,14 @@ contract Deploy is Script, DeterminedAddress {
             abi.encode(kAddresses.webAuthNValidator)
         );
         binHash.webAuthNRecoveryAction = currHash;
+
+        if (_shouldDeploy(kAddresses.moneriumSignMsgAction)) {
+            console.log(" * Deploying MoneriumSignMsgAction");
+            MoneriumSignMsgAction moneriumSignMsgAction = new MoneriumSignMsgAction{salt: 0}();
+            kAddresses.moneriumSignMsgAction = address(moneriumSignMsgAction);
+        }
+        currHash = _saveBin("MoneriumSignMsgAction", type(MoneriumSignMsgAction).creationCode);
+        binHash.moneriumSignMsgAction = currHash;
 
         vm.stopBroadcast();
         return kAddresses;
