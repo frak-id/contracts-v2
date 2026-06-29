@@ -1,0 +1,211 @@
+[
+  {
+    "name": "CampaignBank",
+    "sourcePath": "src/bank/CampaignBank.sol",
+    "artifactPath": "out/CampaignBank.sol/CampaignBank.json",
+    "constructor": {
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "deposit",
+        "inputs": [
+          { "name": "_token", "type": "address", "internalType": "address" },
+          { "name": "_amount", "type": "uint256", "internalType": "uint256" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "primary"
+      },
+      {
+        "name": "withdraw",
+        "inputs": [
+          { "name": "_token", "type": "address", "internalType": "address" },
+          { "name": "_amount", "type": "uint256", "internalType": "uint256" },
+          { "name": "_to", "type": "address", "internalType": "address" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "primary"
+      },
+      {
+        "name": "updateAllowance",
+        "inputs": [
+          { "name": "_token", "type": "address", "internalType": "address" },
+          { "name": "_amount", "type": "uint256", "internalType": "uint256" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "primary"
+      },
+      {
+        "name": "updateAllowances",
+        "inputs": [
+          { "name": "_tokens", "type": "array", "internalType": "address[]" },
+          { "name": "_amounts", "type": "array", "internalType": "uint256[]" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "revokeAllowance",
+        "inputs": [
+          { "name": "_token", "type": "address", "internalType": "address" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "revokeAllowances",
+        "inputs": [
+          { "name": "_tokens", "type": "array", "internalType": "address[]" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "setOpen",
+        "inputs": [
+          { "name": "_isOpen", "type": "bool", "internalType": "bool" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  },
+  {
+    "name": "RewarderHub",
+    "sourcePath": "src/reward/RewarderHub.sol",
+    "artifactPath": "out/RewarderHub.sol/RewarderHub.json",
+    "constructor": {
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "pushReward",
+        "inputs": [
+          { "name": "_wallet", "type": "address", "internalType": "address" },
+          { "name": "_amount", "type": "uint256", "internalType": "uint256" },
+          { "name": "_token", "type": "address", "internalType": "address" },
+          { "name": "_bank", "type": "address", "internalType": "address" },
+          { "name": "_attestation", "type": "bytes", "internalType": "bytes" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "primary"
+      },
+      {
+        "name": "batch",
+        "inputs": [
+          { "name": "_ops", "type": "array", "internalType": "RewardOp[]" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "primary"
+      },
+      {
+        "name": "claim",
+        "inputs": [
+          { "name": "_token", "type": "address", "internalType": "address" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "primary"
+      },
+      {
+        "name": "claimBatch",
+        "inputs": [
+          { "name": "_tokens", "type": "array", "internalType": "address[]" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "primary"
+      },
+      {
+        "name": "freezeUser",
+        "inputs": [
+          { "name": "_wallet", "type": "address", "internalType": "address" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "unfreezeUser",
+        "inputs": [
+          { "name": "_wallet", "type": "address", "internalType": "address" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "recoverFrozenFunds",
+        "inputs": [
+          { "name": "_ops", "type": "array", "internalType": "FrozenFundsRecoverOp[]" },
+          { "name": "_recipient", "type": "address", "internalType": "address" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "withdrawExcess",
+        "inputs": [
+          { "name": "_token", "type": "address", "internalType": "address" },
+          { "name": "_recipient", "type": "address", "internalType": "address" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  },
+  {
+    "name": "mUSDToken",
+    "sourcePath": "src/tokens/mUSDToken.sol",
+    "artifactPath": "out/mUSDToken.sol/mUSDToken.json",
+    "constructor": {
+      "inputs": [
+        { "name": "_owner", "type": "address", "internalType": "address" }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "mint",
+        "inputs": [
+          { "name": "_to", "type": "address", "internalType": "address" },
+          { "name": "_amount", "type": "uint256", "internalType": "uint256" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "transfer",
+        "inputs": [
+          { "name": "to", "type": "address", "internalType": "address" },
+          { "name": "amount", "type": "uint256", "internalType": "uint256" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "transferFrom",
+        "inputs": [
+          { "name": "from", "type": "address", "internalType": "address" },
+          { "name": "to", "type": "address", "internalType": "address" },
+          { "name": "amount", "type": "uint256", "internalType": "uint256" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      },
+      {
+        "name": "approve",
+        "inputs": [
+          { "name": "spender", "type": "address", "internalType": "address" },
+          { "name": "amount", "type": "uint256", "internalType": "uint256" }
+        ],
+        "stateMutability": "nonpayable",
+        "tier": "secondary"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  }
+]

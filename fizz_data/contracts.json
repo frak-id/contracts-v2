@@ -1,0 +1,851 @@
+[
+  {
+    "name": "CampaignBank",
+    "sourcePath": "src/bank/CampaignBank.sol",
+    "artifactPath": "out/CampaignBank.sol/CampaignBank.json",
+    "constructor": {
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "cancelOwnershipHandover",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "completeOwnershipHandover",
+        "inputs": [
+          {
+            "name": "pendingOwner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "deposit",
+        "inputs": [
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "grantRoles",
+        "inputs": [
+          {
+            "name": "user",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "init",
+        "inputs": [
+          {
+            "name": "_owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_rewarderHub",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "renounceOwnership",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "renounceRoles",
+        "inputs": [
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "requestOwnershipHandover",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "revokeAllowance",
+        "inputs": [
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "revokeAllowances",
+        "inputs": [
+          {
+            "name": "_tokens",
+            "type": "array",
+            "internalType": "address[]"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "revokeRoles",
+        "inputs": [
+          {
+            "name": "user",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "setOpen",
+        "inputs": [
+          {
+            "name": "_isOpen",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "transferOwnership",
+        "inputs": [
+          {
+            "name": "newOwner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "updateAllowance",
+        "inputs": [
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "updateAllowances",
+        "inputs": [
+          {
+            "name": "_tokens",
+            "type": "array",
+            "internalType": "address[]"
+          },
+          {
+            "name": "_amounts",
+            "type": "array",
+            "internalType": "uint256[]"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "withdraw",
+        "inputs": [
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "_to",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  },
+  {
+    "name": "CampaignBankFactory",
+    "sourcePath": "src/bank/CampaignBankFactory.sol",
+    "artifactPath": "out/CampaignBankFactory.sol/CampaignBankFactory.json",
+    "constructor": {
+      "inputs": [
+        {
+          "name": "_rewarderHub",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "deployBank",
+        "inputs": [
+          {
+            "name": "_owner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "deployBank",
+        "inputs": [
+          {
+            "name": "_owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_salt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  },
+  {
+    "name": "MultiWebAuthNRecoveryAction",
+    "sourcePath": "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol",
+    "artifactPath": "out/MultiWebAuthNRecoveryAction.sol/MultiWebAuthNRecoveryAction.json",
+    "constructor": {
+      "inputs": [
+        {
+          "name": "_webAuthNValidator",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "doAddPasskey",
+        "inputs": [
+          {
+            "name": "authenticatorId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "x",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "y",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  },
+  {
+    "name": "MultiWebAuthNValidatorV2",
+    "sourcePath": "src/kernel/webauthn/MultiWebAuthNValidator.sol",
+    "artifactPath": "out/MultiWebAuthNValidator.sol/MultiWebAuthNValidatorV2.json",
+    "constructor": {
+      "inputs": [
+        {
+          "name": "_p256Verifier",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "addPassKey",
+        "inputs": [
+          {
+            "name": "authenticatorId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "x",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "y",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "disable",
+        "inputs": [
+          {
+            "name": "",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "enable",
+        "inputs": [
+          {
+            "name": "_data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "removePassKey",
+        "inputs": [
+          {
+            "name": "authenticatorId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "setPrimaryPassKey",
+        "inputs": [
+          {
+            "name": "authenticatorId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "validateUserOp",
+        "inputs": [
+          {
+            "name": "_userOp",
+            "type": "tuple",
+            "internalType": "UserOperation"
+          },
+          {
+            "name": "_userOpHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  },
+  {
+    "name": "RewarderHub",
+    "sourcePath": "src/reward/RewarderHub.sol",
+    "artifactPath": "out/RewarderHub.sol/RewarderHub.json",
+    "constructor": {
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "batch",
+        "inputs": [
+          {
+            "name": "_ops",
+            "type": "array",
+            "internalType": "RewardOp[]"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "cancelOwnershipHandover",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "claim",
+        "inputs": [
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "claimBatch",
+        "inputs": [
+          {
+            "name": "_tokens",
+            "type": "array",
+            "internalType": "address[]"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "completeOwnershipHandover",
+        "inputs": [
+          {
+            "name": "pendingOwner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "freezeUser",
+        "inputs": [
+          {
+            "name": "_wallet",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "grantRoles",
+        "inputs": [
+          {
+            "name": "user",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "init",
+        "inputs": [
+          {
+            "name": "_owner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "pushReward",
+        "inputs": [
+          {
+            "name": "_wallet",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_bank",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_attestation",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "recoverFrozenFunds",
+        "inputs": [
+          {
+            "name": "_ops",
+            "type": "array",
+            "internalType": "FrozenFundsRecoverOp[]"
+          },
+          {
+            "name": "_recipient",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "renounceOwnership",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "renounceRoles",
+        "inputs": [
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "requestOwnershipHandover",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "revokeRoles",
+        "inputs": [
+          {
+            "name": "user",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "transferOwnership",
+        "inputs": [
+          {
+            "name": "newOwner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "unfreezeUser",
+        "inputs": [
+          {
+            "name": "_wallet",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "upgradeToAndCall",
+        "inputs": [
+          {
+            "name": "newImplementation",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "withdrawExcess",
+        "inputs": [
+          {
+            "name": "_token",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_recipient",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  },
+  {
+    "name": "mUSDToken",
+    "sourcePath": "src/tokens/mUSDToken.sol",
+    "artifactPath": "out/mUSDToken.sol/mUSDToken.json",
+    "constructor": {
+      "inputs": [
+        {
+          "name": "_owner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    "functions": [
+      {
+        "name": "approve",
+        "inputs": [
+          {
+            "name": "spender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "cancelOwnershipHandover",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "completeOwnershipHandover",
+        "inputs": [
+          {
+            "name": "pendingOwner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "grantRoles",
+        "inputs": [
+          {
+            "name": "user",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "mint",
+        "inputs": [
+          {
+            "name": "_to",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "_amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "permit",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "spender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "value",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "v",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "r",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "s",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "renounceOwnership",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "renounceRoles",
+        "inputs": [
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "requestOwnershipHandover",
+        "inputs": [],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "revokeRoles",
+        "inputs": [
+          {
+            "name": "user",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roles",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "payable"
+      },
+      {
+        "name": "transfer",
+        "inputs": [
+          {
+            "name": "to",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "transferFrom",
+        "inputs": [
+          {
+            "name": "from",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "to",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "transferOwnership",
+        "inputs": [
+          {
+            "name": "newOwner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "payable"
+      }
+    ],
+    "hasReceive": false,
+    "hasFallback": false
+  }
+]

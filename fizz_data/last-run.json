@@ -1,0 +1,781 @@
+{
+  "version": 1,
+  "createdAt": "2026-06-29T08:48:21.465Z",
+  "projectRoot": ".",
+  "suiteDir": "test/fizz",
+  "metaDir": "fizz_data",
+  "contracts": [
+    {
+      "name": "CampaignBank",
+      "sourcePath": "src/bank/CampaignBank.sol",
+      "sourceHash": "sha256:cbe57c0a3f59c9208266ac4ac451d5f6b3d6e032dd179ed8204ce7e92dddc00e",
+      "constructor": {
+        "inputs": [],
+        "stateMutability": "nonpayable"
+      },
+      "functions": [
+        {
+          "name": "cancelOwnershipHandover",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "cancelOwnershipHandover()"
+        },
+        {
+          "name": "completeOwnershipHandover",
+          "inputs": [
+            {
+              "name": "pendingOwner",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "completeOwnershipHandover(address)"
+        },
+        {
+          "name": "deposit",
+          "inputs": [
+            {
+              "name": "_token",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "deposit(address,uint256)"
+        },
+        {
+          "name": "grantRoles",
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "grantRoles(address,uint256)"
+        },
+        {
+          "name": "init",
+          "inputs": [
+            {
+              "name": "_owner",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_rewarderHub",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "init(address,address)"
+        },
+        {
+          "name": "renounceOwnership",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "renounceOwnership()"
+        },
+        {
+          "name": "renounceRoles",
+          "inputs": [
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "renounceRoles(uint256)"
+        },
+        {
+          "name": "requestOwnershipHandover",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "requestOwnershipHandover()"
+        },
+        {
+          "name": "revokeAllowance",
+          "inputs": [
+            {
+              "name": "_token",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "revokeAllowance(address)"
+        },
+        {
+          "name": "revokeAllowances",
+          "inputs": [
+            {
+              "name": "_tokens",
+              "type": "array",
+              "internalType": "address[]"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "revokeAllowances(address[])"
+        },
+        {
+          "name": "revokeRoles",
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "revokeRoles(address,uint256)"
+        },
+        {
+          "name": "setOpen",
+          "inputs": [
+            {
+              "name": "_isOpen",
+              "type": "bool",
+              "internalType": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "setOpen(bool)"
+        },
+        {
+          "name": "transferOwnership",
+          "inputs": [
+            {
+              "name": "newOwner",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "transferOwnership(address)"
+        },
+        {
+          "name": "updateAllowance",
+          "inputs": [
+            {
+              "name": "_token",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "updateAllowance(address,uint256)"
+        },
+        {
+          "name": "updateAllowances",
+          "inputs": [
+            {
+              "name": "_tokens",
+              "type": "array",
+              "internalType": "address[]"
+            },
+            {
+              "name": "_amounts",
+              "type": "array",
+              "internalType": "uint256[]"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "updateAllowances(address[],uint256[])"
+        },
+        {
+          "name": "withdraw",
+          "inputs": [
+            {
+              "name": "_token",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "_to",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "withdraw(address,uint256,address)"
+        }
+      ]
+    },
+    {
+      "name": "RewarderHub",
+      "sourcePath": "src/reward/RewarderHub.sol",
+      "sourceHash": "sha256:3e82368fa83948dc68b41916855602c38f12f2f5308fac6889ef3dd81732476f",
+      "constructor": {
+        "inputs": [],
+        "stateMutability": "nonpayable"
+      },
+      "functions": [
+        {
+          "name": "batch",
+          "inputs": [
+            {
+              "name": "_ops",
+              "type": "array",
+              "internalType": "RewardOp[]"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "batch(RewardOp[])"
+        },
+        {
+          "name": "cancelOwnershipHandover",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "cancelOwnershipHandover()"
+        },
+        {
+          "name": "claim",
+          "inputs": [
+            {
+              "name": "_token",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "claim(address)"
+        },
+        {
+          "name": "claimBatch",
+          "inputs": [
+            {
+              "name": "_tokens",
+              "type": "array",
+              "internalType": "address[]"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "claimBatch(address[])"
+        },
+        {
+          "name": "completeOwnershipHandover",
+          "inputs": [
+            {
+              "name": "pendingOwner",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "completeOwnershipHandover(address)"
+        },
+        {
+          "name": "freezeUser",
+          "inputs": [
+            {
+              "name": "_wallet",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "freezeUser(address)"
+        },
+        {
+          "name": "grantRoles",
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "grantRoles(address,uint256)"
+        },
+        {
+          "name": "init",
+          "inputs": [
+            {
+              "name": "_owner",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "init(address)"
+        },
+        {
+          "name": "pushReward",
+          "inputs": [
+            {
+              "name": "_wallet",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "_token",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_bank",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_attestation",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "pushReward(address,uint256,address,address,bytes)"
+        },
+        {
+          "name": "recoverFrozenFunds",
+          "inputs": [
+            {
+              "name": "_ops",
+              "type": "array",
+              "internalType": "FrozenFundsRecoverOp[]"
+            },
+            {
+              "name": "_recipient",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "recoverFrozenFunds(FrozenFundsRecoverOp[],address)"
+        },
+        {
+          "name": "renounceOwnership",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "renounceOwnership()"
+        },
+        {
+          "name": "renounceRoles",
+          "inputs": [
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "renounceRoles(uint256)"
+        },
+        {
+          "name": "requestOwnershipHandover",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "requestOwnershipHandover()"
+        },
+        {
+          "name": "revokeRoles",
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "revokeRoles(address,uint256)"
+        },
+        {
+          "name": "transferOwnership",
+          "inputs": [
+            {
+              "name": "newOwner",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "transferOwnership(address)"
+        },
+        {
+          "name": "unfreezeUser",
+          "inputs": [
+            {
+              "name": "_wallet",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "unfreezeUser(address)"
+        },
+        {
+          "name": "upgradeToAndCall",
+          "inputs": [
+            {
+              "name": "newImplementation",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "data",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "upgradeToAndCall(address,bytes)"
+        },
+        {
+          "name": "withdrawExcess",
+          "inputs": [
+            {
+              "name": "_token",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_recipient",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "withdrawExcess(address,address)"
+        }
+      ]
+    },
+    {
+      "name": "mUSDToken",
+      "sourcePath": "src/tokens/mUSDToken.sol",
+      "sourceHash": "sha256:26e1fd17202576b096f70d2ebfc445d371340452541ab6e81a02c1646b628c8b",
+      "constructor": {
+        "inputs": [
+          {
+            "name": "_owner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      "functions": [
+        {
+          "name": "approve",
+          "inputs": [
+            {
+              "name": "spender",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "approve(address,uint256)"
+        },
+        {
+          "name": "cancelOwnershipHandover",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "cancelOwnershipHandover()"
+        },
+        {
+          "name": "completeOwnershipHandover",
+          "inputs": [
+            {
+              "name": "pendingOwner",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "completeOwnershipHandover(address)"
+        },
+        {
+          "name": "grantRoles",
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "grantRoles(address,uint256)"
+        },
+        {
+          "name": "mint",
+          "inputs": [
+            {
+              "name": "_to",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "_amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "mint(address,uint256)"
+        },
+        {
+          "name": "permit",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "spender",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "deadline",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "v",
+              "type": "uint8",
+              "internalType": "uint8"
+            },
+            {
+              "name": "r",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            },
+            {
+              "name": "s",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "primary",
+          "signature": "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)"
+        },
+        {
+          "name": "renounceOwnership",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "renounceOwnership()"
+        },
+        {
+          "name": "renounceRoles",
+          "inputs": [
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "renounceRoles(uint256)"
+        },
+        {
+          "name": "requestOwnershipHandover",
+          "inputs": [],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "requestOwnershipHandover()"
+        },
+        {
+          "name": "revokeRoles",
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "roles",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "revokeRoles(address,uint256)"
+        },
+        {
+          "name": "transfer",
+          "inputs": [
+            {
+              "name": "to",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "transfer(address,uint256)"
+        },
+        {
+          "name": "transferFrom",
+          "inputs": [
+            {
+              "name": "from",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "to",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "tier": "secondary",
+          "signature": "transferFrom(address,address,uint256)"
+        },
+        {
+          "name": "transferOwnership",
+          "inputs": [
+            {
+              "name": "newOwner",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "stateMutability": "payable",
+          "tier": "primary",
+          "signature": "transferOwnership(address)"
+        }
+      ]
+    }
+  ],
+  "handlers": {
+    "CampaignBankHandler.sol": "sha256:fe698ead7444e8f3fd92d9672f24593d1804fe94286ac9712db4ffb1b7853daf",
+    "Handlers.sol": "sha256:10b4b0b04029085bad7ea28ce6bad45252b26c0872b5988e080090c781f16b09",
+    "RewarderHubHandler.sol": "sha256:9ea4998316a951110edf71ae34871ba533266876e6b0d5d9334255cd91e0cc68",
+    "mUSDTokenHandler.sol": "sha256:4de139cd573c5e10a9f365083531dee7edb9d22040fc85a1ecf26d42af0510a7"
+  },
+  "properties": [
+    {
+      "id": "GL-01",
+      "checkbox": "x",
+      "functionName": null,
+      "file": null
+    },
+    {
+      "id": "GL-02",
+      "checkbox": "x",
+      "functionName": null,
+      "file": null
+    },
+    {
+      "id": "SP-01",
+      "checkbox": "x",
+      "functionName": null,
+      "file": null
+    }
+  ]
+}

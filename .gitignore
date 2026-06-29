@@ -25,3 +25,11 @@ lcov.info
 
 # Binary folder
 bin/
+
+# Fizz fuzzing runtime artifacts (regenerable; keep fizz_data/*.json and *.md)
+fizz_data/corpus_medusa/
+fizz_data/corpus_echidna/
+fizz_data/crytic-export/
+fizz_data/logs_medusa/
+fizz_data/slither_results.json
+crytic-export/
