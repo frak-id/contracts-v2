@@ -2,105 +2,105 @@
   "src/kernel/webauthn/MultiWebAuthNValidator.sol:MultiWebAuthNValidatorV2": {
     "source": "src/kernel/webauthn/MultiWebAuthNValidator.sol",
     "kind": "contract",
-    "runtime": 2043,
-    "init": 2137,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 2066,
+    "init": 2160,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/reward/RewarderHub.sol:RewarderHub": {
     "source": "src/reward/RewarderHub.sol",
     "kind": "contract",
-    "runtime": 5209,
-    "init": 5371,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 5232,
+    "init": 5394,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol:MultiWebAuthNRecoveryAction": {
     "source": "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol",
     "kind": "contract",
-    "runtime": 136,
-    "init": 222,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 159,
+    "init": 245,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/bank/CampaignBank.sol:CampaignBank": {
     "source": "src/bank/CampaignBank.sol",
     "kind": "contract",
-    "runtime": 3122,
-    "init": 3236,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 3145,
+    "init": 3259,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/kernel/types/SingleWebAuthNSignatureLib.sol:SingleWebAuthNSignatureLib": {
     "source": "src/kernel/types/SingleWebAuthNSignatureLib.sol",
     "kind": "library",
-    "runtime": 17,
-    "init": 34,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 40,
+    "init": 57,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/kernel/types/WebAuthNSignatureLib.sol:WebAuthNSignatureLib": {
     "source": "src/kernel/types/WebAuthNSignatureLib.sol",
     "kind": "library",
-    "runtime": 17,
-    "init": 34,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 40,
+    "init": 57,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/bank/CampaignBankFactory.sol:CampaignBankFactory": {
     "source": "src/bank/CampaignBankFactory.sol",
     "kind": "contract",
-    "runtime": 751,
-    "init": 4269,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 774,
+    "init": 4315,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/utils/BetaDistribution.sol:BetaDistribution": {
     "source": "src/utils/BetaDistribution.sol",
     "kind": "library",
-    "runtime": 17,
-    "init": 34,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 40,
+    "init": 57,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/kernel/utils/P256VerifierWrapper.sol:P256VerifierWrapper": {
     "source": "src/kernel/utils/P256VerifierWrapper.sol",
     "kind": "contract",
-    "runtime": 4282,
-    "init": 4300,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 4305,
+    "init": 4323,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/tokens/mUSDToken.sol:mUSDToken": {
     "source": "src/tokens/mUSDToken.sol",
     "kind": "contract",
-    "runtime": 2779,
-    "init": 2961,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 2802,
+    "init": 2984,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/utils/MPT.sol:MPT": {
     "source": "src/utils/MPT.sol",
     "kind": "library",
-    "runtime": 17,
-    "init": 34,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 40,
+    "init": 57,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/kernel/types/MultiWebAuthNSignatureLib.sol:MultiWebAuthNSignatureLib": {
     "source": "src/kernel/types/MultiWebAuthNSignatureLib.sol",
     "kind": "library",
-    "runtime": 17,
-    "init": 34,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 40,
+    "init": 57,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   },
   "src/kernel/utils/WebAuthnVerifier.sol:WebAuthnVerifier": {
     "source": "src/kernel/utils/WebAuthnVerifier.sol",
     "kind": "library",
-    "runtime": 17,
-    "init": 34,
-    "compiler": "0.8.38+commit.e7a91fc7.solar.0.3.0",
+    "runtime": 40,
+    "init": 57,
+    "compiler": "0.8.38+commit.a2b44354.solar.0.3.0-dev",
     "evmVersion": "shanghai"
   }
 }

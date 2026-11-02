@@ -2,29 +2,29 @@
   "files": 114,
   "samples": [
     {
-      "wallMs": 450.67520800000057,
-      "compilerMs": 236.11,
-      "rssBytes": 127221760
+      "wallMs": 530.4831669999985,
+      "compilerMs": 249.49,
+      "rssBytes": 132612096
     },
     {
-      "wallMs": 452.0905000000057,
-      "compilerMs": 239.03,
-      "rssBytes": 129908736
+      "wallMs": 531.5019170000014,
+      "compilerMs": 242.78,
+      "rssBytes": 139313152
     },
     {
-      "wallMs": 449.0309999999881,
-      "compilerMs": 233.42,
-      "rssBytes": 129400832
+      "wallMs": 530.1127910000068,
+      "compilerMs": 243.71,
+      "rssBytes": 127991808
     },
     {
-      "wallMs": 445.67137500000536,
-      "compilerMs": 233.76,
-      "rssBytes": 139706368
+      "wallMs": 512.7882079999981,
+      "compilerMs": 232.35,
+      "rssBytes": 138657792
     },
     {
-      "wallMs": 441.42874999999185,
-      "compilerMs": 225.76,
-      "rssBytes": 137134080
+      "wallMs": 521.2181249999994,
+      "compilerMs": 236.87,
+      "rssBytes": 139722752
     }
   ]
 }

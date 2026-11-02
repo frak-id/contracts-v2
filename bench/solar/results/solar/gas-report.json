@@ -2,14 +2,14 @@
   {
     "contract": "lib/FreshCryptoLib/solidity/tests/WebAuthn_forge/lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy",
     "deployment": {
-      "gas": 188178,
-      "size": 1157
+      "gas": 193170,
+      "size": 1180
     },
     "functions": {
       "fallback()": {
-        "calls": 18135,
+        "calls": 18271,
         "min": 4974,
-        "mean": 29534,
+        "mean": 29371,
         "median": 7208,
         "max": 253083
       }
@@ -18,8 +18,8 @@
   {
     "contract": "lib/kernel-v2/src/Kernel.sol:Kernel",
     "deployment": {
-      "gas": 2165588,
-      "size": 10271
+      "gas": 2170582,
+      "size": 10294
     },
     "functions": {
       "disableMode(bytes4)": {
@@ -174,8 +174,8 @@
   {
     "contract": "lib/kernel-v2/src/factory/KernelFactory.sol:KernelFactory",
     "deployment": {
-      "gas": 516269,
-      "size": 2126
+      "gas": 521269,
+      "size": 2149
     },
     "functions": {
       "createAccount(address,bytes,uint256)": {
@@ -197,8 +197,8 @@
   {
     "contract": "lib/kernel-v2/src/mock/TestERC1155.sol:TestERC1155",
     "deployment": {
-      "gas": 605049,
-      "size": 2570
+      "gas": 610049,
+      "size": 2593
     },
     "functions": {
       "batchMint(address,uint256[],uint256[],bytes)": {
@@ -220,8 +220,8 @@
   {
     "contract": "lib/kernel-v2/src/mock/TestERC721.sol:TestERC721",
     "deployment": {
-      "gas": 428104,
-      "size": 1752
+      "gas": 433098,
+      "size": 1775
     },
     "functions": {
       "safeMint(address,uint256)": {
@@ -236,8 +236,8 @@
   {
     "contract": "lib/kernel-v2/src/mock/TestExecutor.sol:TestExecutor",
     "deployment": {
-      "gas": 71845,
-      "size": 103
+      "gas": 76843,
+      "size": 126
     },
     "functions": {
       "doNothing()": {
@@ -252,8 +252,8 @@
   {
     "contract": "lib/kernel-v2/src/mock/TestValidator.sol:TestValidator",
     "deployment": {
-      "gas": 222108,
-      "size": 799
+      "gas": 227108,
+      "size": 822
     },
     "functions": {
       "setData(bool,uint48,uint48)": {
@@ -268,8 +268,8 @@
   {
     "contract": "src/bank/CampaignBank.sol:CampaignBank",
     "deployment": {
-      "gas": 752774,
-      "size": 3236
+      "gas": 757773,
+      "size": 3259
     },
     "functions": {
       "deposit(address,uint256)": {
@@ -375,8 +375,8 @@
   {
     "contract": "src/bank/CampaignBankFactory.sol:CampaignBankFactory",
     "deployment": {
-      "gas": 951579,
-      "size": 4301
+      "gas": 961575,
+      "size": 4347
     },
     "functions": {
       "IMPLEMENTATION()": {
@@ -389,14 +389,14 @@
       "deployBank(address)": {
         "calls": 141,
         "min": 21480,
-        "mean": 158853,
+        "mean": 158852,
         "median": 159897,
         "max": 159897
       },
       "deployBank(address,bytes32)": {
         "calls": 270,
         "min": 22760,
-        "mean": 7864449,
+        "mean": 7864454,
         "median": 160449,
         "max": 1040286190
       },
@@ -412,15 +412,15 @@
   {
     "contract": "src/kernel/utils/P256VerifierWrapper.sol:P256VerifierWrapper",
     "deployment": {
-      "gas": 967532,
-      "size": 4300
+      "gas": 972532,
+      "size": 4323
     },
     "functions": {
       "fallback()": {
         "calls": 143,
         "min": 239,
-        "mean": 258057,
-        "median": 260179,
+        "mean": 257996,
+        "median": 259725,
         "max": 267184
       }
     }
@@ -428,8 +428,8 @@
   {
     "contract": "src/kernel/webauthn/MultiWebAuthNValidator.sol:MultiWebAuthNValidatorV2",
     "deployment": {
-      "gas": 496550,
-      "size": 2169
+      "gas": 501551,
+      "size": 2192
     },
     "functions": {
       "getPasskey(address)": {
@@ -458,8 +458,8 @@
   {
     "contract": "src/reward/RewarderHub.sol:RewarderHub",
     "deployment": {
-      "gas": 1204487,
-      "size": 5371
+      "gas": 1209488,
+      "size": 5394
     },
     "functions": {
       "FREEZE_DURATION()": {
@@ -470,16 +470,16 @@
         "max": 153
       },
       "batch((address,uint256,address,address,bytes)[])": {
-        "calls": 2261,
+        "calls": 2320,
         "min": 2432,
-        "mean": 62627,
-        "median": 59248,
+        "mean": 61990,
+        "median": 56757,
         "max": 1038036
       },
       "claim(address)": {
-        "calls": 1874,
+        "calls": 1859,
         "min": 7366,
-        "mean": 43352,
+        "mean": 43332,
         "median": 51445,
         "max": 51445
       },
@@ -498,7 +498,7 @@
         "max": 25963
       },
       "getClaimable(address,address)": {
-        "calls": 12617,
+        "calls": 12753,
         "min": 2381,
         "mean": 2381,
         "median": 2381,
@@ -554,9 +554,9 @@
         "max": 130
       },
       "pushReward(address,uint256,address,address,bytes)": {
-        "calls": 3470,
+        "calls": 3421,
         "min": 2505,
-        "mean": 56722,
+        "mean": 56926,
         "median": 37942,
         "max": 109255
       },
@@ -593,8 +593,8 @@
   {
     "contract": "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthNTester",
     "deployment": {
-      "gas": 237102,
-      "size": 868
+      "gas": 242100,
+      "size": 891
     },
     "functions": {
       "formatSigLayout(bytes32,bytes)": {
@@ -607,38 +607,38 @@
       "verifySignature(address,bytes32,bytes,uint256,uint256)": {
         "calls": 131,
         "min": 3495,
-        "mean": 264307,
-        "median": 266578,
-        "max": 273531
+        "mean": 264242,
+        "median": 266124,
+        "max": 273295
       }
     }
   },
   {
     "contract": "test/reward/RewarderHub.invariant.t.sol:RewarderHubHandler",
     "deployment": {
-      "gas": 1584047,
-      "size": 6805
+      "gas": 1589048,
+      "size": 6828
     },
     "functions": {
       "batch(uint256,uint256,uint256,uint256)": {
-        "calls": 4122,
+        "calls": 4272,
         "min": 79243,
-        "mean": 116123,
+        "mean": 115410,
         "median": 114556,
         "max": 280442
       },
       "claim(uint256)": {
-        "calls": 12327,
+        "calls": 12463,
         "min": 16067,
-        "mean": 35953,
+        "mean": 35603,
         "median": 18567,
         "max": 138158
       },
       "pushReward(uint256,uint256)": {
-        "calls": 4284,
+        "calls": 4120,
         "min": 74339,
-        "mean": 96160,
-        "median": 102832,
+        "mean": 96619,
+        "median": 102844,
         "max": 222779
       }
     }
@@ -646,8 +646,8 @@
   {
     "contract": "test/utils/MockErc20.sol:MockErc20",
     "deployment": {
-      "gas": 416990,
-      "size": 1700
+      "gas": 421988,
+      "size": 1723
     },
     "functions": {
       "allowance(address,address)": {

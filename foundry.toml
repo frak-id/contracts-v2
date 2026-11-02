@@ -24,6 +24,15 @@ fmt = { sort_imports = true, line_length = 120, number_underscore = "thousands",
 Fuzz = { runs = 1024, seed = "0xacab" }
 invariant = { runs = 1024, seed = "0xacab", depth = 10_000, call_override = true }
 
+# Solar (Paradigm's Rust compiler) for the dev loop: ~23x faster builds than solc on this repo.
+# Run: FOUNDRY_PROFILE=solar forge test (needs Foundry >= 1.9, which ships `solar`).
+# Experimental codegen: never deploy or verify from this profile, see bench/solar/README.md
+[profile.solar]
+solc = "solar"
+# Own artifacts + cache: switching profiles keeps both builds warm, and Solar bytecode never lands in out/
+out = "out-solar"
+cache_path = "cache-solar"
+
 # Etherscan keys
 [etherscan]
   mainnet = { key = "${API_KEY_ETHERSCAN}" }

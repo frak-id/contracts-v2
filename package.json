@@ -12,6 +12,8 @@
     "lint": "solhint src/**/*.sol",
     "lint:test": "solhint test/**/*.sol",
     "lint:script": "solhint script/**/*.sol",
+    "build:solar": "FOUNDRY_PROFILE=solar forge build",
+    "test:solar": "FOUNDRY_PROFILE=solar forge test",
     "bench:solar": "bun run bench/solar/run.ts"
   },
   "devDependencies": {

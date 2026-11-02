@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-02T20:54:52.362Z",
-  "gitCommit": "0a4edea3f9f9b0cff23bd202d46e3848a99a5f8a",
-  "forge": "forge Version: 1.8.8-nightly",
-  "solar": "solar 0.3.0+commit.e7a91fc7",
+  "date": "2026-11-02T21:43:27.180Z",
+  "gitCommit": "b69926eeb940bc258280a37244d4762bd71157a1",
+  "forge": "forge Version: 1.9.0",
+  "solar": "solar 0.3.0-dev+commit.a2b44354",
   "runs": 5,
   "machine": {
     "os": "darwin arm64",
@@ -20,7 +20,7 @@
     {
       "id": "solar",
       "label": "Solar",
-      "args": "--use /Users/quentin/.cache/solar-bench/solar/solar-aarch64-apple-darwin/solar",
+      "args": "--use solar",
       "runs": 5
     },
     {

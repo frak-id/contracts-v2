@@ -2,29 +2,29 @@
   "files": 114,
   "samples": [
     {
-      "wallMs": 10268.988416,
+      "wallMs": 10110.822875,
+      "compilerMs": 9890,
+      "rssBytes": 477413376
+    },
+    {
+      "wallMs": 10230.064541999998,
       "compilerMs": 9990,
-      "rssBytes": 490143744
+      "rssBytes": 482721792
     },
     {
-      "wallMs": 10046.009915999999,
+      "wallMs": 9988.446917000001,
+      "compilerMs": 9750,
+      "rssBytes": 475529216
+    },
+    {
+      "wallMs": 10065.211459000002,
       "compilerMs": 9830,
-      "rssBytes": 487718912
+      "rssBytes": 483016704
     },
     {
-      "wallMs": 10385.781791999998,
-      "compilerMs": 10140,
-      "rssBytes": 489537536
-    },
-    {
-      "wallMs": 10177.417208000003,
-      "compilerMs": 9950,
-      "rssBytes": 487292928
-    },
-    {
-      "wallMs": 10241.368000000002,
-      "compilerMs": 10000,
-      "rssBytes": 486490112
+      "wallMs": 10126.959959,
+      "compilerMs": 9890,
+      "rssBytes": 481181696
     }
   ]
 }

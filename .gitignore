@@ -1,6 +1,8 @@
 # Compiler files
 cache/
 out/
+cache-solar/
+out-solar/
 
 # Ignores development broadcast logs
 /broadcast

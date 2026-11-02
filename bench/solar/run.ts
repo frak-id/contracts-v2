@@ -12,8 +12,9 @@
  * Results land in bench/solar/results/<variant>/*.json, then report.ts renders results/REPORT.md.
  *
  * Env:
- *   FORGE        forge binary (default: `forge`). Needs a Foundry build that accepts `--use <path>` (>= 1.8).
- *   SOLAR        solar binary (default: `solar`). Released binaries: https://github.com/paradigmxyz/solar/releases
+ *   FORGE        forge binary (default: `forge`). Needs Foundry >= 1.9, which ships `solar` next to `forge`.
+ *   SOLAR        solar binary (default: `solar`, the one Foundry installs). Standalone releases:
+ *                https://github.com/paradigmxyz/solar/releases
  *   RUNS         clean builds per variant (default: 5)
  *   VIA_IR       "1" to also bench solc with `--via-ir` (slow: ~90s per build on an M-series laptop)
  *   VIA_IR_RUNS  clean builds for the via-IR variant (default: 1)
@@ -35,6 +36,8 @@ const VIA_IR_RUNS = Number(process.env.VIA_IR_RUNS ?? 1);
 
 const FORGE_ENV = {
     ...process.env,
+    // Every variant starts from the default profile, a stray FOUNDRY_PROFILE=solar would turn the baseline into Solar
+    FOUNDRY_PROFILE: "default",
     FOUNDRY_DISABLE_NIGHTLY_WARNING: "1",
     // Lint-on-build runs Solar's linter after every build, it would add the same noise to every variant
     FOUNDRY_LINT_ON_BUILD: "false",
@@ -235,7 +238,9 @@ mkdirSync(RESULTS_DIR, { recursive: true });
 
 const meta = {
     date: new Date().toISOString(),
-    gitCommit: run(["git", "rev-parse", "HEAD"]).stdout.trim(),
+    gitCommit:
+        run(["git", "rev-parse", "HEAD"]).stdout.trim() +
+        (run(["git", "status", "--porcelain", "--", "src", "test", "foundry.toml"]).stdout.trim() ? "-dirty" : ""),
     forge: run([FORGE, "--version"]).stdout.trim().split("\n")[0],
     solar: run([SOLAR, "--version"]).stdout.trim().split("\n")[0],
     runs: RUNS,

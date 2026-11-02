@@ -2,16 +2,18 @@ name: test
 
 on: workflow_dispatch
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
   check:
     strategy:
-      fail-fast: true
+      fail-fast: false
+      matrix:
+        # default: solc 0.8.23, what gets deployed. solar: Paradigm's Rust compiler, dev loop only (see bench/solar)
+        profile: [default, solar]
 
-    name: Foundry project
+    name: Foundry project (${{ matrix.profile }})
     runs-on: ubuntu-latest
+    env:
+      FOUNDRY_PROFILE: ${{ matrix.profile }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,7 +22,8 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          # >= 1.9.0 ships `solar` next to `forge` (the `nightly` tag stopped moving in April 2026)
+          version: v1.9.0
 
       - name: Run Forge build
         run: |

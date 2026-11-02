@@ -23,8 +23,9 @@ bun run lint:script                  # Lint script/**/*.sol
 # Heavy testing (extended fuzzing)
 FOUNDRY_PROFILE=heavy forge test     # 1024 fuzz runs, deeper invariants
 
-# Solar (Rust compiler) vs solc benchmark, see bench/solar/README.md
-FORGE=/path/to/forge SOLAR=/path/to/solar bun run bench:solar  # writes bench/solar/results/REPORT.md
+# Solar (Paradigm's Rust compiler, Foundry >= 1.9): ~19x faster builds, dev loop only, see bench/solar/README.md
+FOUNDRY_PROFILE=solar forge test     # or bun run test:solar; never deploy/verify from this profile
+bun run bench:solar                  # solc vs Solar benchmark -> bench/solar/results/REPORT.md
 
 # Generate ABIs for external use
 bun run generate                     # Generate TypeScript ABIs via wagmi

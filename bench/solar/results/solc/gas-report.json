@@ -7,9 +7,9 @@
     },
     "functions": {
       "fallback()": {
-        "calls": 18356,
+        "calls": 18228,
         "min": 5137,
-        "mean": 30065,
+        "mean": 30298,
         "median": 7660,
         "max": 257164
       }
@@ -396,7 +396,7 @@
       "deployBank(address,bytes32)": {
         "calls": 270,
         "min": 22760,
-        "mean": 7865231,
+        "mean": 7865233,
         "median": 161252,
         "max": 1040285045
       },
@@ -419,9 +419,9 @@
       "fallback()": {
         "calls": 143,
         "min": 1397,
-        "mean": 211014,
-        "median": 212721,
-        "max": 218629
+        "mean": 210702,
+        "median": 212299,
+        "max": 217785
       }
     }
   },
@@ -470,16 +470,16 @@
         "max": 260
       },
       "batch((address,uint256,address,address,bytes)[])": {
-        "calls": 2248,
+        "calls": 2326,
         "min": 2691,
-        "mean": 65034,
+        "mean": 65045,
         "median": 61961,
         "max": 1199381
       },
       "claim(address)": {
-        "calls": 1863,
+        "calls": 1882,
         "min": 7635,
-        "mean": 44087,
+        "mean": 43915,
         "median": 52193,
         "max": 52193
       },
@@ -498,7 +498,7 @@
         "max": 26329
       },
       "getClaimable(address,address)": {
-        "calls": 12830,
+        "calls": 12703,
         "min": 2777,
         "mean": 2777,
         "median": 2777,
@@ -554,9 +554,9 @@
         "max": 324
       },
       "pushReward(address,uint256,address,address,bytes)": {
-        "calls": 3501,
+        "calls": 3403,
         "min": 2971,
-        "mean": 57845,
+        "mean": 58226,
         "median": 39036,
         "max": 110374
       },
@@ -607,9 +607,9 @@
       "verifySignature(address,bytes32,bytes,uint256,uint256)": {
         "calls": 131,
         "min": 5855,
-        "mean": 219460,
-        "median": 221248,
-        "max": 227156
+        "mean": 219120,
+        "median": 220826,
+        "max": 226312
       }
     }
   },
@@ -621,24 +621,24 @@
     },
     "functions": {
       "batch(uint256,uint256,uint256,uint256)": {
-        "calls": 4219,
+        "calls": 4244,
         "min": 82655,
-        "mean": 119376,
-        "median": 119715,
+        "mean": 120082,
+        "median": 119739,
         "max": 286759
       },
       "claim(uint256)": {
-        "calls": 12540,
+        "calls": 12413,
         "min": 17053,
-        "mean": 36814,
+        "mean": 37022,
         "median": 19553,
         "max": 140336
       },
       "pushReward(uint256,uint256)": {
-        "calls": 4284,
+        "calls": 4181,
         "min": 76357,
-        "mean": 98774,
-        "median": 105026,
+        "mean": 98677,
+        "median": 105014,
         "max": 225516
       }
     }

@@ -3,24 +3,24 @@
   "files": 13,
   "samples": [
     {
-      "wallMs": 307.4313339999935,
-      "compilerMs": 132.01
+      "wallMs": 389.05699999998615,
+      "compilerMs": 137.29
     },
     {
-      "wallMs": 296.51849999999104,
-      "compilerMs": 126.04
+      "wallMs": 384.7447919999977,
+      "compilerMs": 136.81
     },
     {
-      "wallMs": 304.2282500000001,
-      "compilerMs": 128.58
+      "wallMs": 382.48225000000093,
+      "compilerMs": 141.89
     },
     {
-      "wallMs": 320.99237500000163,
-      "compilerMs": 143.71
+      "wallMs": 369.9951250000013,
+      "compilerMs": 133.54
     },
     {
-      "wallMs": 309.90879199998744,
-      "compilerMs": 128.35
+      "wallMs": 380.95895899999596,
+      "compilerMs": 133.31
     }
   ]
 }

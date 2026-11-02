@@ -1,6 +1,6 @@
 {
-  "wallMs": 3226.7445420000004,
-  "exitCode": 1,
+  "wallMs": 3207.553457999995,
+  "exitCode": 0,
   "tests": {
     "test/bank/CampaignBank.t.sol:CampaignBankTest::testFuzz_deposit_amounts(uint96)": {
       "status": "Success",
@@ -372,7 +372,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 222690
+      "gas": 224652
     },
     "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_constructor_setsImplementation()": {
       "status": "Success",
@@ -564,7 +564,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 462191
+      "gas": 467196
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_fail_validate_wrongsignature()": {
       "status": "Success",
@@ -612,13 +612,13 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 775403
+      "gas": 780408
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_set_execution()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 822658
+      "gas": 827663
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_emit_event_on_receive()": {
       "status": "Success",
@@ -630,19 +630,19 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 695467
+      "gas": 700475
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_receive_erc1155_batch()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 722442
+      "gas": 727450
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_receive_erc721()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 539254
+      "gas": 544257
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_return_address_if_deployed()": {
       "status": "Success",
@@ -690,7 +690,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Fuzz",
-      "gas": 619443
+      "gas": 617190
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_webAuthnSignatureGeneration_solo()": {
       "status": "Success",
@@ -762,19 +762,19 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 1300018
+      "gas": 1305021
     },
     "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_upgrade_revert_notUpgradeRole()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 1274217
+      "gas": 1279220
     },
     "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::testFuzz_batch_multipleOps(uint8,uint96)": {
       "status": "Success",
       "reason": null,
       "kind": "Fuzz",
-      "gas": 196038
+      "gas": 195930
     },
     "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_benchmark_100ops()": {
       "status": "Success",
@@ -834,7 +834,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 2062570
+      "gas": 2067573
     },
     "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_unsorted_byBank()": {
       "status": "Success",
@@ -858,13 +858,13 @@
       "status": "Success",
       "reason": null,
       "kind": "Fuzz",
-      "gas": 218480
+      "gas": 218492
     },
     "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::testFuzz_claim_multipleRewards(uint8)": {
       "status": "Success",
       "reason": null,
       "kind": "Fuzz",
-      "gas": 307353
+      "gas": 338767
     },
     "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_duplicateTokenSkipsSecond()": {
       "status": "Success",
@@ -1032,7 +1032,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 614880
+      "gas": 619878
     },
     "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_claimBatch_revert_userFrozen()": {
       "status": "Success",
@@ -1077,10 +1077,10 @@
       "gas": 72588
     },
     "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_getFreezeInfo_canRecover()": {
-      "status": "Failure",
-      "reason": "assertion failed: 1 != 5184001",
+      "status": "Success",
+      "reason": null,
       "kind": "Unit",
-      "gas": 82857
+      "gas": 83287
     },
     "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_getFreezeInfo_frozenButCannotRecover()": {
       "status": "Success",
@@ -1170,31 +1170,31 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 1335578
+      "gas": 1340576
     },
     "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_closeBankWithdrawRemaining()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 1226024
+      "gas": 1231022
     },
     "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_deployBankDepositPushClaim()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 1130477
+      "gas": 1135475
     },
     "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_freezeAndRecover()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 1199126
+      "gas": 1204124
     },
     "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_multipleBanksMultipleTokens()": {
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 2262130
+      "gas": 2272126
     },
     "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_proxyDeployment_cannotReinitialize()": {
       "status": "Success",
@@ -1206,7 +1206,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 1269231
+      "gas": 1274234
     },
     "test/reward/RewarderHub.invariant.t.sol:RewarderHubInvariantTest::invariant_hubBalanceCoversObligations()": {
       "status": "Success",
@@ -1218,7 +1218,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Fuzz",
-      "gas": 222733
+      "gas": 222739
     },
     "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::test_getClaimable_accumulates()": {
       "status": "Success",
@@ -1305,10 +1305,10 @@
       "gas": 102391410
     },
     "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_average_beta2()": {
-      "status": "Failure",
-      "reason": "Average should be greater than 0.49: 489478307198224644 <= 490000000000000000",
+      "status": "Success",
+      "reason": null,
       "kind": "Unit",
-      "gas": 37329601
+      "gas": 37331192
     },
     "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_betaEqual()": {
       "status": "Success",

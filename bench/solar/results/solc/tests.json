@@ -1,5 +1,5 @@
 {
-  "wallMs": 4646.902542000011,
+  "wallMs": 4575.454958000002,
   "exitCode": 0,
   "tests": {
     "test/bank/CampaignBank.t.sol:CampaignBankTest::testFuzz_deposit_amounts(uint96)": {
@@ -690,7 +690,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Fuzz",
-      "gas": 521599
+      "gas": 521309
     },
     "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_webAuthnSignatureGeneration_solo()": {
       "status": "Success",
@@ -1080,7 +1080,7 @@
       "status": "Success",
       "reason": null,
       "kind": "Unit",
-      "gas": 84927
+      "gas": 85271
     },
     "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_getFreezeInfo_frozenButCannotRecover()": {
       "status": "Success",
