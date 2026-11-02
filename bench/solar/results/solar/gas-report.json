@@ -1,0 +1,690 @@
+[
+  {
+    "contract": "lib/FreshCryptoLib/solidity/tests/WebAuthn_forge/lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy",
+    "deployment": {
+      "gas": 188178,
+      "size": 1157
+    },
+    "functions": {
+      "fallback()": {
+        "calls": 18135,
+        "min": 4974,
+        "mean": 29534,
+        "median": 7208,
+        "max": 253083
+      }
+    }
+  },
+  {
+    "contract": "lib/kernel-v2/src/Kernel.sol:Kernel",
+    "deployment": {
+      "gas": 2165588,
+      "size": 10271
+    },
+    "functions": {
+      "disableMode(bytes4)": {
+        "calls": 2,
+        "min": 3229,
+        "mean": 3229,
+        "median": 3229,
+        "max": 3229
+      },
+      "eip712Domain()": {
+        "calls": 1,
+        "min": 1047,
+        "mean": 1047,
+        "median": 1047,
+        "max": 1047
+      },
+      "execute(address,uint256,bytes,uint8)": {
+        "calls": 4,
+        "min": 6996,
+        "mean": 8685,
+        "median": 7968,
+        "max": 11811
+      },
+      "executeBatch((address,uint256,bytes)[])": {
+        "calls": 1,
+        "min": 8484,
+        "mean": 8484,
+        "median": 8484,
+        "max": 8484
+      },
+      "fallback()": {
+        "calls": 3,
+        "min": 2490,
+        "mean": 3360,
+        "median": 3796,
+        "max": 3796
+      },
+      "getDefaultValidator()": {
+        "calls": 1,
+        "min": 2239,
+        "mean": 2239,
+        "median": 2239,
+        "max": 2239
+      },
+      "getDisabledMode()": {
+        "calls": 1,
+        "min": 2233,
+        "mean": 2233,
+        "median": 2233,
+        "max": 2233
+      },
+      "getExecution(bytes4)": {
+        "calls": 1,
+        "min": 4704,
+        "mean": 4704,
+        "median": 4704,
+        "max": 4704
+      },
+      "getLastDisabledTime()": {
+        "calls": 1,
+        "min": 2239,
+        "mean": 2239,
+        "median": 2239,
+        "max": 2239
+      },
+      "getNonce()": {
+        "calls": 1,
+        "min": 5571,
+        "mean": 5571,
+        "median": 5571,
+        "max": 5571
+      },
+      "getNonce(uint192)": {
+        "calls": 130,
+        "min": 5579,
+        "mean": 5579,
+        "median": 5579,
+        "max": 5579
+      },
+      "initialize(address,bytes)": {
+        "calls": 41,
+        "min": 2418,
+        "mean": 93366,
+        "median": 95640,
+        "max": 95640
+      },
+      "isValidSignature(bytes32,bytes)": {
+        "calls": 6,
+        "min": 8884,
+        "mean": 100105,
+        "median": 11767,
+        "max": 281654
+      },
+      "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)": {
+        "calls": 1,
+        "min": 380,
+        "mean": 380,
+        "median": 380,
+        "max": 380
+      },
+      "onERC1155Received(address,address,uint256,uint256,bytes)": {
+        "calls": 1,
+        "min": 244,
+        "mean": 244,
+        "median": 244,
+        "max": 244
+      },
+      "onERC721Received(address,address,uint256,bytes)": {
+        "calls": 1,
+        "min": 244,
+        "mean": 244,
+        "median": 244,
+        "max": 244
+      },
+      "receive()": {
+        "calls": 1,
+        "min": 1306,
+        "mean": 1306,
+        "median": 1306,
+        "max": 1306
+      },
+      "setDefaultValidator(address,bytes)": {
+        "calls": 2,
+        "min": 9376,
+        "mean": 10376,
+        "median": 10376,
+        "max": 11376
+      },
+      "setExecution(bytes4,address,address,uint48,uint48,bytes)": {
+        "calls": 2,
+        "min": 51328,
+        "mean": 51328,
+        "median": 51328,
+        "max": 51328
+      },
+      "upgradeTo(address)": {
+        "calls": 1,
+        "min": 4242,
+        "mean": 4242,
+        "median": 4242,
+        "max": 4242
+      },
+      "validateUserOp((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)": {
+        "calls": 14,
+        "min": 238,
+        "mean": 226341,
+        "median": 305059,
+        "max": 364385
+      }
+    }
+  },
+  {
+    "contract": "lib/kernel-v2/src/factory/KernelFactory.sol:KernelFactory",
+    "deployment": {
+      "gas": 516269,
+      "size": 2126
+    },
+    "functions": {
+      "createAccount(address,bytes,uint256)": {
+        "calls": 41,
+        "min": 29752,
+        "mean": 205106,
+        "median": 209490,
+        "max": 209502
+      },
+      "setImplementation(address,bool)": {
+        "calls": 39,
+        "min": 46063,
+        "mean": 46063,
+        "median": 46063,
+        "max": 46063
+      }
+    }
+  },
+  {
+    "contract": "lib/kernel-v2/src/mock/TestERC1155.sol:TestERC1155",
+    "deployment": {
+      "gas": 605049,
+      "size": 2570
+    },
+    "functions": {
+      "batchMint(address,uint256[],uint256[],bytes)": {
+        "calls": 1,
+        "min": 81495,
+        "mean": 81495,
+        "median": 81495,
+        "max": 81495
+      },
+      "mint(address,uint256,uint256,bytes)": {
+        "calls": 1,
+        "min": 55103,
+        "mean": 55103,
+        "median": 55103,
+        "max": 55103
+      }
+    }
+  },
+  {
+    "contract": "lib/kernel-v2/src/mock/TestERC721.sol:TestERC721",
+    "deployment": {
+      "gas": 428104,
+      "size": 1752
+    },
+    "functions": {
+      "safeMint(address,uint256)": {
+        "calls": 1,
+        "min": 76113,
+        "mean": 76113,
+        "median": 76113,
+        "max": 76113
+      }
+    }
+  },
+  {
+    "contract": "lib/kernel-v2/src/mock/TestExecutor.sol:TestExecutor",
+    "deployment": {
+      "gas": 71845,
+      "size": 103
+    },
+    "functions": {
+      "doNothing()": {
+        "calls": 2,
+        "min": 806,
+        "mean": 806,
+        "median": 806,
+        "max": 806
+      }
+    }
+  },
+  {
+    "contract": "lib/kernel-v2/src/mock/TestValidator.sol:TestValidator",
+    "deployment": {
+      "gas": 222108,
+      "size": 799
+    },
+    "functions": {
+      "setData(bool,uint48,uint48)": {
+        "calls": 3,
+        "min": 26714,
+        "mean": 32389,
+        "median": 26714,
+        "max": 43739
+      }
+    }
+  },
+  {
+    "contract": "src/bank/CampaignBank.sol:CampaignBank",
+    "deployment": {
+      "gas": 752774,
+      "size": 3236
+    },
+    "functions": {
+      "deposit(address,uint256)": {
+        "calls": 279,
+        "min": 4482,
+        "mean": 40586,
+        "median": 40847,
+        "max": 40847
+      },
+      "getAllowance(address)": {
+        "calls": 144,
+        "min": 7421,
+        "mean": 7421,
+        "median": 7421,
+        "max": 7421
+      },
+      "getBalance(address)": {
+        "calls": 266,
+        "min": 5130,
+        "mean": 5130,
+        "median": 5130,
+        "max": 5130
+      },
+      "grantRoles(address,uint256)": {
+        "calls": 57,
+        "min": 26049,
+        "mean": 26049,
+        "median": 26049,
+        "max": 26049
+      },
+      "hasAnyRole(address,uint256)": {
+        "calls": 3,
+        "min": 2336,
+        "mean": 2336,
+        "median": 2336,
+        "max": 2336
+      },
+      "init(address,address)": {
+        "calls": 468,
+        "min": 5336,
+        "mean": 92376,
+        "median": 92897,
+        "max": 92897
+      },
+      "isOpen()": {
+        "calls": 9,
+        "min": 2223,
+        "mean": 2223,
+        "median": 2223,
+        "max": 2223
+      },
+      "owner()": {
+        "calls": 266,
+        "min": 2226,
+        "mean": 2226,
+        "median": 2226,
+        "max": 2226
+      },
+      "revokeAllowance(address)": {
+        "calls": 4,
+        "min": 2300,
+        "mean": 8266,
+        "median": 7566,
+        "max": 15632
+      },
+      "revokeAllowances(address[])": {
+        "calls": 5,
+        "min": 2372,
+        "mean": 12700,
+        "median": 4510,
+        "max": 27124
+      },
+      "setOpen(bool)": {
+        "calls": 170,
+        "min": 4481,
+        "mean": 8351,
+        "median": 8398,
+        "max": 8398
+      },
+      "updateAllowance(address,uint256)": {
+        "calls": 155,
+        "min": 4482,
+        "mean": 31927,
+        "median": 32825,
+        "max": 32825
+      },
+      "updateAllowances(address[],uint256[])": {
+        "calls": 6,
+        "min": 2569,
+        "mean": 22950,
+        "median": 4710,
+        "max": 61571
+      },
+      "withdraw(address,uint256,address)": {
+        "calls": 137,
+        "min": 4497,
+        "mean": 37342,
+        "median": 38078,
+        "max": 38078
+      }
+    }
+  },
+  {
+    "contract": "src/bank/CampaignBankFactory.sol:CampaignBankFactory",
+    "deployment": {
+      "gas": 951579,
+      "size": 4301
+    },
+    "functions": {
+      "IMPLEMENTATION()": {
+        "calls": 1,
+        "min": 110,
+        "mean": 110,
+        "median": 110,
+        "max": 110
+      },
+      "deployBank(address)": {
+        "calls": 141,
+        "min": 21480,
+        "mean": 158853,
+        "median": 159897,
+        "max": 159897
+      },
+      "deployBank(address,bytes32)": {
+        "calls": 270,
+        "min": 22760,
+        "mean": 7864449,
+        "median": 160449,
+        "max": 1040286190
+      },
+      "predictBankAddress(bytes32)": {
+        "calls": 393,
+        "min": 359,
+        "mean": 359,
+        "median": 359,
+        "max": 359
+      }
+    }
+  },
+  {
+    "contract": "src/kernel/utils/P256VerifierWrapper.sol:P256VerifierWrapper",
+    "deployment": {
+      "gas": 967532,
+      "size": 4300
+    },
+    "functions": {
+      "fallback()": {
+        "calls": 143,
+        "min": 239,
+        "mean": 258057,
+        "median": 260179,
+        "max": 267184
+      }
+    }
+  },
+  {
+    "contract": "src/kernel/webauthn/MultiWebAuthNValidator.sol:MultiWebAuthNValidatorV2",
+    "deployment": {
+      "gas": 496550,
+      "size": 2169
+    },
+    "functions": {
+      "getPasskey(address)": {
+        "calls": 2,
+        "min": 6740,
+        "mean": 6740,
+        "median": 6740,
+        "max": 6740
+      },
+      "validCaller(address,bytes)": {
+        "calls": 3,
+        "min": 215,
+        "mean": 215,
+        "median": 215,
+        "max": 215
+      },
+      "validateSignature(bytes32,bytes)": {
+        "calls": 1,
+        "min": 4761,
+        "mean": 4761,
+        "median": 4761,
+        "max": 4761
+      }
+    }
+  },
+  {
+    "contract": "src/reward/RewarderHub.sol:RewarderHub",
+    "deployment": {
+      "gas": 1204487,
+      "size": 5371
+    },
+    "functions": {
+      "FREEZE_DURATION()": {
+        "calls": 10,
+        "min": 153,
+        "mean": 153,
+        "median": 153,
+        "max": 153
+      },
+      "batch((address,uint256,address,address,bytes)[])": {
+        "calls": 2261,
+        "min": 2432,
+        "mean": 62627,
+        "median": 59248,
+        "max": 1038036
+      },
+      "claim(address)": {
+        "calls": 1874,
+        "min": 7366,
+        "mean": 43352,
+        "median": 51445,
+        "max": 51445
+      },
+      "claimBatch(address[])": {
+        "calls": 9,
+        "min": 7433,
+        "mean": 58793,
+        "median": 53741,
+        "max": 95609
+      },
+      "freezeUser(address)": {
+        "calls": 23,
+        "min": 2381,
+        "mean": 22984,
+        "median": 25963,
+        "max": 25963
+      },
+      "getClaimable(address,address)": {
+        "calls": 12617,
+        "min": 2381,
+        "mean": 2381,
+        "median": 2381,
+        "max": 2381
+      },
+      "getFreezeInfo(address)": {
+        "calls": 5,
+        "min": 2355,
+        "mean": 2383,
+        "median": 2403,
+        "max": 2403
+      },
+      "getPendingBalance(address)": {
+        "calls": 413,
+        "min": 2302,
+        "mean": 2302,
+        "median": 2302,
+        "max": 2302
+      },
+      "grantRoles(address,uint256)": {
+        "calls": 186,
+        "min": 26036,
+        "mean": 26036,
+        "median": 26036,
+        "max": 26036
+      },
+      "hasAnyRole(address,uint256)": {
+        "calls": 1,
+        "min": 2334,
+        "mean": 2334,
+        "median": 2334,
+        "max": 2334
+      },
+      "init(address)": {
+        "calls": 97,
+        "min": 5319,
+        "mean": 68929,
+        "median": 70732,
+        "max": 70732
+      },
+      "owner()": {
+        "calls": 1,
+        "min": 2224,
+        "mean": 2224,
+        "median": 2224,
+        "max": 2224
+      },
+      "proxiableUUID()": {
+        "calls": 1,
+        "min": 130,
+        "mean": 130,
+        "median": 130,
+        "max": 130
+      },
+      "pushReward(address,uint256,address,address,bytes)": {
+        "calls": 3470,
+        "min": 2505,
+        "mean": 56722,
+        "median": 37942,
+        "max": 109255
+      },
+      "recoverFrozenFunds((address,address)[],address)": {
+        "calls": 11,
+        "min": 2447,
+        "mean": 41678,
+        "median": 54222,
+        "max": 98792
+      },
+      "unfreezeUser(address)": {
+        "calls": 4,
+        "min": 2359,
+        "mean": 6008,
+        "median": 6556,
+        "max": 8561
+      },
+      "upgradeToAndCall(address,bytes)": {
+        "calls": 2,
+        "min": 2491,
+        "mean": 15514,
+        "median": 15514,
+        "max": 28537
+      },
+      "withdrawExcess(address,address)": {
+        "calls": 136,
+        "min": 2380,
+        "mean": 43325,
+        "median": 43861,
+        "max": 60961
+      }
+    }
+  },
+  {
+    "contract": "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthNTester",
+    "deployment": {
+      "gas": 237102,
+      "size": 868
+    },
+    "functions": {
+      "formatSigLayout(bytes32,bytes)": {
+        "calls": 145,
+        "min": 3476,
+        "mean": 3476,
+        "median": 3476,
+        "max": 3476
+      },
+      "verifySignature(address,bytes32,bytes,uint256,uint256)": {
+        "calls": 131,
+        "min": 3495,
+        "mean": 264307,
+        "median": 266578,
+        "max": 273531
+      }
+    }
+  },
+  {
+    "contract": "test/reward/RewarderHub.invariant.t.sol:RewarderHubHandler",
+    "deployment": {
+      "gas": 1584047,
+      "size": 6805
+    },
+    "functions": {
+      "batch(uint256,uint256,uint256,uint256)": {
+        "calls": 4122,
+        "min": 79243,
+        "mean": 116123,
+        "median": 114556,
+        "max": 280442
+      },
+      "claim(uint256)": {
+        "calls": 12327,
+        "min": 16067,
+        "mean": 35953,
+        "median": 18567,
+        "max": 138158
+      },
+      "pushReward(uint256,uint256)": {
+        "calls": 4284,
+        "min": 74339,
+        "mean": 96160,
+        "median": 102832,
+        "max": 222779
+      }
+    }
+  },
+  {
+    "contract": "test/utils/MockErc20.sol:MockErc20",
+    "deployment": {
+      "gas": 416990,
+      "size": 1700
+    },
+    "functions": {
+      "allowance(address,address)": {
+        "calls": 145,
+        "min": 2376,
+        "mean": 2376,
+        "median": 2376,
+        "max": 2376
+      },
+      "approve(address,uint256)": {
+        "calls": 478,
+        "min": 28662,
+        "mean": 45883,
+        "median": 45870,
+        "max": 46146
+      },
+      "balanceOf(address)": {
+        "calls": 965,
+        "min": 2307,
+        "mean": 2307,
+        "median": 2307,
+        "max": 2307
+      },
+      "mint(address,uint256)": {
+        "calls": 566,
+        "min": 33609,
+        "mean": 55609,
+        "median": 67881,
+        "max": 67989
+      },
+      "transferFrom(address,address,uint256)": {
+        "calls": 1,
+        "min": 56421,
+        "mean": 56421,
+        "median": 56421,
+        "max": 56421
+      }
+    }
+  }
+]

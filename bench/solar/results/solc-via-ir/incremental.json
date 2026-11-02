@@ -1,0 +1,10 @@
+{
+  "file": "src/reward/RewarderHub.sol",
+  "files": 13,
+  "samples": [
+    {
+      "wallMs": 50848.18825000001,
+      "compilerMs": 50660
+    }
+  ]
+}

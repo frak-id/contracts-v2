@@ -11,7 +11,8 @@
     "generate": "wagmi generate",
     "lint": "solhint src/**/*.sol",
     "lint:test": "solhint test/**/*.sol",
-    "lint:script": "solhint script/**/*.sol"
+    "lint:script": "solhint script/**/*.sol",
+    "bench:solar": "bun run bench/solar/run.ts"
   },
   "devDependencies": {
     "@wagmi/cli": "2.1.10"

@@ -1,0 +1,26 @@
+{
+  "file": "src/reward/RewarderHub.sol",
+  "files": 13,
+  "samples": [
+    {
+      "wallMs": 307.4313339999935,
+      "compilerMs": 132.01
+    },
+    {
+      "wallMs": 296.51849999999104,
+      "compilerMs": 126.04
+    },
+    {
+      "wallMs": 304.2282500000001,
+      "compilerMs": 128.58
+    },
+    {
+      "wallMs": 320.99237500000163,
+      "compilerMs": 143.71
+    },
+    {
+      "wallMs": 309.90879199998744,
+      "compilerMs": 128.35
+    }
+  ]
+}

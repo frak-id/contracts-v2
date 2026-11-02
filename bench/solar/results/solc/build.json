@@ -1,0 +1,30 @@
+{
+  "files": 114,
+  "samples": [
+    {
+      "wallMs": 10268.988416,
+      "compilerMs": 9990,
+      "rssBytes": 490143744
+    },
+    {
+      "wallMs": 10046.009915999999,
+      "compilerMs": 9830,
+      "rssBytes": 487718912
+    },
+    {
+      "wallMs": 10385.781791999998,
+      "compilerMs": 10140,
+      "rssBytes": 489537536
+    },
+    {
+      "wallMs": 10177.417208000003,
+      "compilerMs": 9950,
+      "rssBytes": 487292928
+    },
+    {
+      "wallMs": 10241.368000000002,
+      "compilerMs": 10000,
+      "rssBytes": 486490112
+    }
+  ]
+}

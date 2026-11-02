@@ -25,3 +25,5 @@ lcov.info
 
 # Binary folder
 bin/
+# Solar benchmark scratch builds
+bench/solar/.work/

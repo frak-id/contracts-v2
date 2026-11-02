@@ -1,0 +1,1350 @@
+{
+  "wallMs": 3226.7445420000004,
+  "exitCode": 1,
+  "tests": {
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::testFuzz_deposit_amounts(uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 132679
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::testFuzz_updateAllowance_amounts(uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 115565
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::testFuzz_withdraw_partialAmounts(uint96,uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 205715
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_closedBank_canWithdrawAfterClose()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 267714
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_closedBank_cannotUpdateAllowance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 107099
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_closedBank_existingAllowanceStillUsable()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 341264
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_deposit_byManager()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 132543
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_deposit_revert_notAuthorized()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 141496
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_deposit_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 134216
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_deposit_whileBankClosed()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 132521
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_deposit_whileBankOpen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 165201
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_getAllowance_returnsCorrectValue()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 115562
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_getAllowance_zeroWhenNotSet()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 19964
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_getBalance_returnsCorrectValue()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 132521
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_getBalance_zeroWhenEmpty()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 17695
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_implementation_cannotBeInitialized()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 39176
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_init_grantsManagerRole()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 14898
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_init_ownerHasManagerRole()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 14898
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_init_revert_alreadyInitialized()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 41877
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_init_revert_invalidRewarderHub()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 148787
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_init_setsOwner()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 14769
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_init_zeroOwnerAccepted()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 204612
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_isOpen_default()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 12608
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_managerCannotRevokeAllowance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 131658
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_managerCannotRevokeAllowances()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 132350
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_randomUserCannotDeposit()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 140219
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_randomUserCannotSetOpen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 37368
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_revokeAllowance_revert_notOwner()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 131773
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_revokeAllowance_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 153052
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_revokeAllowance_whenNoAllowanceSet()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 79625
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_revokeAllowances_emitsEvents()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 209065
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_revokeAllowances_emptyArray()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 38677
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_revokeAllowances_revert_notOwner()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 132372
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_revokeAllowances_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 275892
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_setOpen_byManager()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 50148
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_setOpen_disable()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 83184
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_setOpen_enable()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 51521
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_setOpen_revert_notAuthorized()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 38514
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_setOpen_toggleMultipleTimes()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 192710
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowance_byManager()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 117584
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowance_overwritePreviousAllowance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 156020
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowance_revert_bankClosed()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 41195
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowance_revert_notAuthorized()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 76160
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowance_setToZero()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 151134
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowance_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 124911
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowances_emitsEvents()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 138697
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowances_emptyArrays()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 72423
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowances_multiple()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 166131
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowances_revert_arrayLengthMismatch_amountsLonger()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 40738
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowances_revert_arrayLengthMismatch_tokensLonger()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 43004
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_updateAllowances_revert_bankClosed()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 42560
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_withdraw_byManager()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 194825
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_withdraw_fullBalance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 200584
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_withdraw_revert_bankStillOpen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 186654
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_withdraw_revert_invalidAddress()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 151702
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_withdraw_revert_notAuthorized()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 153995
+    },
+    "test/bank/CampaignBank.t.sol:CampaignBankTest::test_withdraw_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 228650
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::testFuzz_deployBank_anyOwner(address)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 175574
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::testFuzz_deployBank_anySalt(bytes32)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 177596
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::testFuzz_predictAndDeploy_match(address,bytes32)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 174153
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::testFuzz_predictBankAddress_consistency(bytes32)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 11222
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_constructor_revert_invalidRewarderHub()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 222690
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_constructor_setsImplementation()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 7811
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_emitsBankDeployed()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 177072
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_multipleMerchants()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 354642
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_revert_invalidOwner()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 29197
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_sameMerchantMultipleBanks()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 350555
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 192186
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_withSalt_deterministicAddress()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 173436
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_withSalt_differentSalts()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 331295
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_withSalt_revert_invalidOwner()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 30501
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_withSalt_revert_sameSalt()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1040456963
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_withSalt_sameSaltDifferentOwner_reverts()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1040457024
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_deployBank_withSalt_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 180380
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_predictBankAddress_accuracy()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 173461
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_predictBankAddress_differentSalts()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 11139
+    },
+    "test/bank/CampaignBankFactory.t.sol:CampaignBankFactoryTest::test_predictBankAddress_sameSaltSameAddress()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 173436
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_default_validator_disable()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 520471
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_default_validator_enable()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 541134
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_disable_mode()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 525492
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_dontRevertForDummySig()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 34802
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_eip712()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 17882
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_enable_then_mode_1()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 713867
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_batch_execute_fail()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 46414
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_batch_execute_success()": {
+      "status": "Skipped",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 0
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_default()": {
+      "status": "Skipped",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 0
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_execute_delegatecall_fail()": {
+      "status": "Skipped",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 0
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_execute_delegatecall_option_fail()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 42893
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_execute_delegatecall_success()": {
+      "status": "Skipped",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 0
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_execute_fail()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 42897
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_execute_success()": {
+      "status": "Skipped",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 0
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_external_call_execution()": {
+      "status": "Skipped",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 0
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_fail_validate_InvalidWebAuthnData()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 56419
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_fail_validate_not_activate()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 462191
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_fail_validate_wrongsignature()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 323828
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_get_nonce()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 41925
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_get_nonce(uint192)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 23224
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_initialize()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 226060
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_initialize_twice()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 46973
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_mode_2()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 620955
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_revert_when_mode_disabled()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 580011
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_set_default_validator()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 775403
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_set_execution()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 822658
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_emit_event_on_receive()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 43160
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_receive_erc1155()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 695467
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_receive_erc1155_batch()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 722442
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_receive_erc721()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 539254
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_should_return_address_if_deployed()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 51267
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_sudo()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 509474
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_sudo_wrongSig()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 460762
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_upgrade()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 41788
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_validateUserOp_fail_invalid_mode()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 53353
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_validateUserOp_fail_not_entryPoint()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 48175
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_validate_signature()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 319767
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_webAuthnSignatureGeneration(bytes32,uint256)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 619443
+    },
+    "test/kernel/webauthn/MultiWebAuthnValidator.t.sol:WebAuthnFclValidatorTest::test_webAuthnSignatureGeneration_solo()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 566238
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_init_revert_alreadyInitialized()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 39298
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_init_setsOwner()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 14740
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_init_setsUpgradeRole()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 14883
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_pushReward_multipleToSameUser()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 222308
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_pushReward_revert_insufficientAllowance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 102240
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_pushReward_revert_insufficientBalance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 77238
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_pushReward_revert_invalidAddress()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 67334
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_pushReward_revert_invalidAmount()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 69635
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_pushReward_revert_notRewarder()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 45509
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_pushReward_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 171328
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_upgrade_onlyUpgradeRole()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1300018
+    },
+    "test/reward/RewarderHub.admin.t.sol:RewarderHubAdminTest::test_upgrade_revert_notUpgradeRole()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1274217
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::testFuzz_batch_multipleOps(uint8,uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 196038
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_benchmark_100ops()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 2096716
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_benchmark_200ops()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 2878049
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_emitsEvents()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 191938
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_emptyArray()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 58804
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_push_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 305299
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_revert_badBank()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 100672
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_revert_insufficientAllowance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 133824
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_revert_insufficientBalance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 103923
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_revert_notRewarder()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 46365
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_sortedVsUnsorted_sameResult()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 2062570
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_unsorted_byBank()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 337647
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_unsorted_byToken()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 351855
+    },
+    "test/reward/RewarderHub.batch.t.sol:RewarderHubBatchTest::test_batch_unsorted_fullyShuffled()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 523224
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::testFuzz_claim_amount(uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 218480
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::testFuzz_claim_multipleRewards(uint8)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 307353
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_duplicateTokenSkipsSecond()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 242393
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_emitsEvents()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 368996
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_emptyArray()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 58844
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_mixedRewardsAndZeros()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 234882
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_multipleTokens()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 380131
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_pendingBalanceCorrectAfterPartialSkip()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 403843
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claimBatch_tokenWithNoReward()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 235014
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claim_clearsClaimableAfterClaim()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 247070
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claim_multipleRewards()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 280943
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claim_onlyClaimsRequestedToken()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 349896
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claim_revert_nothingToClaim()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 63003
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claim_revert_nothingToClaim_wrongToken()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 187865
+    },
+    "test/reward/RewarderHub.claim.t.sol:RewarderHubClaimTest::test_claim_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 249277
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::testFuzz_pendingBalance_accuracy(uint96,uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 332490
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::testFuzz_withdrawExcess_amount(uint96,uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 278944
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_pendingBalance_decrementsOnClaim()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 220504
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_pendingBalance_decrementsOnClaimBatch()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 385387
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_pendingBalance_decrementsOnRecoverFrozenFunds()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 294628
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_pendingBalance_incrementsOnBatch()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 292232
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_pendingBalance_incrementsOnPushReward()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 171481
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_pendingBalance_multipleUsersAccurate()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 404481
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_withdrawExcess_afterPartialClaim()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 436043
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_withdrawExcess_noExcess()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 216846
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_withdrawExcess_preservesPendingBalance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 321399
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_withdrawExcess_revert_invalidRecipient()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 114826
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_withdrawExcess_revert_notCompliance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 93000
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_withdrawExcess_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 297540
+    },
+    "test/reward/RewarderHub.compliance.t.sol:RewarderHubComplianceTest::test_withdrawExcess_unknownToken()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 614880
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_claimBatch_revert_userFrozen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 237378
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_claim_revert_userFrozen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 236522
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_claim_success_afterUnfreeze()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 299530
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_freezeUser_revert_alreadyFrozen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 91922
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_freezeUser_revert_invalidAddress()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 36433
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_freezeUser_revert_notCompliance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 38762
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_freezeUser_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 72588
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_getFreezeInfo_canRecover()": {
+      "status": "Failure",
+      "reason": "assertion failed: 1 != 5184001",
+      "kind": "Unit",
+      "gas": 82857
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_getFreezeInfo_frozenButCannotRecover()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 70756
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_getFreezeInfo_notFrozen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 15259
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_exactlyAtDuration()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 286491
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_multipleOps()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 459096
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_multipleUsers()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 440229
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_revert_freezePeriodNotElapsed()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 242137
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_revert_invalidRecipient()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 129771
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_revert_notCompliance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 247880
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_revert_notFrozen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 190851
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_skipsZeroBalance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 143440
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_recoverFrozenFunds_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 311792
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_unfreezeUser_revert_notCompliance()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 89655
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_unfreezeUser_revert_notFrozen()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 40925
+    },
+    "test/reward/RewarderHub.freeze.t.sol:RewarderHubFreezeTest::test_unfreezeUser_success()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 100725
+    },
+    "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_batchRewardsMultipleUsers()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1335578
+    },
+    "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_closeBankWithdrawRemaining()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1226024
+    },
+    "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_deployBankDepositPushClaim()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1130477
+    },
+    "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_freezeAndRecover()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1199126
+    },
+    "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_fullFlow_multipleBanksMultipleTokens()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 2262130
+    },
+    "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_proxyDeployment_cannotReinitialize()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 41465
+    },
+    "test/reward/RewarderHub.integration.t.sol:RewarderHubIntegrationTest::test_proxyDeployment_uninitializedImplementation()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 1269231
+    },
+    "test/reward/RewarderHub.invariant.t.sol:RewarderHubInvariantTest::invariant_hubBalanceCoversObligations()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Invariant",
+      "gas": null
+    },
+    "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::testFuzz_getClaimable_accuracy(uint96,uint96)": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Fuzz",
+      "gas": 222733
+    },
+    "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::test_getClaimable_accumulates()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 222284
+    },
+    "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::test_getClaimable_basic()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 159507
+    },
+    "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::test_getClaimable_multipleTokens()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 288360
+    },
+    "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::test_getClaimable_multipleUsers()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 254118
+    },
+    "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::test_getClaimable_zeroAfterClaim()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 220733
+    },
+    "test/reward/RewarderHub.view.t.sol:RewarderHubViewTest::test_getClaimable_zeroWhenNone()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 17068
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_integerBetaPoint_average_beta10()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 41054429
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_integerBetaPoint_average_beta2()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 17021139
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_integerBetaPoint_betaEqual()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 5934
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_integerBetaPoint_betaInferior()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 5446
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_integerBetaPoint_betaSuperior()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 7537
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_integerBetaPoint_differentPoints()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 14864
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_integerBetaPoint_gas()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 29396
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_average_beta13()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 102391410
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_average_beta2()": {
+      "status": "Failure",
+      "reason": "Average should be greater than 0.49: 489478307198224644 <= 490000000000000000",
+      "kind": "Unit",
+      "gas": 37329601
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_betaEqual()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 7531
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_betaInferior()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 6410
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_betaSuperior()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 15771
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_differentPoints()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 27702
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_distribution()": {
+      "status": "Skipped",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 0
+    },
+    "test/utils/BetaDistribution.t.sol:BetaDistributionTest::test_wadBetaPoint_gas()": {
+      "status": "Success",
+      "reason": null,
+      "kind": "Unit",
+      "gas": 64206
+    }
+  }
+}

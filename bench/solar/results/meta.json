@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-02T20:54:52.362Z",
+  "gitCommit": "0a4edea3f9f9b0cff23bd202d46e3848a99a5f8a",
+  "forge": "forge Version: 1.8.8-nightly",
+  "solar": "solar 0.3.0+commit.e7a91fc7",
+  "runs": 5,
+  "machine": {
+    "os": "darwin arm64",
+    "cpu": "Apple M1 Pro",
+    "cores": 8,
+    "memGiB": 16
+  },
+  "variants": [
+    {
+      "id": "solc",
+      "label": "solc (project settings)",
+      "args": "",
+      "runs": 5
+    },
+    {
+      "id": "solar",
+      "label": "Solar",
+      "args": "--use /Users/quentin/.cache/solar-bench/solar/solar-aarch64-apple-darwin/solar",
+      "runs": 5
+    },
+    {
+      "id": "solc-via-ir",
+      "label": "solc --via-ir",
+      "args": "--via-ir",
+      "runs": 1
+    }
+  ]
+}

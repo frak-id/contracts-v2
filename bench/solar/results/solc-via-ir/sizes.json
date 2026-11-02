@@ -1,0 +1,106 @@
+{
+  "src/kernel/webauthn/MultiWebAuthNValidator.sol:MultiWebAuthNValidatorV2": {
+    "source": "src/kernel/webauthn/MultiWebAuthNValidator.sol",
+    "kind": "contract",
+    "runtime": 3810,
+    "init": 3941,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/reward/RewarderHub.sol:RewarderHub": {
+    "source": "src/reward/RewarderHub.sol",
+    "kind": "contract",
+    "runtime": 8050,
+    "init": 8212,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol:MultiWebAuthNRecoveryAction": {
+    "source": "src/kernel/webauthn/MultiWebAuthNRecoveryAction.sol",
+    "kind": "contract",
+    "runtime": 325,
+    "init": 457,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/bank/CampaignBank.sol:CampaignBank": {
+    "source": "src/bank/CampaignBank.sol",
+    "kind": "contract",
+    "runtime": 5180,
+    "init": 5322,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/kernel/types/SingleWebAuthNSignatureLib.sol:SingleWebAuthNSignatureLib": {
+    "source": "src/kernel/types/SingleWebAuthNSignatureLib.sol",
+    "kind": "library",
+    "runtime": 16,
+    "init": 44,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/kernel/types/WebAuthNSignatureLib.sol:WebAuthNSignatureLib": {
+    "source": "src/kernel/types/WebAuthNSignatureLib.sol",
+    "kind": "library",
+    "runtime": 16,
+    "init": 44,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/bank/CampaignBankFactory.sol:CampaignBankFactory": {
+    "source": "src/bank/CampaignBankFactory.sol",
+    "kind": "contract",
+    "runtime": 1571,
+    "init": 7150,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/utils/BetaDistribution.sol:BetaDistribution": {
+    "source": "src/utils/BetaDistribution.sol",
+    "kind": "library",
+    "runtime": 16,
+    "init": 44,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/kernel/utils/P256VerifierWrapper.sol:P256VerifierWrapper": {
+    "source": "src/kernel/utils/P256VerifierWrapper.sol",
+    "kind": "contract",
+    "runtime": 6385,
+    "init": 6412,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/tokens/mUSDToken.sol:mUSDToken": {
+    "source": "src/tokens/mUSDToken.sol",
+    "kind": "contract",
+    "runtime": 4451,
+    "init": 4678,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/utils/MPT.sol:MPT": {
+    "source": "src/utils/MPT.sol",
+    "kind": "library",
+    "runtime": 16,
+    "init": 44,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/kernel/types/MultiWebAuthNSignatureLib.sol:MultiWebAuthNSignatureLib": {
+    "source": "src/kernel/types/MultiWebAuthNSignatureLib.sol",
+    "kind": "library",
+    "runtime": 16,
+    "init": 44,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  },
+  "src/kernel/utils/WebAuthnVerifier.sol:WebAuthnVerifier": {
+    "source": "src/kernel/utils/WebAuthnVerifier.sol",
+    "kind": "library",
+    "runtime": 16,
+    "init": 44,
+    "compiler": "0.8.23+commit.f704f362",
+    "evmVersion": "shanghai"
+  }
+}
