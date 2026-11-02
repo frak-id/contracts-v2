@@ -314,7 +314,9 @@ contract RewarderHubFreezeTest is RewarderHubBaseTest {
     }
 
     function test_getFreezeInfo_canRecover() public {
-        uint256 freezeTime = block.timestamp;
+        // Not `block.timestamp`: it is constant within a tx, so optimizing compilers (via-IR, Solar) may re-read it
+        // after the `vm.warp` below
+        uint256 freezeTime = vm.getBlockTimestamp();
 
         vm.prank(compliance);
         hub.freezeUser(user1);

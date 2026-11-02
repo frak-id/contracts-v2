@@ -178,6 +178,8 @@ contract BetaDistributionTest is Test {
     }
 
     // Generate 10_000 points and ensure that the average match the mean of the alpha distrib: alpha=2 beta=2.1
+    // Linear interpolation between Beta(2,2) (mean 0.5) and Beta(2,3) (mean 0.4) gives a mean of exactly 0.49, so the
+    // bounds are centered on it (the PRNG seed depends on `gas()`, any bytecode change moves the average around)
     function test_wadBetaPoint_average_beta2() public view {
         uint256 betaWad = 2.1e18;
         uint256 runs = 10_000;
@@ -189,8 +191,8 @@ contract BetaDistributionTest is Test {
 
         uint256 average = total / runs;
 
-        assertGt(average, 0.49e18, "Average should be greater than 0.49");
-        assertLt(average, 0.51e18, "Average should be lower than 0.51");
+        assertGt(average, 0.48e18, "Average should be greater than 0.48");
+        assertLt(average, 0.5e18, "Average should be lower than 0.50");
     }
 
     // Enure every runs generate new points on the curve
